@@ -1,0 +1,944 @@
+<title>Vibe Hub — Mur d'idées</title>
+<style>
+  :root{
+    --bg:#F9F9F9;
+    --bg-alt:#FAFAFA;
+    --card:#FFFFFF;
+    --ink:#000000;
+    --ink-2:#333333;
+    --ink-3:#666666;
+    --ink-4:#999999;
+    --line:#EAEAEA;
+    --line-2:#D4D4D4;
+    --line-hover:#CCCCCC;
+    --input:#F4F4F4;
+    --shadow-card: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-lift: 0 20px 50px -20px rgba(0,0,0,0.14);
+    --grad-hmw-a:#3b82f6; --grad-hmw-b:#4f46e5;
+    --grad-scamper-a:#10b981; --grad-scamper-b:#0d9488;
+    --grad-jtbd-a:#f97316; --grad-jtbd-b:#f43f5e;
+    --grad-ofo-a:#8b5cf6; --grad-ofo-b:#9333ea;
+    --grad-ship-a:#0ea5e9; --grad-ship-b:#2563eb;
+    --grad-collision-a:#d946ef; --grad-collision-b:#ec4899;
+    --grad-pirate-a:#d97706; --grad-pirate-b:#b45309;
+    --grad-kill-a:#ef4444; --grad-kill-b:#be123c;
+    --grad-worst-a:#64748b; --grad-worst-b:#16a34a;
+    --grad-morpho-a:#06b6d4; --grad-morpho-b:#0891b2;
+    --grad-time-a:#6366f1; --grad-time-b:#7c3aed;
+    --grad-rev-a:#f59e0b; --grad-rev-b:#ea580c;
+    --grad-crazy-a:#ec4899; --grad-crazy-b:#8b5cf6;
+    --grad-synth-a:#111111; --grad-synth-b:#000000;
+    --gold:#c9962f;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0a0a0b;
+      --bg-alt:#111113;
+      --card:#17171a;
+      --ink:#f5f5f5;
+      --ink-2:#d4d4d4;
+      --ink-3:#a3a3a3;
+      --ink-4:#737373;
+      --line:#2a2a2e;
+      --line-2:#3a3a3e;
+      --line-hover:#4a4a4e;
+      --input:#202024;
+      --shadow-card: 0 1px 2px rgba(0,0,0,0.4);
+      --shadow-lift: 0 20px 50px -20px rgba(0,0,0,0.6);
+      --gold:#e0b354;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0a0b; --bg-alt:#111113; --card:#17171a; --ink:#f5f5f5; --ink-2:#d4d4d4;
+    --ink-3:#a3a3a3; --ink-4:#737373; --line:#2a2a2e; --line-2:#3a3a3e; --line-hover:#4a4a4e;
+    --input:#202024; --shadow-card:0 1px 2px rgba(0,0,0,0.4); --shadow-lift:0 20px 50px -20px rgba(0,0,0,0.6);
+    --gold:#e0b354;
+  }
+  :root[data-theme="light"]{
+    --bg:#F9F9F9; --bg-alt:#FAFAFA; --card:#FFFFFF; --ink:#000000; --ink-2:#333333;
+    --ink-3:#666666; --ink-4:#999999; --line:#EAEAEA; --line-2:#D4D4D4; --line-hover:#CCCCCC;
+    --input:#F4F4F4; --shadow-card:0 1px 2px rgba(0,0,0,0.04); --shadow-lift:0 20px 50px -20px rgba(0,0,0,0.14);
+    --gold:#c9962f;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; overflow-x:hidden; }
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+  }
+  a{ color:inherit; }
+  .wrap{ max-width:1160px; margin:0 auto; padding:0 22px; }
+
+  /* ---------- background texture ---------- */
+  .grain{
+    position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.5;
+    background-image:
+      radial-gradient(circle at 1px 1px, var(--line) 1px, transparent 0);
+    background-size:26px 26px;
+    mask-image:linear-gradient(to bottom, black, transparent 90%);
+  }
+
+  /* ---------- header ---------- */
+  header.hero{
+    position:relative; z-index:1;
+    padding:76px 0 54px;
+    border-bottom:1px solid var(--line);
+    background:
+      radial-gradient(1200px 420px at 15% -10%, rgba(59,130,246,.10), transparent 60%),
+      radial-gradient(1000px 380px at 90% 0%, rgba(236,72,153,.09), transparent 55%);
+  }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.14em;
+    color:var(--ink-3); background:var(--input); border:1px solid var(--line);
+    padding:6px 12px; border-radius:999px;
+  }
+  .eyebrow .dot{ width:6px; height:6px; border-radius:50%; background:#22c55e; box-shadow:0 0 0 3px rgba(34,197,94,.18); }
+  h1.title{
+    margin:22px 0 14px;
+    font-size:clamp(34px, 6vw, 60px);
+    font-weight:800; letter-spacing:-0.03em; line-height:1.02;
+  }
+  h1.title em{ font-style:normal; background:linear-gradient(100deg,#3b82f6,#8b5cf6 45%,#ec4899); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .lede{ max-width:760px; font-size:17px; color:var(--ink-3); font-weight:450; }
+  .meta-row{
+    margin-top:30px; display:flex; flex-wrap:wrap; gap:10px;
+  }
+  .meta-chip{
+    display:flex; flex-direction:column; gap:2px;
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:10px 16px; min-width:120px; box-shadow:var(--shadow-card);
+  }
+  .meta-chip .k{ font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:var(--ink-4); }
+  .meta-chip .v{ font-size:13.5px; font-weight:700; color:var(--ink); }
+
+  /* ---------- technique index ---------- */
+  nav.toc{
+    position:relative; z-index:1;
+    padding:22px 0; border-bottom:1px solid var(--line);
+    overflow-x:auto; white-space:nowrap;
+    -ms-overflow-style:none; scrollbar-width:none;
+  }
+  nav.toc::-webkit-scrollbar{ display:none; }
+  nav.toc .wrap{ display:flex; gap:8px; }
+  nav.toc a{
+    flex:0 0 auto; text-decoration:none;
+    font-size:12px; font-weight:700; color:var(--ink-3);
+    background:var(--input); border:1px solid var(--line);
+    padding:7px 13px; border-radius:999px; transition:all .2s;
+  }
+  nav.toc a:hover{ color:var(--ink); border-color:var(--line-hover); }
+
+  main{ position:relative; z-index:1; }
+
+  section.tech{ padding:64px 0; border-bottom:1px solid var(--line); }
+  section.tech:nth-child(even){ background:var(--bg-alt); }
+
+  .tech-head{ display:flex; align-items:flex-start; gap:16px; margin-bottom:30px; flex-wrap:wrap; }
+  .tech-num{
+    font-size:12px; font-weight:800; color:var(--card);
+    width:38px; height:38px; border-radius:11px; flex:0 0 auto;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .tech-titles h2{ margin:0 0 4px; font-size:25px; font-weight:800; letter-spacing:-.01em; }
+  .tech-titles p{ margin:0; font-size:13.5px; color:var(--ink-3); max-width:640px; }
+  .tech-count{
+    margin-left:auto; font-size:11px; font-weight:800; color:var(--ink-3);
+    background:var(--input); border:1px solid var(--line); padding:5px 11px; border-radius:999px; align-self:center;
+  }
+
+  /* ===================== 1. HMW — sticky wall ===================== */
+  .hmw-num{ background:linear-gradient(135deg,var(--grad-hmw-a),var(--grad-hmw-b)); }
+  .hmw-grid{
+    columns: 280px 3; column-gap:16px;
+  }
+  .hmw-card{
+    break-inside:avoid; margin:0 0 16px;
+    background:var(--card); border:1px solid var(--line); border-radius:16px;
+    padding:18px 18px 16px; box-shadow:var(--shadow-card);
+    position:relative;
+  }
+  .hmw-card::before{
+    content:"?"; position:absolute; top:10px; right:14px;
+    font-size:34px; font-weight:800; color:var(--line-2); line-height:1;
+  }
+  .hmw-tag{ font-size:9.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#4f46e5; }
+  .hmw-card p{ margin:8px 0 0; font-size:14px; font-weight:600; line-height:1.5; padding-right:20px; }
+
+  /* ===================== 2. SCAMPER — letter rail ===================== */
+  .scamper-num{ background:linear-gradient(135deg,var(--grad-scamper-a),var(--grad-scamper-b)); }
+  .scamper-list{ display:flex; flex-direction:column; gap:2px; }
+  .scamper-row{
+    display:grid; grid-template-columns:56px 1fr; gap:18px;
+    padding:16px 0; border-top:1px solid var(--line);
+  }
+  .scamper-row:first-child{ border-top:none; }
+  .scamper-letter{
+    width:44px; height:44px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:19px; color:#fff;
+    background:linear-gradient(135deg,var(--grad-scamper-a),var(--grad-scamper-b));
+  }
+  .scamper-body .k{ font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:#0d9488; margin-bottom:6px; }
+  .scamper-body ul{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:7px; }
+  .scamper-body li{ font-size:14px; color:var(--ink-2); padding-left:16px; position:relative; }
+  .scamper-body li::before{ content:"›"; position:absolute; left:0; color:#10b981; font-weight:800; }
+
+  /* ===================== 3. JTBD — quote cards ===================== */
+  .jtbd-num{ background:linear-gradient(135deg,var(--grad-jtbd-a),var(--grad-jtbd-b)); }
+  .jtbd-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+  .jtbd-card{
+    background:var(--card); border:1px solid var(--line); border-radius:18px; padding:24px;
+    box-shadow:var(--shadow-card);
+  }
+  .jtbd-card:nth-child(odd){ transform:translateY(10px); }
+  .jtbd-mark{ font-size:40px; font-weight:800; line-height:.5; color:transparent; background:linear-gradient(135deg,var(--grad-jtbd-a),var(--grad-jtbd-b)); -webkit-background-clip:text; background-clip:text; }
+  .jtbd-card p{ margin:10px 0 0; font-size:15px; font-weight:600; line-height:1.55; }
+  .jtbd-card .tag{ display:inline-block; margin-top:14px; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:#f97316; }
+
+  /* ===================== 4. One Feature Only — dial cards ===================== */
+  .ofo-num{ background:linear-gradient(135deg,var(--grad-ofo-a),var(--grad-ofo-b)); }
+  .ofo-row{ display:flex; gap:14px; overflow-x:auto; padding-bottom:10px; scroll-snap-type:x proximity; }
+  .ofo-card{
+    scroll-snap-align:start; flex:0 0 260px;
+    border:1.5px dashed var(--line-2); border-radius:18px; padding:20px;
+    background:var(--card);
+  }
+  .ofo-only{ font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:#9333ea; }
+  .ofo-card h3{ margin:8px 0 8px; font-size:16px; font-weight:800; }
+  .ofo-card p{ margin:0; font-size:13.5px; color:var(--ink-3); line-height:1.55; }
+
+  /* ===================== 5. Ship in 60 — checklist timeline ===================== */
+  .ship-num{ background:linear-gradient(135deg,var(--grad-ship-a),var(--grad-ship-b)); }
+  .ship-list{ display:flex; flex-direction:column; }
+  .ship-item{
+    display:grid; grid-template-columns:26px 1fr auto; align-items:start; gap:14px;
+    padding:14px 4px; border-bottom:1px dashed var(--line);
+  }
+  .ship-item:last-child{ border-bottom:none; }
+  .ship-check{
+    width:22px; height:22px; border-radius:7px; margin-top:1px;
+    border:2px solid #2563eb; display:flex; align-items:center; justify-content:center;
+    background:rgba(37,99,235,.08);
+  }
+  .ship-check svg{ width:12px; height:12px; }
+  .ship-item p{ margin:0; font-size:14px; font-weight:600; line-height:1.5; }
+  .ship-min{ font-size:10.5px; font-weight:800; color:#2563eb; background:rgba(37,99,235,.1); padding:4px 9px; border-radius:999px; white-space:nowrap; }
+
+  /* ===================== 6. Emerging Tech Collision ===================== */
+  .collision-num{ background:linear-gradient(135deg,var(--grad-collision-a),var(--grad-collision-b)); }
+  .collision-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+  .collision-card{
+    background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px;
+    box-shadow:var(--shadow-card);
+  }
+  .collision-tags{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .ctag{ font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:#fff; background:linear-gradient(135deg,var(--grad-collision-a),var(--grad-collision-b)); padding:5px 10px; border-radius:999px; }
+  .cx{ font-weight:800; color:var(--ink-4); }
+  .collision-card p{ margin:0; font-size:14px; font-weight:600; line-height:1.5; }
+
+  /* ===================== 7. Pirate Code — treasure list ===================== */
+  .pirate-num{ background:linear-gradient(135deg,var(--grad-pirate-a),var(--grad-pirate-b)); }
+  .pirate-wrap{
+    background:linear-gradient(180deg, rgba(217,119,6,.06), transparent 60%);
+    border:1px solid var(--line); border-radius:20px; padding:8px;
+  }
+  .pirate-row{
+    display:grid; grid-template-columns:30px 1fr; gap:14px; align-items:flex-start;
+    padding:14px 12px; border-radius:12px;
+  }
+  .pirate-row:hover{ background:var(--input); }
+  .pirate-flag{ color:#b45309; margin-top:2px; }
+  .pirate-row p{ margin:0; font-size:14px; font-weight:600; line-height:1.55; }
+  .pirate-row b{ color:#b45309; font-weight:800; }
+
+  /* ===================== 8. Kill the Crown Jewel ===================== */
+  .kill-num{ background:linear-gradient(135deg,var(--grad-kill-a),var(--grad-kill-b)); }
+  .kill-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; }
+  .kill-card{
+    border:1px solid var(--line); border-radius:16px; padding:20px; background:var(--card);
+    position:relative; overflow:hidden;
+  }
+  .kill-card::before{
+    content:""; position:absolute; top:0; left:0; width:4px; height:100%;
+    background:linear-gradient(180deg,var(--grad-kill-a),var(--grad-kill-b));
+  }
+  .kill-strike{ display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:#ef4444; text-decoration:line-through; }
+  .kill-card p{ margin:10px 0 0; font-size:14px; font-weight:600; line-height:1.55; }
+
+  /* ===================== 9. Worst Possible Idea — flip ===================== */
+  .worst-num{ background:linear-gradient(135deg,var(--grad-worst-a),var(--grad-worst-b)); }
+  .worst-item{
+    display:grid; grid-template-columns:1fr 34px 1fr; gap:0; align-items:stretch;
+    border:1px solid var(--line); border-radius:16px; overflow:hidden; margin-bottom:12px;
+    background:var(--card);
+  }
+  .worst-bad, .worst-good{ padding:16px 18px; font-size:13.5px; font-weight:600; line-height:1.5; }
+  .worst-bad{ color:var(--ink-4); text-decoration:line-through; text-decoration-color:#94a3b8; background:rgba(100,116,139,.06); }
+  .worst-good{ color:var(--ink); background:rgba(34,197,94,.06); }
+  .worst-arrow{ display:flex; align-items:center; justify-content:center; background:var(--input); }
+  .worst-label{ font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; display:block; margin-bottom:5px; }
+  .worst-bad .worst-label{ color:#64748b; }
+  .worst-good .worst-label{ color:#16a34a; }
+
+  /* ===================== 10. Morphological matrix ===================== */
+  .morpho-num{ background:linear-gradient(135deg,var(--grad-morpho-a),var(--grad-morpho-b)); }
+  .morpho-scroll{ overflow-x:auto; }
+  .morpho-table{ width:100%; min-width:640px; border-collapse:separate; border-spacing:0 10px; }
+  .morpho-table td{ padding:14px 16px; font-size:13px; font-weight:600; background:var(--card); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .morpho-table tr td:first-child{ border-left:1px solid var(--line); border-radius:12px 0 0 12px; color:#0891b2; font-weight:800; white-space:nowrap; }
+  .morpho-table tr td:last-child{ border-right:1px solid var(--line); border-radius:0 12px 12px 0; }
+  .morpho-x{ color:var(--ink-4); font-weight:800; padding:0 8px; }
+
+  /* ===================== 11. Time Horizon Ladder ===================== */
+  .time-num{ background:linear-gradient(135deg,var(--grad-time-a),var(--grad-time-b)); }
+  .ladder{ position:relative; padding-left:26px; }
+  .ladder::before{ content:""; position:absolute; left:8px; top:6px; bottom:6px; width:2px; background:linear-gradient(180deg,var(--grad-time-a),var(--grad-time-b)); border-radius:2px; }
+  .rung{ position:relative; margin-bottom:26px; }
+  .rung:last-child{ margin-bottom:0; }
+  .rung::before{ content:""; position:absolute; left:-26px; top:4px; width:14px; height:14px; border-radius:50%; background:var(--bg); border:3px solid var(--grad-time-b); }
+  .rung .yr{ font-size:12px; font-weight:800; color:#7c3aed; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px; }
+  .rung ul{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:8px; }
+  .rung li{ font-size:14.5px; font-weight:600; line-height:1.5; color:var(--ink-2); }
+
+  /* ===================== 12. Assumption Reversal ===================== */
+  .rev-num{ background:linear-gradient(135deg,var(--grad-rev-a),var(--grad-rev-b)); }
+  .rev-item{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:12px; }
+  .rev-side{ border-radius:14px; padding:16px 18px; font-size:13.5px; font-weight:600; line-height:1.5; }
+  .rev-assum{ background:var(--input); color:var(--ink-3); border:1px solid var(--line); }
+  .rev-flip{ background:rgba(245,158,11,.09); border:1px solid rgba(245,158,11,.3); color:var(--ink); }
+  .rev-k{ display:block; font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; margin-bottom:6px; }
+  .rev-assum .rev-k{ color:var(--ink-4); }
+  .rev-flip .rev-k{ color:#ea580c; }
+
+  /* ===================== 13. Six Thinking Hats ===================== */
+  .hats-num{ background:linear-gradient(135deg,#334155,#0f172a); }
+  .hats-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; }
+  .hat-card{ border-radius:16px; padding:18px; color:#fff; box-shadow:var(--shadow-card); }
+  .hat-card p{ margin:8px 0 0; font-size:13.5px; font-weight:600; line-height:1.55; }
+  .hat-name{ font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; opacity:.85; }
+  .hat-white{ background:#4b5563; }
+  .hat-red{ background:linear-gradient(135deg,#dc2626,#b91c1c); }
+  .hat-yellow{ background:linear-gradient(135deg,#d97706,#b45309); color:#fff; }
+  .hat-black{ background:linear-gradient(135deg,#111827,#000); }
+  .hat-green{ background:linear-gradient(135deg,#16a34a,#166534); }
+  .hat-blue{ background:linear-gradient(135deg,#2563eb,#1d4ed8); }
+
+  /* ===================== 14. Crazy 8s ===================== */
+  .crazy-num{ background:linear-gradient(135deg,var(--grad-crazy-a),var(--grad-crazy-b)); }
+  .crazy-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+  .crazy-cell{
+    aspect-ratio:1/1; border-radius:16px; padding:14px; display:flex; flex-direction:column; justify-content:space-between;
+    border:1.5px solid var(--line); background:var(--card); position:relative;
+  }
+  .crazy-cell .n{ font-size:24px; font-weight:800; color:var(--line-2); }
+  .crazy-cell p{ margin:0; font-size:12.5px; font-weight:700; line-height:1.4; }
+  .crazy-cell:nth-child(1){ border-top:3px solid #ec4899; }
+  .crazy-cell:nth-child(2){ border-top:3px solid #8b5cf6; }
+  .crazy-cell:nth-child(3){ border-top:3px solid #6366f1; }
+  .crazy-cell:nth-child(4){ border-top:3px solid #0ea5e9; }
+  .crazy-cell:nth-child(5){ border-top:3px solid #10b981; }
+  .crazy-cell:nth-child(6){ border-top:3px solid #f59e0b; }
+  .crazy-cell:nth-child(7){ border-top:3px solid #f43f5e; }
+  .crazy-cell:nth-child(8){ border-top:3px solid #a855f7; }
+
+  /* ===================== Synthesis climax ===================== */
+  section.synth{
+    position:relative; padding:90px 0 100px;
+    background:
+      radial-gradient(900px 500px at 50% 0%, rgba(201,150,47,.14), transparent 60%),
+      linear-gradient(180deg, var(--bg-alt), var(--bg));
+    border-bottom:none;
+    overflow:hidden;
+  }
+  section.synth::before{
+    content:""; position:absolute; inset:0;
+    background-image: radial-gradient(circle at 1px 1px, rgba(201,150,47,.35) 1px, transparent 0);
+    background-size:34px 34px; opacity:.25; pointer-events:none;
+  }
+  .synth-inner{ position:relative; z-index:1; }
+  .synth-eyebrow{
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    text-align:center;
+  }
+  .synth-eyebrow span{
+    font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.18em;
+    color:var(--gold); border:1px solid rgba(201,150,47,.4); background:rgba(201,150,47,.08);
+    padding:7px 16px; border-radius:999px;
+  }
+  h2.synth-title{
+    text-align:center; margin:22px auto 12px; max-width:820px;
+    font-size:clamp(28px,4.4vw,44px); font-weight:800; letter-spacing:-.02em; line-height:1.12;
+  }
+  p.synth-lede{ text-align:center; max-width:640px; margin:0 auto 48px; color:var(--ink-3); font-size:15.5px; }
+
+  .synth-points{ display:flex; flex-direction:column; gap:16px; max-width:900px; margin:0 auto 46px; }
+  .synth-point{
+    display:grid; grid-template-columns:52px 1fr; gap:20px; align-items:flex-start;
+    background:var(--card); border:1px solid var(--line); border-radius:20px; padding:22px 24px;
+    box-shadow:var(--shadow-lift);
+  }
+  .synth-point .num{
+    width:52px; height:52px; border-radius:16px; flex:0 0 auto;
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px; font-weight:800; color:#0a0a0a;
+    background:linear-gradient(135deg,#f5d78e,var(--gold));
+  }
+  .synth-point h3{ margin:0 0 6px; font-size:15.5px; font-weight:800; }
+  .synth-point p{ margin:0; font-size:14px; color:var(--ink-2); line-height:1.6; }
+
+  .directions{
+    max-width:960px; margin:0 auto; text-align:center;
+  }
+  .directions h4{
+    font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.12em; color:var(--ink-3); margin-bottom:18px;
+  }
+  .dir-row{ display:flex; flex-wrap:wrap; justify-content:center; gap:12px; }
+  .dir-pill{
+    display:flex; align-items:center; gap:9px;
+    background:var(--ink); color:var(--bg); border-radius:999px; padding:12px 20px;
+    font-size:13.5px; font-weight:700; box-shadow:var(--shadow-lift);
+  }
+  .dir-pill .letter{
+    width:22px; height:22px; border-radius:50%; background:var(--gold); color:#0a0a0a;
+    font-size:11px; font-weight:800; display:flex; align-items:center; justify-content:center; flex:0 0 auto;
+  }
+
+  footer{
+    padding:34px 0 60px; text-align:center; position:relative; z-index:1;
+  }
+  footer p{ margin:0; font-size:12px; color:var(--ink-4); font-weight:600; }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 860px){
+    .jtbd-grid{ grid-template-columns:1fr; }
+    .jtbd-card:nth-child(odd){ transform:none; }
+    .collision-grid{ grid-template-columns:1fr; }
+    .hmw-grid{ columns:1; }
+    .worst-item{ grid-template-columns:1fr; }
+    .worst-arrow{ padding:8px 0; transform:rotate(90deg); }
+    .rev-item{ grid-template-columns:1fr; }
+    .crazy-grid{ grid-template-columns:repeat(2,1fr); }
+    .synth-point{ grid-template-columns:1fr; }
+    .synth-point .num{ margin-bottom:4px; }
+  }
+  @media (max-width: 520px){
+    .meta-chip{ min-width:0; flex:1 1 40%; }
+  }
+</style>
+
+<div class="grain"></div>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="eyebrow"><span class="dot"></span>Journal de brainstorming — session autonome</span>
+    <h1 class="title">Du prototype au produit<br><em>lançable.</em></h1>
+    <p class="lede">Faire évoluer Vibe Hub — plateforme d'apprentissage IA pour designers UI/UX — d'un WIP en beta vers un produit crédible et différenciant. 13 techniques créatives, ~100 idées, une synthèse.</p>
+    <div class="meta-row">
+      <div class="meta-chip"><span class="k">Objectif</span><span class="v">Fonctionnalités, business model, contenu, UX &amp; GTM</span></div>
+      <div class="meta-chip"><span class="k">Mode</span><span class="v">Autonome</span></div>
+      <div class="meta-chip"><span class="k">Statut</span><span class="v">Terminé</span></div>
+      <div class="meta-chip"><span class="k">Mise à jour</span><span class="v">05 août 2026, 14:48</span></div>
+      <div class="meta-chip"><span class="k">Techniques</span><span class="v">13 + synthèse</span></div>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="wrap">
+    <a href="#hmw">1 · HMW</a>
+    <a href="#scamper">2 · SCAMPER</a>
+    <a href="#jtbd">3 · JTBD</a>
+    <a href="#ofo">4 · One Feature Only</a>
+    <a href="#ship">5 · Ship in 60min</a>
+    <a href="#collision">6 · Tech Collision</a>
+    <a href="#pirate">7 · Pirate Code</a>
+    <a href="#kill">8 · Kill the Crown Jewel</a>
+    <a href="#worst">9 · Worst Possible Idea</a>
+    <a href="#morpho">10 · Morphologique</a>
+    <a href="#time">11 · Time Horizon</a>
+    <a href="#rev">12 · Assumption Reversal</a>
+    <a href="#hats">13 · Six Hats</a>
+    <a href="#crazy">14 · Crazy 8s</a>
+    <a href="#synth">★ Synthèse</a>
+  </div>
+</nav>
+
+<main>
+
+  <!-- 1. HOW MIGHT WE -->
+  <section class="tech" id="hmw">
+    <div class="wrap">
+      <div class="tech-head">
+        <div class="tech-num hmw-num">01</div>
+        <div class="tech-titles">
+          <h2>How Might We</h2>
+          <p>Le mur de questions ouvertes — chaque idée reformulée en "Comment pourrions-nous…" pour ouvrir le champ des solutions.</p>
+        </div>
+        <span class="tech-count">10 idées</span>
+      </div>
+      <div class="hmw-grid">
+        <div class="hmw-card"><span class="hmw-tag">Conversion</span><p>Turn "Rejoindre la Beta" en un tunnel qui filtre les designers prêts à payer, pas juste les curieux ?</p></div>
+        <div class="hmw-card"><span class="hmw-tag">Positionnement</span><p>Faire des "skills" (instructions custom) de l'IA le vrai hook produit plutôt qu'une fonctionnalité cachée ?</p></div>
+        <div class="hmw-card"><span class="hmw-tag">Onboarding</span><p>Montrer un diagnostic IA personnalisé du workflow du designer avant même la liste des cours ?</p></div>
+        <div class="hmw-card"><span class="hmw-tag">Confiance</span><p>Remplacer la photo Unsplash du formateur par une preuve de travail qui bâtit la confiance plus vite qu'un portrait ?</p></div>
+        <div class="hmw-card"><span class="hmw-tag">Contenu</span><p>Transformer les dossiers docs/ et BMad vides en moteur de contenu "build in public" ?</p></div>
+        <div class="hmw-card"><span class="hmw-tag">Croissance</span><p>Rendre l'outil générateur UI de l'onglet Outils partageable pour que les utilisateurs gratuits deviennent le marketing ?</p></div>
+        <div class="hmw-card"><span class="hmw-tag">Validation</span><p>Obtenir les 10 premiers beta users payants avant de finir le backlog routing/TypeScript ?</p></div>
+        <div class="hmw-card"><span class="hmw-tag">Rétention</span><p>Faire ressentir la progression des cours comme une certification pro plutôt qu'une playlist vidéo ?</p></div>
+        <div class="hmw-card"><span class="hmw-tag">Produit</span><p>Laisser un designer importer son propre fichier Figma dans le chat IA au lieu de partir d'un prompt vide ?</p></div>
+        <div class="hmw-card"><span class="hmw-tag">Scalabilité</span><p>Faire de "Julien D." une communauté grandissante de praticiens plutôt qu'un goulot d'étranglement gourou-unique ?</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. SCAMPER -->
+  <section class="tech" id="scamper">
+    <div class="wrap">
+      <div class="tech-head">
+        <div class="tech-num scamper-num">02</div>
+        <div class="tech-titles">
+          <h2>SCAMPER</h2>
+          <p>Sept leviers de transformation appliqués systématiquement au produit existant.</p>
+        </div>
+        <span class="tech-count">12 idées</span>
+      </div>
+      <div class="scamper-list">
+        <div class="scamper-row">
+          <div class="scamper-letter">S</div>
+          <div class="scamper-body">
+            <div class="k">Substitute</div>
+            <ul>
+              <li>Remplacer le wrapper Gemini générique par un agent spécialisé UI pré-chargé d'heuristiques UX et frameworks de critique design</li>
+              <li>Remplacer les vidéos statiques par des sessions live hebdo de critique IA, archivées ensuite en contenu</li>
+            </ul>
+          </div>
+        </div>
+        <div class="scamper-row">
+          <div class="scamper-letter">C</div>
+          <div class="scamper-body">
+            <div class="k">Combine</div>
+            <ul>
+              <li>Combiner l'outil générateur UI (Outils) avec les modules de cours pour finir chaque leçon par un exercice pratique noté par l'IA</li>
+              <li>Combiner Admin et chat IA pour que Julien réponde une fois aux questions fréquentes et que ça se publie en FAQ/contenu de cours automatiquement</li>
+            </ul>
+          </div>
+        </div>
+        <div class="scamper-row">
+          <div class="scamper-letter">A</div>
+          <div class="scamper-body">
+            <div class="k">Adapt</div>
+            <ul>
+              <li>Adapter le pattern "code review" à l'UI/UX : un étudiant soumet un écran, IA + pairs laissent des critiques en ligne</li>
+              <li>Adapter les streaks/gamification style Duolingo pour maintenir une pratique quotidienne des outils IA</li>
+            </ul>
+          </div>
+        </div>
+        <div class="scamper-row">
+          <div class="scamper-letter">M</div>
+          <div class="scamper-body">
+            <div class="k">Modify / Magnify / Minify</div>
+            <ul>
+              <li>Magnify : transformer le concept de "skills" en marketplace où les étudiants publient et vendent leurs propres prompts/skills IA</li>
+              <li>Minify : réduire l'onboarding à un seul prompt "colle ton lien Figma, obtiens ton premier workflow IA en 2 minutes"</li>
+            </ul>
+          </div>
+        </div>
+        <div class="scamper-row">
+          <div class="scamper-letter">P</div>
+          <div class="scamper-body">
+            <div class="k">Put to other use</div>
+            <ul>
+              <li>Réutiliser l'infrastructure vidéo des cours pour des case studies clients que les designers montrent à leurs propres clients</li>
+            </ul>
+          </div>
+        </div>
+        <div class="scamper-row">
+          <div class="scamper-letter">E</div>
+          <div class="scamper-body">
+            <div class="k">Eliminate</div>
+            <ul>
+              <li>Supprimer la séparation Modules/Outils/IA en un seul workspace continu, fusionné</li>
+              <li>Supprimer la création manuelle de cours dans l'Admin, laisser l'IA générer des plans de cours à partir des notes brutes de Julien</li>
+            </ul>
+          </div>
+        </div>
+        <div class="scamper-row">
+          <div class="scamper-letter">R</div>
+          <div class="scamper-body">
+            <div class="k">Reverse</div>
+            <ul>
+              <li>Rendre l'outil IA gratuit et illimité, et faire payer le parcours de cours structuré qui fait que la maîtrise reste acquise</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. JTBD -->
+  <section class="tech" id="jtbd">
+    <div class="wrap">
+      <div class="tech-head">
+        <div class="tech-num jtbd-num">03</div>
+        <div class="tech-titles">
+          <h2>Job to Be Done</h2>
+          <p>Ce que le designer "embauche" vraiment Vibe Hub pour accomplir — au-delà de "apprendre l'IA".</p>
+        </div>
+        <span class="tech-count">8 idées</span>
+      </div>
+      <div class="jtbd-grid">
+        <div class="jtbd-card"><span class="jtbd-mark">“</span><p>Ne pas paraître incompétent devant son PM/dev en utilisant l'IA — pas "apprendre la théorie IA".</p><span class="tag">Statut pro</span></div>
+        <div class="jtbd-card"><span class="jtbd-mark">“</span><p>Prouver à son boss que l'IA n'a pas baissé la qualité — besoin d'un portfolio de travaux assistés par IA à montrer.</p><span class="tag">Preuve</span></div>
+        <div class="jtbd-card"><span class="jtbd-mark">“</span><p>Se débloquer en 10 minutes quand un fichier Figma stagne — le chat IA doit être un outil de déblocage, pas un cours.</p><span class="tag">Vitesse</span></div>
+        <div class="jtbd-card"><span class="jtbd-mark">“</span><p>Garder son emploi alors que l'IA mange les tâches juniors — positionner Vibe Hub comme une assurance carrière.</p><span class="tag">Sécurité</span></div>
+        <div class="jtbd-card"><span class="jtbd-mark">“</span><p>Éviter la honte de demander à un junior/dev "comment on utilise cet outil IA" — un espace de pratique privé compte plus qu'une communauté publique.</p><span class="tag">Intimité</span></div>
+        <div class="jtbd-card"><span class="jtbd-mark">“</span><p>Construire un système personnel réutilisable (prompts, skills) projet après projet, pas des astuces ponctuelles.</p><span class="tag">Capital perso</span></div>
+        <div class="jtbd-card"><span class="jtbd-mark">“</span><p>Les freelances embauchent ça pour chiffrer plus vite et livrer plus de scope sans embaucher — angle pricing/marketing.</p><span class="tag">Freelance</span></div>
+        <div class="jtbd-card"><span class="jtbd-mark">“</span><p>Reframe : le produit n'est ni les cours ni le chat IA — c'est un workflow IA personnel qui accompagne le designer partout.</p><span class="tag">Vision</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. ONE FEATURE ONLY -->
+  <section class="tech" id="ofo">
+    <div class="wrap">
+      <div class="tech-head">
+        <div class="tech-num ofo-num">04</div>
+        <div class="tech-titles">
+          <h2>One Feature Only</h2>
+          <p>Si Vibe Hub ne devait garder qu'une seule chose — cinq versions radicalement réduites du produit.</p>
+        </div>
+        <span class="tech-count">5 idées</span>
+      </div>
+      <div class="ofo-row">
+        <div class="ofo-card"><span class="ofo-only">Ne garder que</span><h3>Le chat IA + skills</h3><p>Couper cours et générateur UI, vendre comme wrapper Gemini spécialisé designers.</p></div>
+        <div class="ofo-card"><span class="ofo-only">Ne garder que</span><h3>Le générateur UI</h3><p>En faire tout le produit gratuit, monétiser via templates/exports.</p></div>
+        <div class="ofo-card"><span class="ofo-only">Ne garder que</span><h3>Les skills en presets</h3><p>Marketplace téléchargeable style templates Notion, sans UI de chat du tout.</p></div>
+        <div class="ofo-card"><span class="ofo-only">Ne garder que</span><h3>Le coaching live</h3><p>Zéro logiciel, appels avec Julien — modèle cohorte haute-touche.</p></div>
+        <div class="ofo-card"><span class="ofo-only">Ne garder que</span><h3>Le contenu des cours</h3><p>Abandonner Supabase/Gemini, vendre en simple cours vidéo Gumroad pour valider la demande à bas coût.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. SHIP IN 60 MIN -->
+  <section class="tech" id="ship">
+    <div class="wrap">
+      <div class="tech-head">
+        <div class="tech-num ship-num">05</div>
+        <div class="tech-titles">
+          <h2>Ship in 60 Minutes</h2>
+          <p>Les gestes cheap et immédiats — aucun ne demande plus d'une heure de travail.</p>
+        </div>
+        <span class="tech-count">8 idées</span>
+      </div>
+      <div class="ship-list">
+        <div class="ship-item"><div class="ship-check"><svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div><p>Couper entièrement la migration TypeScript/router — shipper l'existant derrière le hack /admin, ça suffit pour la beta</p><span class="ship-min">~10 min</span></div>
+        <div class="ship-item"><div class="ship-check"><svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div><p>Simuler le "plan de cours généré par IA" avec du contenu pré-écrit déguisé en sortie IA pour tester la demande</p><span class="ship-min">~30 min</span></div>
+        <div class="ship-item"><div class="ship-check"><svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div><p>Remplacer le placeholder Unsplash par une vraie photo prise au téléphone de Julien — l'authenticité bat le poli</p><span class="ship-min">~5 min</span></div>
+        <div class="ship-item"><div class="ship-check"><svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div><p>Remplacer le .env vide par une clé démo avec rate-limiting strict pour que les visiteurs testent le chat IA sans inscription</p><span class="ship-min">~40 min</span></div>
+        <div class="ship-item"><div class="ship-check"><svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div><p>Transformer les dossiers docs/ vides en une seule page "Roadmap" publique — transparence instantanée, coût de build nul</p><span class="ship-min">~20 min</span></div>
+        <div class="ship-item"><div class="ship-check"><svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div><p>Réutiliser DESIGN_SYSTEM.md pour lancer un partage de style sur une page publique comme lead magnet</p><span class="ship-min">~25 min</span></div>
+        <div class="ship-item"><div class="ship-check"><svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div><p>Shipper la waitlist en simple formulaire Typeform au lieu de construire une vraie auth Supabase pour le CTA beta</p><span class="ship-min">~15 min</span></div>
+        <div class="ship-item"><div class="ship-check"><svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div><p>Enregistrer un Loom brut et non-poli du chat IA en action, au-dessus de la ligne de flottaison au lieu du texte statique</p><span class="ship-min">~15 min</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. EMERGING TECH COLLISION -->
+  <section class="tech" id="collision">
+    <div class="wrap">
+      <div class="tech-head">
+        <div class="tech-num collision-num">06</div>
+        <div class="tech-titles">
+          <h2>Emerging Tech Collision</h2>
+          <p>Faire percuter le produit avec des technos émergentes pour forcer des angles inattendus.</p>
+        </div>
+        <span class="tech-count">8 idées</span>
+      </div>
+      <div class="collision-grid">
+        <div class="collision-card"><div class="collision-tags"><span class="ctag">Multimodal</span><span class="cx">×</span><span class="ctag">Critique</span></div><p>Le designer parle sa critique à voix haute, l'IA transcrit et structure en tâches actionnables.</p></div>
+        <div class="collision-card"><div class="collision-tags"><span class="ctag">Agents</span><span class="cx">×</span><span class="ctag">Computer-use</span></div><p>Un agent qui ouvre réellement Figma, essaie le prompt du designer, et rapporte ce qui a cassé.</p></div>
+        <div class="collision-card"><div class="collision-tags"><span class="ctag">IA on-device</span><span class="cx">×</span><span class="ctag">NDA</span></div><p>Mode privacy-first où le travail client ne quitte jamais le navigateur, pour les freelances sous NDA.</p></div>
+        <div class="collision-card"><div class="collision-tags"><span class="ctag">AR/Spatial</span><span class="cx">×</span><span class="ctag">Preview</span></div><p>Prévisualiser l'UI générée par IA directement en casque pour les designers d'apps spatiales.</p></div>
+        <div class="collision-card"><div class="collision-tags"><span class="ctag">Vidéo générative</span><span class="cx">×</span><span class="ctag">Portfolio</span></div><p>Produire automatiquement un reel "avant/après" de chaque projet assisté par IA pour le portfolio de l'étudiant.</p></div>
+        <div class="collision-card"><div class="collision-tags"><span class="ctag">Voice cloning</span><span class="cx">×</span><span class="ctag">i18n</span></div><p>La narration des cours de Julien auto-doublée en plusieurs langues pour dépasser le marché français.</p></div>
+        <div class="collision-card"><div class="collision-tags"><span class="ctag">IA collaborative</span><span class="cx">×</span><span class="ctag">Équipe</span></div><p>Un workspace partagé où les "skills" de toute une équipe fusionnent en un cerveau collectif.</p></div>
+        <div class="collision-card"><div class="collision-tags"><span class="ctag">Codegen</span><span class="cx">×</span><span class="ctag">Générateur UI</span></div><p>L'outil générateur UI exporte directement en code React/Tailwind fonctionnel, pas juste des images.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. PIRATE CODE -->
+  <section class="tech" id="pirate">
+    <div class="wrap">
+      <div class="tech-head">
+        <div class="tech-num pirate-num">07</div>
+        <div class="tech-titles">
+          <h2>Pirate Code Brainstorm</h2>
+          <p>Voler sans vergogne les meilleurs mécanismes d'autres produits — AARRR à main armée.</p>
+        </div>
+        <span class="tech-count">10 idées</span>
+      </div>
+      <div class="pirate-wrap">
+        <div class="pirate-row"><span class="pirate-flag">⚑</span><p>Voler le mécanisme <b>streaks/ligues de Duolingo</b> pour la pratique IA quotidienne</p></div>
+        <div class="pirate-row"><span class="pirate-flag">⚑</span><p>Voler le <b>graphe de contributions GitHub</b> — afficher un "graphe de fluidité IA" du designer comme preuve sociale</p></div>
+        <div class="pirate-row"><span class="pirate-flag">⚑</span><p>Voler le <b>modèle de galerie de templates Notion</b> pour la marketplace de "skills"</p></div>
+        <div class="pirate-row"><span class="pirate-flag">⚑</span><p>Voler le <b>pattern de docs magnifiques de Stripe</b> pour enseigner le prompt engineering à des designers qui détestent le technique</p></div>
+        <div class="pirate-row"><span class="pirate-flag">⚑</span><p>Voler l'astuce du <b>feed public Discord Midjourney</b> — un mur public d'UI générées par IA par de vrais étudiants</p></div>
+        <div class="pirate-row"><span class="pirate-flag">⚑</span><p>Voler le <b>format bande-annonce cinématique de Masterclass</b> pour le Hero au lieu d'un texte+CTA statique</p></div>
+        <div class="pirate-row"><span class="pirate-flag">⚑</span><p>Voler la <b>cadence et le ton du changelog de Linear</b> pour bâtir la confiance en public pendant la beta</p></div>
+        <div class="pirate-row"><span class="pirate-flag">⚑</span><p>Voler le <b>playbook "vendre avant de construire" de Gumroad</b> pour valider le prix du cours avant de finir le backend</p></div>
+        <div class="pirate-row"><span class="pirate-flag">⚑</span><p>Voler le <b>partage de certificat LinkedIn Learning</b> — les designers postent leur certificat pour une distribution à coût nul</p></div>
+        <div class="pirate-row"><span class="pirate-flag">⚑</span><p>Voler le <b>modèle "fork this" de Replit</b> — laisser les visiteurs forker une skill IA publique sans login</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. KILL THE CROWN JEWEL -->
+  <section class="tech" id="kill">
+    <div class="wrap">
+      <div class="tech-head">
+        <div class="tech-num kill-num">08</div>
+        <div class="tech-titles">
+          <h2>Kill the Crown Jewel</h2>
+          <p>Et si le chat IA — la pièce maîtresse supposée — disparaissait ? Ce que le produit deviendrait.</p>
+        </div>
+        <span class="tech-count">5 idées</span>
+      </div>
+      <div class="kill-grid">
+        <div class="kill-card"><span class="kill-strike">Chat IA</span><p>Vibe Hub devient un pur jeu cours-curatés + communauté, gagne sur la qualité du curriculum, pas la tech.</p></div>
+        <div class="kill-card"><span class="kill-strike">Chat IA</span><p>Devient un programme live en cohorte (style Maven) — le produit est le jugement en direct de Julien, pas le logiciel.</p></div>
+        <div class="kill-card"><span class="kill-strike">Chat IA</span><p>Devient un marketplace de templates/assets (kits Figma, packs de prompts) — transactionnel, pas abonnement.</p></div>
+        <div class="kill-card"><span class="kill-strike">Chat IA</span><p>Devient d'abord une marque média/newsletter (SEO + contenu IA-design français), monétisée par sponsoring.</p></div>
+        <div class="kill-card"><span class="kill-strike">Chat IA</span><p>Devient un angle staffing/job-board — certifie des designers "IA-fluent" et les place chez des agences qui paient pour ce pipeline.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. WORST POSSIBLE IDEA -->
+  <section class="tech" id="worst">
+    <div class="wrap">
+      <div class="tech-head">
+        <div class="tech-num worst-num">09</div>
+        <div class="tech-titles">
+          <h2>Worst Possible Idea</h2>
+          <p>Imaginer le pire, puis retourner chaque idée catastrophique en principe produit sain.</p>
+        </div>
+        <span class="tech-count">5 idées</span>
+      </div>
+      <div>
+        <div class="worst-item">
+          <div class="worst-bad"><span class="worst-label">Pire idée</span>Facturer plein tarif sans IA fonctionnelle — juste des humains cachés en Wizard-of-Oz</div>
+          <div class="worst-arrow">→</div>
+          <div class="worst-good"><span class="worst-label">Flip</span>Une vraie "beta concierge" où un humain répond via le chat d'abord, puis automatisation progressive — validation low-risk légitime</div>
+        </div>
+        <div class="worst-item">
+          <div class="worst-bad"><span class="worst-label">Pire idée</span>Rendre le cours infini et ne jamais laisser personne finir</div>
+          <div class="worst-arrow">→</div>
+          <div class="worst-good"><span class="worst-label">Flip</span>Garantir une vraie ligne d'arrivée avec un livrable/certificat réel à la semaine 4</div>
+        </div>
+        <div class="worst-item">
+          <div class="worst-bad"><span class="worst-label">Pire idée</span>Cacher le prix jusqu'après un appel de vente de 45 minutes</div>
+          <div class="worst-arrow">→</div>
+          <div class="worst-good"><span class="worst-label">Flip</span>Afficher le prix radicalement en avant, retirer toute friction du CTA "Rejoindre la Beta"</div>
+        </div>
+        <div class="worst-item">
+          <div class="worst-bad"><span class="worst-label">Pire idée</span>Forcer tout le monde dans le même curriculum peu importe l'outil (Figma/Framer/Webflow)</div>
+          <div class="worst-arrow">→</div>
+          <div class="worst-good"><span class="worst-label">Flip</span>Brancher le curriculum selon la stack réelle du designer dès la première question</div>
+        </div>
+        <div class="worst-item">
+          <div class="worst-bad"><span class="worst-label">Pire idée</span>Laisser le panel Admin être le seul moyen de publier du contenu, goulot d'étranglement sur Julien</div>
+          <div class="worst-arrow">→</div>
+          <div class="worst-good"><span class="worst-label">Flip</span>Construire une contribution self-serve légère pour des experts invités</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. MORPHOLOGICAL ANALYSIS -->
+  <section class="tech" id="morpho">
+    <div class="wrap">
+      <div class="tech-head">
+        <div class="tech-num morpho-num">10</div>
+        <div class="tech-titles">
+          <h2>Analyse Morphologique</h2>
+          <p>Combinaisons de paramètres de monétisation — modèle × cible × canal.</p>
+        </div>
+        <span class="tech-count">5 combinaisons</span>
+      </div>
+      <div class="morpho-scroll">
+        <table class="morpho-table">
+          <tr><td>Frais unique</td><td class="morpho-x">×</td><td>Cohorte freelances</td><td class="morpho-x">×</td><td>Appels live</td></tr>
+          <tr><td>Abonnement</td><td class="morpho-x">×</td><td>Style Skool/Circle</td><td class="morpho-x">×</td><td>Chat &amp; outils async</td></tr>
+          <tr><td>Freemium</td><td class="morpho-x">×</td><td>Designers solo</td><td class="morpho-x">×</td><td>Upsell vers les cours</td></tr>
+          <tr><td>Licences par siège</td><td class="morpho-x">×</td><td>Agences design (B2B)</td><td class="morpho-x">×</td><td>Skills gérés par l'admin d'équipe</td></tr>
+          <tr><td>Marketplace</td><td class="morpho-x">×</td><td>Power users</td><td class="morpho-x">×</td><td>Pay-per-skill, pas d'abonnement</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. TIME HORIZON LADDER -->
+  <section class="tech" id="time">
+    <div class="wrap">
+      <div class="tech-head">
+        <div class="tech-num time-num">11</div>
+        <div class="tech-titles">
+          <h2>Time Horizon Ladder</h2>
+          <p>Le produit à 1 an, 10 ans, 100 ans — de la traction à l'héritage.</p>
+        </div>
+        <span class="tech-count">6 idées</span>
+      </div>
+      <div class="ladder">
+        <div class="rung">
+          <div class="yr">Dans 1 an</div>
+          <ul>
+            <li>Vibe Hub est la référence francophone pour la formation IA des freelances UI/UX, ~500 membres payants</li>
+            <li>La marketplace de "skills" compte 50 presets publiés, pas seulement créés par Julien</li>
+          </ul>
+        </div>
+        <div class="rung">
+          <div class="yr">Dans 10 ans</div>
+          <ul>
+            <li>"Designer IA-fluent" est une certification attendue par les employeurs, comme un permis de conduire — Vibe Hub est l'organisme accréditeur</li>
+            <li>Le chat IA a absorbé le cours entièrement — les étudiants apprennent en faisant dans l'outil, plus de bibliothèque vidéo séparée</li>
+          </ul>
+        </div>
+        <div class="rung">
+          <div class="yr">Dans 100 ans</div>
+          <ul>
+            <li>Les designers n'"apprennent" plus l'IA, c'est ambiant — l'héritage de Vibe Hub est la taxonomie des skills qu'il a définie, encore citée</li>
+            <li>Ce qui survit n'est pas le produit mais le graphe communautaire — des alumni qui enseignent à des alumni, autonome sans Julien</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12. ASSUMPTION REVERSAL -->
+  <section class="tech" id="rev">
+    <div class="wrap">
+      <div class="tech-head">
+        <div class="tech-num rev-num">12</div>
+        <div class="tech-titles">
+          <h2>Assumption Reversal</h2>
+          <p>Prendre chaque hypothèse tacite du produit et la retourner complètement.</p>
+        </div>
+        <span class="tech-count">6 idées</span>
+      </div>
+      <div>
+        <div class="rev-item"><div class="rev-side rev-assum"><span class="rev-k">Hypothèse</span>Les étudiants ont besoin de vidéos pour apprendre</div><div class="rev-side rev-flip"><span class="rev-k">Reversal</span>Tout le cours est du faire, pas du regarder : l'IA note des soumissions de vrais projets, pas de vidéo requise</div></div>
+        <div class="rev-item"><div class="rev-side rev-assum"><span class="rev-k">Hypothèse</span>Julien doit être le seul formateur</div><div class="rev-side rev-flip"><span class="rev-k">Reversal</span>Ouvrir la plateforme à des experts IA-design invités dès le jour 1, Julien curate</div></div>
+        <div class="rev-item"><div class="rev-side rev-assum"><span class="rev-k">Hypothèse</span>Le chat IA doit être textuel</div><div class="rev-side rev-flip"><span class="rev-k">Reversal</span>Interface principale en voix + partage d'écran, le chat en secondaire</div></div>
+        <div class="rev-item"><div class="rev-side rev-assum"><span class="rev-k">Hypothèse</span>La beta doit filtrer l'accès</div><div class="rev-side rev-flip"><span class="rev-k">Reversal</span>Rendre totalement ouvert, monétiser seulement les skills/outils avancés, supprimer la friction de la waitlist</div></div>
+        <div class="rev-item"><div class="rev-side rev-assum"><span class="rev-k">Hypothèse</span>Francophone uniquement</div><div class="rev-side rev-flip"><span class="rev-k">Reversal</span>Lancer bilingue FR/EN dès le jour 1 pour accéder au marché EN bien plus vaste de l'IA-design</div></div>
+        <div class="rev-item"><div class="rev-side rev-assum"><span class="rev-k">Hypothèse</span>La progression est liée au prix payé</div><div class="rev-side rev-flip"><span class="rev-k">Reversal</span>Accès cours gratuit et illimité, facturer seulement l'usage de calcul IA/outils (pricing à l'usage)</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13. SIX THINKING HATS -->
+  <section class="tech" id="hats">
+    <div class="wrap">
+      <div class="tech-head">
+        <div class="tech-num hats-num">13</div>
+        <div class="tech-titles">
+          <h2>Six Thinking Hats</h2>
+          <p>Un état des lieux du produit vu à travers six modes de pensée distincts.</p>
+        </div>
+        <span class="tech-count">6 idées</span>
+      </div>
+      <div class="hats-grid">
+        <div class="hat-card hat-white"><div class="hat-name">Chapeau blanc · Faits</div><p>Le produit a déjà une intégration Gemini + Supabase fonctionnelle — plus avancé que ce que le README admet</p></div>
+        <div class="hat-card hat-red"><div class="hat-name">Chapeau rouge · Ressenti</div><p>La photo placeholder et l'état PLACEHOLDER vidéo minent la promesse premium d'un pitch "maîtrisez l'IA" — ça fait inachevé pour un produit payant</p></div>
+        <div class="hat-card hat-yellow"><div class="hat-name">Chapeau jaune · Bénéfices</div><p>Le concept "skills" (instructions custom) est vraiment différenciant vs des cours IA génériques — à mettre en avant dans le marketing</p></div>
+        <div class="hat-card hat-black"><div class="hat-name">Chapeau noir · Risques</div><p>Une seule clé API Gemini sans rate-limiting/suivi d'usage visible est un risque d'explosion de coûts à l'ouverture de la beta</p></div>
+        <div class="hat-card hat-green"><div class="hat-name">Chapeau vert · Idées neuves</div><p>Transformer chaque "skill" de module en extension Chrome exportable pour que la valeur fonctionne aussi hors Vibe Hub</p></div>
+        <div class="hat-card hat-blue"><div class="hat-name">Chapeau bleu · Process</div><p>Le projet a zéro PRD/spec malgré l'outillage BMad complet installé — lancer bmad-prd ensuite réduirait le risque de périmètre avant de construire plus</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 14. CRAZY 8S -->
+  <section class="tech" id="crazy">
+    <div class="wrap">
+      <div class="tech-head">
+        <div class="tech-num crazy-num">14</div>
+        <div class="tech-titles">
+          <h2>Crazy 8s — Landing &amp; Marketing</h2>
+          <p>Huit idées rapides pour la page d'atterrissage, dans l'esprit du sprint de sketch original.</p>
+        </div>
+        <span class="tech-count">8 idées</span>
+      </div>
+      <div class="crazy-grid">
+        <div class="crazy-cell"><span class="n">1</span><p>Compteur live "designers ayant automatisé X heures cette semaine" sur la landing</p></div>
+        <div class="crazy-cell"><span class="n">2</span><p>Remplacer le copy générique du Hero par une animation d'écran Figma transformé par IA avant/après</p></div>
+        <div class="crazy-cell"><span class="n">3</span><p>Outil gratuit "roast mon portfolio par IA" comme hook de haut de funnel</p></div>
+        <div class="crazy-cell"><span class="n">4</span><p>Preuve sociale de vrais beta users (même peu nombreux) au lieu de rien</p></div>
+        <div class="crazy-cell"><span class="n">5</span><p>Transformer la FAQ en widget de chat IA lui-même — dogfooder le produit sur la landing</p></div>
+        <div class="crazy-cell"><span class="n">6</span><p>Leaderboard public d'usage des "skills" pour créer du FOMO</p></div>
+        <div class="crazy-cell"><span class="n">7</span><p>Téléchargement gratuit d'une "skill" IA en échange d'un email — lead magnet classique</p></div>
+        <div class="crazy-cell"><span class="n">8</span><p>Popup exit-intent offrant une mini-leçon gratuite au lieu de juste partir</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SYNTHESIS -->
+  <section class="synth" id="synth">
+    <div class="wrap synth-inner">
+      <div class="synth-eyebrow"><span>★ Synthèse finale</span></div>
+      <h2 class="synth-title">Ce que 100 idées disent quand on prend du recul</h2>
+      <p class="synth-lede">Six lignes de force émergent de treize techniques indépendantes — assez convergentes pour devenir une feuille de route, pas juste une liste d'options.</p>
+
+      <div class="synth-points">
+        <div class="synth-point">
+          <div class="num">1</div>
+          <div><h3>"Skills" = le vrai différenciant</h3><p>Le concept de skills (instructions IA custom / marketplace) revient dans 5 techniques différentes (SCAMPER, One Feature Only, Kill the Crown Jewel, Pirate Code, Time Horizon). C'est le vrai différenciant du produit — plus que les cours ou le chat générique — et devrait être le pilier marketing/produit n°1.</p></div>
+        </div>
+        <div class="synth-point">
+          <div class="num">2</div>
+          <div><h3>Authenticité beta vs. polish premium</h3><p>Tension productive entre "authenticité beta" (Ship in 60 min : vraie photo, Loom brut, waitlist Typeform) et "polish premium" (Six Hats rouge/noir : placeholder photo + pas de rate-limiting minent le pitch "Master AI"). Résolution : les fixes sont cheap et immédiats, à faire avant tout autre chantier.</p></div>
+        </div>
+        <div class="synth-point">
+          <div class="num">3</div>
+          <div><h3>La valeur doit se démontrer, pas s'expliquer</h3><p>JTBD réel ("prouver à son boss", "assurance carrière", "se débloquer en 10 min") + Crazy 8s ("roast mon portfolio") + Ship 60 (démo Loom) convergent : la valeur doit se démontrer en live dès la landing, pas s'expliquer en texte.</p></div>
+        </div>
+        <div class="synth-point">
+          <div class="num">4</div>
+          <div><h3>Vers un moteur freemium</h3><p>Assumption Reversal (beta ouverte) + Ship 60 (waitlist légère) + One Feature Only (chat IA gratuit illimité) pointent vers un moteur de croissance freemium plutôt qu'une beta fermée.</p></div>
+        </div>
+        <div class="synth-point">
+          <div class="num">5</div>
+          <div><h3>Le générateur UI doit sortir du vrai code</h3><p>Emerging Tech + Pirate Code (export code React/Tailwind, "fork this" façon Replit) suggèrent que le générateur UI devrait produire du vrai code, pas juste des images — casse la limite actuelle.</p></div>
+        </div>
+        <div class="synth-point">
+          <div class="num">6</div>
+          <div><h3>Cadrer avant de disperser l'effort</h3><p>Six Hats bleu note l'absence de PRD/spec malgré l'outillage BMad installé. Avant d'exécuter, cadrer via bmad-product-brief ou bmad-prd pour éviter de disperser l'effort sur 100+ pistes.</p></div>
+        </div>
+      </div>
+
+      <div class="directions">
+        <h4>Directions retenues</h4>
+        <div class="dir-row">
+          <div class="dir-pill"><span class="letter">a</span>Fix rapides de crédibilité — photo, démo live, rate-limit</div>
+          <div class="dir-pill"><span class="letter">b</span>"Skills" comme marketplace / différenciant central</div>
+          <div class="dir-pill"><span class="letter">c</span>Landing démo-first — chat IA public limité ou "roast mon portfolio"</div>
+          <div class="dir-pill"><span class="letter">d</span>Cadrage PRD avant scaling</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Vibe Hub — Journal de brainstorming · 13 techniques · ~100 idées · 05 août 2026</p>
+  </div>
+</footer>

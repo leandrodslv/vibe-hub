@@ -1,0 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+@keyframes floatingMouse {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(-60px, 40px); }
+  66% { transform: translate(-20px, 70px); }
+}
+
+.animate-mouse {
+  animation: floatingMouse 6s ease-in-out infinite;
+}
