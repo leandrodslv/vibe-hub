@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vibe Hub - Maîtrisez l'IA dans votre workflow créatif</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&amp;family=Hanken+Grotesk:wght@400;700&amp;family=JetBrains+Mono:wght@600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#797587",
+                        "primary-fixed": "#e5deff",
+                        "on-secondary-fixed": "#3c0700",
+                        "secondary-fixed": "#ffdad2",
+                        "on-surface": "#1c1b1b",
+                        "surface-container-highest": "#e5e2e1",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed": "#b7eaff",
+                        "on-tertiary-container": "#fafdff",
+                        "error": "#ba1a1a",
+                        "secondary-fixed-dim": "#ffb4a2",
+                        "inverse-on-surface": "#f3f0ef",
+                        "on-primary": "#ffffff",
+                        "on-surface-variant": "#484555",
+                        "surface-container-high": "#eae7e7",
+                        "outline-variant": "#c9c4d8",
+                        "surface": "#fcf9f8",
+                        "on-error": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#4cd6ff",
+                        "surface-dim": "#dcd9d9",
+                        "inverse-surface": "#313030",
+                        "on-tertiary-fixed-variant": "#004e60",
+                        "secondary": "#a7391e",
+                        "surface-container": "#f0eded",
+                        "on-primary-fixed-variant": "#441cc8",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed": "#001f28",
+                        "inverse-primary": "#c9bfff",
+                        "surface-variant": "#e5e2e1",
+                        "primary-container": "#7459f7",
+                        "surface-container-low": "#f6f3f2",
+                        "secondary-container": "#fd7958",
+                        "tertiary": "#00647c",
+                        "surface-tint": "#5d3fe0",
+                        "on-background": "#1c1b1b",
+                        "on-secondary-fixed-variant": "#862208",
+                        "on-secondary-container": "#6e1500",
+                        "on-primary-container": "#fffbff",
+                        "primary": "#5b3cdd",
+                        "on-primary-fixed": "#1a0063",
+                        "tertiary-container": "#007f9c",
+                        "surface-bright": "#fcf9f8",
+                        "primary-fixed-dim": "#c9bfff",
+                        "background": "#fcf9f8",
+                        "on-error-container": "#93000a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-margin": "24px",
+                        "grid-gutter": "20px",
+                        "stack-gap": "16px",
+                        "base": "8px",
+                        "section-padding": "64px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Hanken Grotesk"],
+                        "headline-lg": ["Bricolage Grotesque"],
+                        "cta-pill": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "display-xl": ["Bricolage Grotesque"],
+                        "headline-lg-mobile": ["Bricolage Grotesque"],
+                        "display-lg": ["Bricolage Grotesque"],
+                        "label-caps": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "cta-pill": ["16px", { "lineHeight": "1", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "display-xl": ["64px", { "lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "800" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.03em", "fontWeight": "800" }],
+                        "label-caps": ["12px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .chunky-shadow {
+            box-shadow: 0 10px 30px rgba(91, 60, 221, 0.15);
+        }
+        .chunky-shadow-pressed:active {
+            box-shadow: none;
+            transform: translateY(2px);
+        }
+        /* Hide scrollbar for carousels */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased overflow-x-hidden selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- TopAppBar -->
+<header class="docked full-width top-0 bg-surface dark:bg-on-surface flex justify-between items-center px-container-margin py-4 w-full z-50 sticky shadow-[0_4px_20px_rgba(0,0,0,0.05)]">
+<div class="flex items-center gap-2">
+<span class="font-display-lg text-display-lg text-on-surface dark:text-surface-container-lowest font-extrabold tracking-tight">Vibe Hub</span>
+</div>
+<div class="hidden md:flex items-center gap-6">
+<nav class="flex gap-6">
+<a class="text-primary dark:text-primary-fixed-dim font-bold border-b-4 border-primary pb-1" href="#">Accueil</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed hover:scale-105 transition-transform" href="#">Modules</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed hover:scale-105 transition-transform" href="#">Outils</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-weight="fill" style="font-variation-settings: 'FILL' 1;">notifications</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-weight="fill" style="font-variation-settings: 'FILL' 1;">settings</span>
+</button>
+<button class="hidden md:flex bg-primary text-on-primary font-cta-pill text-cta-pill px-6 py-3 rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors chunky-shadow chunky-shadow-pressed items-center gap-2">
+                Rejoindre la Beta
+                <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</header>
+<main class="pb-32">
+<!-- Hero Section -->
+<section class="px-container-margin py-section-padding md:py-24 max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12">
+<div class="flex-1 space-y-8">
+<div class="inline-block bg-secondary-fixed text-on-secondary-fixed px-4 py-2 rounded-full font-label-caps text-label-caps uppercase tracking-wider mb-4">
+                    🔥 Nouveau : IA Générative V2
+                </div>
+<h1 class="font-display-xl text-display-xl md:text-[80px] leading-tight text-on-background">
+                    Maîtrisez l'IA dans votre workflow créatif.
+                </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl">
+                    Vibe Hub fusionne des outils UI/UX professionnels avec une assistance IA de pointe. Libérez votre créativité, automatisez le fastidieux, et concevez l'avenir du web, plus vite.
+                </p>
+<div class="flex flex-col sm:flex-row gap-4 pt-4">
+<button class="bg-on-background text-surface-container-lowest font-cta-pill text-cta-pill px-8 py-4 rounded-full hover:scale-105 transition-transform chunky-shadow chunky-shadow-pressed flex items-center justify-center gap-2">
+                        Rejoindre la Beta
+                        <span class="material-symbols-outlined">rocket_launch</span>
+</button>
+<button class="bg-surface-container text-on-surface font-cta-pill text-cta-pill px-8 py-4 rounded-full hover:bg-surface-variant transition-colors flex items-center justify-center gap-2">
+                        Voir la Démo
+                        <span class="material-symbols-outlined">play_circle</span>
+</button>
+</div>
+</div>
+<!-- Hero Visual Canvas -->
+<div class="flex-1 w-full relative h-[500px] bg-primary-fixed rounded-3xl p-6 overflow-hidden flex items-center justify-center border-4 border-surface-container-lowest">
+<!-- Decorative 3D elements placeholder -->
+<div class="absolute top-10 right-10 w-24 h-24 bg-secondary-container rounded-full opacity-80 blur-2xl animate-pulse"></div>
+<div class="absolute bottom-10 left-10 w-32 h-32 bg-tertiary-container rounded-full opacity-80 blur-2xl animate-pulse delay-700"></div>
+<!-- Main collage image -->
+<div class="relative z-10 w-full max-w-md h-full rounded-2xl overflow-hidden shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-500 bg-surface">
+<div class="w-full h-full bg-cover bg-center" data-alt="A dynamic, high-contrast collage illustration of a diverse designer working enthusiastically at a modern desk setup. The scene integrates chunky 3D geometric shapes (stars, pills) floating around the workspace, with vibrant pops of violet and orange against a warm off-white background. The aesthetic is premium craft, tactile modernism, and energetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAKxicgLrdfEgmeaXN0156-HEbvGabtjNoiHs2sTg0jEAvmoA0W1iwRNxV_mvYI-mxDBz9k3N2msRgD7aOTUR5x59zkGZRyBbpPxIPGE6t51hTqPiyW1aNNY_xLcFpXJ2MPjqGtYM1mqGrZ2JjSK-AlGArwvoDuNZtH1eDoMQSFN0wWul3WwEOL4LzAMdb5CQcduVPmXXoBzr8HB-8yCOG2FA5khdCpkIK8tJGUxUBwgcPRHqXkyL9J6w')"></div>
+</div>
+<!-- Floating UI Cards -->
+<div class="absolute top-1/4 -left-6 bg-surface-container-lowest p-4 rounded-xl shadow-xl z-20 flex items-center gap-3 transform -rotate-6">
+<div class="w-10 h-10 bg-primary-container rounded-full flex items-center justify-center text-on-primary-container">
+<span class="material-symbols-outlined">auto_awesome</span>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant">IA ASSISTANT</p>
+<p class="font-cta-pill text-cta-pill text-on-surface">Layout optimisé</p>
+</div>
+</div>
+<div class="absolute bottom-1/4 -right-6 bg-surface-container-lowest p-4 rounded-xl shadow-xl z-20 flex items-center gap-3 transform rotate-3">
+<div class="w-10 h-10 bg-secondary-container rounded-full flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined">palette</span>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant">UI BUILDER</p>
+<p class="font-cta-pill text-cta-pill text-on-surface">Tokens synchronisés</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Social Proof -->
+<section class="py-12 bg-surface-container-low">
+<div class="max-w-7xl mx-auto px-container-margin">
+<p class="text-center font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider mb-8">Utilisé par les meilleurs designers créatifs</p>
+<div class="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+<span class="font-display-lg text-[32px] font-extrabold text-on-surface">AcmeStudio</span>
+<span class="font-display-lg text-[32px] font-extrabold text-on-surface">GlobalArt</span>
+<span class="font-display-lg text-[32px] font-extrabold text-on-surface">TechVibe</span>
+<span class="font-display-lg text-[32px] font-extrabold text-on-surface">DesignCo</span>
+</div>
+</div>
+</section>
+<!-- Product Showcase (Bento Grid) -->
+<section class="py-section-padding px-container-margin max-w-7xl mx-auto">
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-center mb-16 max-w-2xl mx-auto">
+                Des outils pensés pour les créateurs, propulsés par l'intelligence.
+            </h2>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-grid-gutter">
+<!-- Main Feature: AI Assistant -->
+<div class="md:col-span-8 bg-tertiary-fixed rounded-3xl p-8 flex flex-col justify-between relative overflow-hidden group">
+<div class="relative z-10 max-w-md">
+<div class="inline-block bg-surface-container-lowest text-on-tertiary-fixed-variant px-3 py-1 rounded-full font-label-caps text-label-caps mb-4">
+                            Assistant IA
+                        </div>
+<h3 class="font-display-lg text-[36px] text-on-tertiary-fixed mb-4">Votre co-pilote créatif toujours disponible.</h3>
+<p class="font-body-md text-on-tertiary-fixed-variant mb-6">Générez des variations de layouts, suggérez des palettes de couleurs et rédigez du copy placeholder en un clic.</p>
+<button class="bg-on-tertiary-fixed text-tertiary-fixed font-cta-pill text-cta-pill px-6 py-3 rounded-full hover:scale-105 transition-transform flex items-center gap-2 w-fit">
+                            Découvrir l'IA
+                            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+<!-- Decorative Graphic -->
+<div class="absolute right-0 bottom-0 w-2/3 h-2/3 transform translate-x-1/4 translate-y-1/4 group-hover:translate-x-10 transition-transform duration-700">
+<div class="w-full h-full bg-cover bg-center rounded-tl-[100px]" data-alt="A stylized 3D rendering of a friendly, matte-finished robot arm holding a digital paintbrush, hovering over a wireframe UI canvas. The background is a soft cyan with subtle grid lines. The aesthetic is clean, premium, and tactile." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuASBWsIsFVxQI1-W2kd68xK-UwcaL_lMAho08IYaaIu6mxNwvaVB3tJSSRbO3lFmsj98l5yEkzPYlp4VGT5kM6Lza69rHOZ4Dn58puetzCO4cD90jUwPR7QX-jbeSEl8jd3CgcpyT32ammi4MryN3U7RPACpKCY9lfxjYzunSRxW9ymsesGs8-jP9tSuuiXvzJMsjIq6aE4EXW_s06gatd_MGMDMIGTVTXSPwLl8ESf7zxeZUn9BO7Ikw')"></div>
+</div>
+</div>
+<!-- Feature: Modules -->
+<div class="md:col-span-4 bg-primary-container rounded-3xl p-8 flex flex-col relative overflow-hidden text-on-primary-container">
+<div class="relative z-10 h-full flex flex-col">
+<div class="inline-block bg-surface-container-lowest text-primary px-3 py-1 rounded-full font-label-caps text-label-caps mb-4 w-fit">
+                            Modules
+                        </div>
+<h3 class="font-display-lg text-[28px] mb-4">Briques intelligentes.</h3>
+<p class="font-body-md opacity-90 mb-8 flex-grow">Des composants partagés synchronisés avec votre système de design.</p>
+<!-- Visual representation of modules -->
+<div class="space-y-3 mt-auto">
+<div class="bg-surface-container-lowest/20 p-3 rounded-lg backdrop-blur-sm flex items-center gap-3">
+<span class="material-symbols-outlined">view_quilt</span>
+<span class="font-label-caps text-label-caps">TopAppBar.json</span>
+</div>
+<div class="bg-surface-container-lowest/20 p-3 rounded-lg backdrop-blur-sm flex items-center gap-3 ml-4">
+<span class="material-symbols-outlined">credit_card</span>
+<span class="font-label-caps text-label-caps">HeroCard.json</span>
+</div>
+<div class="bg-surface-container-lowest/20 p-3 rounded-lg backdrop-blur-sm flex items-center gap-3">
+<span class="material-symbols-outlined">smart_button</span>
+<span class="font-label-caps text-label-caps">PrimaryCTA.json</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Feature: UI Builder -->
+<div class="md:col-span-12 bg-surface-container rounded-3xl p-8 flex flex-col md:flex-row items-center gap-12 overflow-hidden">
+<div class="flex-1">
+<div class="inline-block bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full font-label-caps text-label-caps mb-4">
+                            UI Builder
+                        </div>
+<h3 class="font-display-lg text-[36px] text-on-surface mb-4">Assemblez plus vite, sans compromis.</h3>
+<p class="font-body-md text-on-surface-variant mb-6 max-w-lg">Un canvas fluide qui respecte vos règles typographiques et vos grilles. Glissez, déposez, et laissez la magie opérer.</p>
+</div>
+<div class="flex-1 w-full relative">
+<div class="aspect-video bg-surface-container-lowest rounded-2xl shadow-xl border-2 border-outline-variant p-4 flex flex-col gap-4">
+<!-- Mock UI inside the builder -->
+<div class="w-full h-8 bg-surface-container rounded-md flex items-center px-4 gap-2">
+<div class="w-3 h-3 rounded-full bg-error"></div>
+<div class="w-3 h-3 rounded-full bg-primary-fixed-dim"></div>
+<div class="w-3 h-3 rounded-full bg-secondary-fixed-dim"></div>
+</div>
+<div class="flex gap-4 flex-1">
+<div class="w-1/4 bg-surface-container-low rounded-lg p-2 space-y-2 hidden sm:block">
+<div class="h-4 bg-outline-variant/30 rounded w-full"></div>
+<div class="h-4 bg-outline-variant/30 rounded w-3/4"></div>
+<div class="h-4 bg-outline-variant/30 rounded w-5/6"></div>
+</div>
+<div class="flex-1 bg-surface-container-low rounded-lg relative overflow-hidden flex items-center justify-center border-2 border-dashed border-primary/50">
+<span class="font-label-caps text-primary bg-primary-fixed px-3 py-1 rounded-full">Zone de Drop</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- FAQ Section -->
+<section class="py-section-padding bg-surface">
+<div class="max-w-3xl mx-auto px-container-margin">
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-center mb-12 text-on-surface">Questions Fréquentes</h2>
+<div class="space-y-4">
+<!-- FAQ Item 1 -->
+<details class="group bg-surface-container-lowest rounded-2xl border-2 border-surface-variant [&amp;_summary::-webkit-details-marker]:hidden">
+<summary class="flex cursor-pointer items-center justify-between gap-1.5 p-6 text-on-surface font-cta-pill text-cta-pill">
+                            Comment l'IA s'intègre-t-elle à mon style existant ?
+                            <span class="shrink-0 rounded-full bg-surface-container p-2 text-on-surface group-open:-rotate-180 transition-transform">
+<span class="material-symbols-outlined">expand_more</span>
+</span>
+</summary>
+<div class="px-6 pb-6 text-on-surface-variant font-body-md">
+<p>Vibe Hub analyse vos tokens de design (couleurs, typographie, espacements) et s'assure que chaque composant généré ou suggéré respecte scrupuleusement votre identité visuelle. Il ne remplace pas votre style, il l'applique à grande échelle.</p>
+</div>
+</details>
+<!-- FAQ Item 2 -->
+<details class="group bg-surface-container-lowest rounded-2xl border-2 border-surface-variant [&amp;_summary::-webkit-details-marker]:hidden">
+<summary class="flex cursor-pointer items-center justify-between gap-1.5 p-6 text-on-surface font-cta-pill text-cta-pill">
+                            Puis-je exporter le code ?
+                            <span class="shrink-0 rounded-full bg-surface-container p-2 text-on-surface group-open:-rotate-180 transition-transform">
+<span class="material-symbols-outlined">expand_more</span>
+</span>
+</summary>
+<div class="px-6 pb-6 text-on-surface-variant font-body-md">
+<p>Absolument. Tout ce que vous construisez dans Vibe Hub peut être exporté en HTML/Tailwind propre, prêt pour la production, sans classes inutiles.</p>
+</div>
+</details>
+<!-- FAQ Item 3 -->
+<details class="group bg-surface-container-lowest rounded-2xl border-2 border-surface-variant [&amp;_summary::-webkit-details-marker]:hidden">
+<summary class="flex cursor-pointer items-center justify-between gap-1.5 p-6 text-on-surface font-cta-pill text-cta-pill">
+                            La Beta est-elle ouverte à tous ?
+                            <span class="shrink-0 rounded-full bg-surface-container p-2 text-on-surface group-open:-rotate-180 transition-transform">
+<span class="material-symbols-outlined">expand_more</span>
+</span>
+</summary>
+<div class="px-6 pb-6 text-on-surface-variant font-body-md">
+<p>Actuellement, nous limitons l'accès pour garantir une expérience de haute qualité. Inscrivez-vous sur la liste d'attente et nous vous enverrons une invitation dès qu'une place se libère.</p>
+</div>
+</details>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed md:hidden bottom-0 left-0 right-0 w-full z-50 flex justify-around items-center px-8 pb-4 pt-4 bg-on-surface dark:bg-surface-container-highest shadow-[0_-10px_30px_rgba(0,0,0,0.1)] dark:shadow-none rounded-t-[32px]">
+<button class="flex flex-col items-center justify-center text-surface-variant dark:text-on-surface-variant p-3 hover:bg-primary-container/20 transition-all rounded-xl">
+<span class="material-symbols-outlined text-[28px] mb-1">view_quilt</span>
+<span class="font-label-caps text-[10px]">Modules</span>
+</button>
+<button class="flex flex-col items-center justify-center bg-primary dark:bg-primary-container text-on-primary dark:text-on-primary-container rounded-full p-4 transform -translate-y-4 chunky-shadow hover:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[32px]" data-weight="fill" style="font-variation-settings: 'FILL' 1;">psychology</span>
+<span class="font-label-caps text-[10px] mt-1 hidden">IA</span>
+</button>
+<button class="flex flex-col items-center justify-center text-surface-variant dark:text-on-surface-variant p-3 hover:bg-primary-container/20 transition-all rounded-xl">
+<span class="material-symbols-outlined text-[28px] mb-1">handyman</span>
+<span class="font-label-caps text-[10px]">Outils</span>
+</button>
+</nav>
+<!-- Scripts for interactions -->
+<script>
+        // Simple accordion logic for specific interactions if needed beyond CSS
+        document.querySelectorAll('details').forEach((detail) => {
+            detail.addEventListener('toggle', (e) => {
+                if (detail.open) {
+                    // Close others
+                    document.querySelectorAll('details').forEach((otherDetail) => {
+                        if (otherDetail !== detail) {
+                            otherDetail.removeAttribute('open');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body></html>

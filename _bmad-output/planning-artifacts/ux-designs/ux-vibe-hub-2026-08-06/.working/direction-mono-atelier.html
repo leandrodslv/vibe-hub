@@ -1,0 +1,231 @@
+<!--
+DIRECTION: Mono Atelier
+Rationale: A disciplined, achromatic evolution of the current identity — no accent color at all, only ink,
+paper and greys, so the product argues its expertise through typographic precision, hairline borders and
+generous air rather than color. Reads like a design-tool built by people who trust restraint (closest to a
+Linear settings screen or a type foundry site): flat surfaces, no shadow, crisp 1px borders, a single
+geometric grotesque carrying every weight from the whisper-thin labels to the black headline.
+-->
+<style>
+  /*
+    PALETTE — Mono Atelier (strictly achromatic, no accent hue)
+    #0A0A0A  ink        — primary text, active tab underline, primary button
+    #171717  ink-soft    — secondary text on dark
+    #4A4A4A  graphite    — body copy
+    #8A8A8A  slate       — tertiary / meta text
+    #C7C7C7  line        — hairline borders
+    #E4E4E4  line-soft   — subtle dividers
+    #F2F2F2  paper-dim   — recessed surfaces (chat bg, code block bg)
+    #FAFAFA  paper       — app background
+    #FFFFFF  paper-lift  — cards / panels
+  */
+  .ma * { box-sizing: border-box; }
+  .ma {
+    font-family: -apple-system, "Segoe UI", "Inter", "Helvetica Neue", Arial, sans-serif;
+    color: #0A0A0A;
+    background: #EDEDED;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+  }
+  .ma-note {
+    max-width: 900px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #4A4A4A;
+    text-align: center;
+  }
+  .ma-note b { color: #0A0A0A; }
+
+  /* Browser chrome */
+  .browser {
+    width: 100%;
+    max-width: 1040px;
+    background: #fff;
+    border: 1px solid #C7C7C7;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .chrome-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 1px solid #E4E4E4;
+    background: #FAFAFA;
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: #D9D9D9; border: 1px solid #C7C7C7; }
+  .chrome-url {
+    margin-left: 10px;
+    flex: 1;
+    font-size: 12px;
+    color: #8A8A8A;
+    background: #F2F2F2;
+    border: 1px solid #E4E4E4;
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-family: "SFMono-Regular", Consolas, monospace;
+  }
+
+  /* App shell */
+  .app { display: flex; min-height: 560px; background: #FAFAFA; }
+  .rail {
+    width: 208px;
+    border-right: 1px solid #E4E4E4;
+    background: #FFFFFF;
+    padding: 20px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .brand { font-size: 13px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 22px; padding: 0 6px; }
+  .brand span { color: #8A8A8A; font-weight: 500; }
+  .navitem {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13.5px; font-weight: 600; letter-spacing: -0.01em;
+    padding: 9px 10px; border-radius: 6px; color: #4A4A4A;
+    border-left: 2px solid transparent;
+  }
+  .navitem .ic { width: 15px; height: 15px; border: 1.5px solid currentColor; border-radius: 3px; flex: none; }
+  .navitem.active { color: #0A0A0A; background: #F2F2F2; border-left: 2px solid #0A0A0A; }
+
+  .main { flex: 1; display: flex; flex-direction: column; }
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 26px; border-bottom: 1px solid #E4E4E4;
+  }
+  .topbar h2 { font-size: 15px; font-weight: 800; letter-spacing: -0.02em; margin: 0; }
+  .topbar .meta { font-size: 11.5px; color: #8A8A8A; font-family: "SFMono-Regular", Consolas, monospace; }
+
+  .thread { flex: 1; padding: 26px 34px; display: flex; flex-direction: column; gap: 18px; overflow: auto; }
+  .msg { display: flex; gap: 12px; max-width: 640px; }
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+  .avatar { width: 26px; height: 26px; border-radius: 50%; flex: none; border: 1px solid #C7C7C7; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; }
+  .avatar.ai { background: #0A0A0A; color: #fff; border-color: #0A0A0A; }
+  .avatar.u { background: #F2F2F2; color: #4A4A4A; }
+  .bubble { font-size: 13.5px; line-height: 1.6; padding: 12px 14px; border-radius: 8px; border: 1px solid #E4E4E4; }
+  .msg.user .bubble { background: #0A0A0A; color: #fff; border-color: #0A0A0A; }
+  .msg.ai .bubble { background: #fff; color: #171717; }
+
+  .prompt-card {
+    margin-left: 38px;
+    border: 1px solid #0A0A0A;
+    border-radius: 8px;
+    overflow: hidden;
+    max-width: 640px;
+  }
+  .prompt-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 14px; background: #0A0A0A; color: #fff;
+  }
+  .prompt-head .label { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .copy-btn {
+    font-size: 11.5px; font-weight: 700; color: #0A0A0A; background: #fff;
+    border: none; border-radius: 4px; padding: 5px 10px; letter-spacing: -0.01em;
+  }
+  .prompt-body {
+    background: #F2F2F2; padding: 14px 16px; font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 12px; line-height: 1.7; color: #171717; white-space: pre-wrap;
+  }
+  .prompt-body .k { color: #8A8A8A; }
+
+  .composer { padding: 16px 34px 22px; border-top: 1px solid #E4E4E4; }
+  .composer-box { border: 1px solid #C7C7C7; border-radius: 8px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: #8A8A8A; }
+  .send { width: 26px; height: 26px; border-radius: 50%; background: #0A0A0A; }
+
+  /* States row */
+  .states { display: flex; gap: 10px; margin-left: 38px; max-width: 640px; }
+  .state-chip { font-size: 11px; font-weight: 700; border: 1px solid #C7C7C7; border-radius: 5px; padding: 5px 10px; color: #4A4A4A; }
+  .state-chip.copied { background: #0A0A0A; color: #fff; border-color: #0A0A0A; }
+
+  /* Secondary fragment: Outils grid */
+  .frag-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #8A8A8A; margin: 6px 0 -8px; align-self: flex-start; margin-left: 6px; }
+  .tools-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #E4E4E4; border: 1px solid #E4E4E4; border-radius: 8px; overflow: hidden; }
+  .tool-card { background: #fff; padding: 16px; display: flex; flex-direction: column; gap: 8px; min-height: 108px; }
+  .tool-name { font-size: 13px; font-weight: 800; letter-spacing: -0.01em; }
+  .tool-desc { font-size: 11.5px; color: #8A8A8A; line-height: 1.5; flex: 1; }
+  .tool-tag { font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; align-self: flex-start; padding: 3px 7px; border-radius: 4px; }
+  .tool-tag.live { background: #0A0A0A; color: #fff; }
+  .tool-tag.soon { background: #F2F2F2; color: #8A8A8A; border: 1px solid #E4E4E4; }
+</style>
+
+<div class="ma">
+  <div class="ma-note">
+    <b>Mono Atelier</b> — Aucune couleur d'accent : seulement encre, papier et gris. Bordures 1px, surfaces plates,
+    grotesque géométrique. L'expertise se lit dans la précision typographique et le vide maîtrisé, pas dans la couleur.
+  </div>
+
+  <div class="browser">
+    <div class="chrome-bar">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="chrome-url">app.vibehub.io/workspace</div>
+    </div>
+    <div class="app">
+      <div class="rail">
+        <div class="brand">Vibe<span>Hub</span></div>
+        <div class="navitem"><span class="ic"></span> Modules</div>
+        <div class="navitem active"><span class="ic"></span> IA</div>
+        <div class="navitem"><span class="ic"></span> Outils</div>
+      </div>
+      <div class="main">
+        <div class="topbar">
+          <h2>Assistant IA</h2>
+          <div class="meta">SESSION 04 · GÉNÉRATION UI</div>
+        </div>
+        <div class="thread">
+          <div class="msg user"><div class="avatar u">LV</div>
+            <div class="bubble">J'ai besoin d'une page d'accueil pour une appli de méditation, un peu épurée mais chaleureuse.</div>
+          </div>
+          <div class="msg ai"><div class="avatar ai">AI</div>
+            <div class="bubble">Parfait, je vois le ton que tu veux donner. Je vais te rédiger le prompt parfait à utiliser dans l'UI Generator, avec la structure, la palette et la mise en page pour démarrer.</div>
+          </div>
+          <div class="prompt-card">
+            <div class="prompt-head">
+              <span class="label">Prompt de génération</span>
+              <button class="copy-btn">Copier</button>
+            </div>
+            <div class="prompt-body"><span class="k"># Page d'accueil — app de méditation</span>
+Style : épuré, chaleureux, beaucoup d'espace blanc.
+Structure : héro (titre + sous-titre + CTA), 3 bénéfices,
+témoignage, footer minimal.
+Palette : tons sable, blanc cassé, accent vert sauge.
+Composants : boutons arrondis, cartes à ombre légère.</div>
+          </div>
+          <div class="states">
+            <span class="state-chip">Copier</span>
+            <span class="state-chip copied">✓ Copié</span>
+          </div>
+        </div>
+        <div class="composer">
+          <div class="composer-box">
+            Décris ce que tu veux concevoir…
+            <div class="send"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="frag-label">Fragment — Onglet Outils</div>
+  <div class="browser" style="max-width:640px;">
+    <div class="tools-grid">
+      <div class="tool-card">
+        <div class="tool-name">UI Builder</div>
+        <div class="tool-desc">Génère des interfaces complètes à partir d'un prompt structuré.</div>
+        <span class="tool-tag live">Disponible</span>
+      </div>
+      <div class="tool-card">
+        <div class="tool-name">Générateur de palette</div>
+        <div class="tool-desc">Palettes cohérentes à partir d'une intention de marque.</div>
+        <span class="tool-tag soon">Bientôt</span>
+      </div>
+      <div class="tool-card">
+        <div class="tool-name">Audit accessibilité</div>
+        <div class="tool-desc">Contraste, focus et lecture d'écran en un clic.</div>
+        <span class="tool-tag soon">Bientôt</span>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vibe Hub - IA</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&amp;family=Hanken+Grotesk:wght@400;700&amp;family=JetBrains+Mono:wght@600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#797587",
+                        "primary-fixed": "#e5deff",
+                        "on-secondary-fixed": "#3c0700",
+                        "secondary-fixed": "#ffdad2",
+                        "on-surface": "#1c1b1b",
+                        "surface-container-highest": "#e5e2e1",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed": "#b7eaff",
+                        "on-tertiary-container": "#fafdff",
+                        "error": "#ba1a1a",
+                        "secondary-fixed-dim": "#ffb4a2",
+                        "inverse-on-surface": "#f3f0ef",
+                        "on-primary": "#ffffff",
+                        "on-surface-variant": "#484555",
+                        "surface-container-high": "#eae7e7",
+                        "outline-variant": "#c9c4d8",
+                        "surface": "#fcf9f8",
+                        "on-error": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#4cd6ff",
+                        "surface-dim": "#dcd9d9",
+                        "inverse-surface": "#313030",
+                        "on-tertiary-fixed-variant": "#004e60",
+                        "secondary": "#a7391e",
+                        "surface-container": "#f0eded",
+                        "on-primary-fixed-variant": "#441cc8",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed": "#001f28",
+                        "inverse-primary": "#c9bfff",
+                        "surface-variant": "#e5e2e1",
+                        "primary-container": "#7459f7",
+                        "surface-container-low": "#f6f3f2",
+                        "secondary-container": "#fd7958",
+                        "tertiary": "#00647c",
+                        "surface-tint": "#5d3fe0",
+                        "on-background": "#1c1b1b",
+                        "on-secondary-fixed-variant": "#862208",
+                        "on-secondary-container": "#6e1500",
+                        "on-primary-container": "#fffbff",
+                        "primary": "#5b3cdd",
+                        "on-primary-fixed": "#1a0063",
+                        "tertiary-container": "#007f9c",
+                        "surface-bright": "#fcf9f8",
+                        "primary-fixed-dim": "#c9bfff",
+                        "background": "#fcf9f8",
+                        "on-error-container": "#93000a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px",
+                        "2xl": "1rem",
+                        "3xl": "1.5rem"
+                    },
+                    "spacing": {
+                        "container-margin": "24px",
+                        "grid-gutter": "20px",
+                        "stack-gap": "16px",
+                        "base": "8px",
+                        "section-padding": "40px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Hanken Grotesk"],
+                        "headline-lg": ["Bricolage Grotesque"],
+                        "cta-pill": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "display-xl": ["Bricolage Grotesque"],
+                        "headline-lg-mobile": ["Bricolage Grotesque"],
+                        "display-lg": ["Bricolage Grotesque"],
+                        "label-caps": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "cta-pill": ["16px", { "lineHeight": "1", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "display-xl": ["64px", { "lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "800" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.03em", "fontWeight": "800" }],
+                        "label-caps": ["12px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: theme('colors.background'); color: theme('colors.on-background'); }
+        .bento-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .chunky-shadow { box-shadow: 0 10px 30px -5px rgba(116, 89, 247, 0.15); } /* Tinted primary shadow */
+    </style>
+</head>
+<body class="font-body-md min-h-screen flex flex-col md:flex-row pb-24 md:pb-0">
+<!-- TopAppBar (Desktop hidden, Mobile visible) -->
+<header class="md:hidden flex justify-between items-center px-container-margin py-4 w-full bg-surface z-40 sticky top-0">
+<div class="font-display-lg text-display-lg text-on-surface font-extrabold tracking-tight">Vibe Hub</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary cursor-pointer hover:scale-105 transition-transform" data-icon="notifications">notifications</span>
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold">
+                PR
+            </div>
+</div>
+</header>
+<!-- SideNav (Desktop visible, Mobile hidden) - Assuming structure based on Context -->
+<aside class="hidden md:flex flex-col w-64 bg-surface-container-lowest h-screen sticky top-0 p-container-margin border-r border-outline-variant shadow-sm z-40">
+<div class="font-display-lg text-display-lg text-on-surface font-extrabold tracking-tight mb-8">Vibe Hub</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-3 p-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="view_quilt">view_quilt</span>
+<span class="font-cta-pill text-cta-pill">Modules</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-lg bg-primary text-on-primary shadow-md transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="psychology">psychology</span>
+<span class="font-cta-pill text-cta-pill">IA</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="handyman">handyman</span>
+<span class="font-cta-pill text-cta-pill">Outils</span>
+</a>
+</nav>
+<div class="mt-auto flex items-center gap-3 p-3 cursor-pointer hover:bg-surface-container-high rounded-lg transition-colors">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold">
+                PR
+            </div>
+<div>
+<div class="font-bold text-sm">Profil</div>
+<div class="text-xs text-on-surface-variant">Paramètres</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col h-[calc(100vh-80px)] md:h-screen bg-background relative overflow-hidden">
+<!-- Header Area within Canvas -->
+<div class="p-container-margin md:p-section-padding pb-0 flex-shrink-0 z-10">
+<div class="inline-flex items-center gap-2 bg-primary-container/20 text-primary px-3 py-1 rounded-full mb-4">
+<span class="material-symbols-outlined text-sm" data-icon="smart_toy">smart_toy</span>
+<span class="font-label-caps text-label-caps tracking-wider">Assistant IA</span>
+</div>
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-2">
+                Bonjour ! Comment puis-je vous aider aujourd'hui ?
+            </h1>
+</div>
+<!-- Chat Container -->
+<div class="flex-1 overflow-y-auto p-container-margin md:p-section-padding space-y-6 z-10 scroll-smooth">
+<!-- User Message -->
+<div class="flex justify-end">
+<div class="bg-surface-container-high text-on-surface px-6 py-4 rounded-2xl rounded-tr-sm max-w-[85%] md:max-w-[70%] font-body-md text-body-md shadow-sm">
+                    J'ai besoin de créer une interface pour une application de réservation de restaurants, avec un style très moderne et sombre. Peux-tu me préparer le prompt ?
+                </div>
+</div>
+<!-- AI Message with Hand-off Block -->
+<div class="flex justify-start">
+<div class="flex gap-4 max-w-[95%] md:max-w-[80%]">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex-shrink-0 flex items-center justify-center shadow-md">
+<span class="material-symbols-outlined" data-icon="psychology">psychology</span>
+</div>
+<div class="space-y-4">
+<div class="bg-surface-container-lowest text-on-surface px-6 py-4 rounded-2xl rounded-tl-sm bento-shadow font-body-md text-body-md border border-outline-variant/30">
+                            Bien sûr ! Je vais te rédiger le prompt parfait à utiliser dans l'UI Generator pour obtenir ce résultat.
+                        </div>
+<!-- Prompt Hand-off Block (Visually Distinct) -->
+<div class="bg-inverse-surface text-inverse-on-surface rounded-3xl p-6 chunky-shadow relative overflow-hidden group border border-outline-variant/10">
+<!-- Decorative bg element -->
+<div class="absolute -right-10 -top-10 w-32 h-32 bg-primary rounded-full opacity-20 blur-2xl group-hover:opacity-30 transition-opacity"></div>
+<div class="flex justify-between items-start mb-4 relative z-10">
+<div class="flex items-center gap-2 text-primary-fixed-dim">
+<span class="material-symbols-outlined" data-icon="code_blocks">code_blocks</span>
+<span class="font-label-caps text-label-caps">PROMPT PRÊT</span>
+</div>
+<button class="bg-primary hover:bg-primary-container text-on-primary hover:text-on-primary-container w-10 h-10 rounded-full flex items-center justify-center transition-colors shadow-md active:scale-95">
+<span class="material-symbols-outlined" data-icon="content_copy">content_copy</span>
+</button>
+</div>
+<div class="font-body-lg text-body-lg text-surface-container-lowest leading-relaxed relative z-10">
+                                "Génère une interface utilisateur pour une application mobile de réservation de restaurants haut de gamme. Le thème doit être un 'Dark Mode' profond (utilisation de noirs absolus et de gris anthracite). Utilise une typographie sans-serif audacieuse (comme Bricolage Grotesque pour les titres). Inclus une grille de cartes (Bento style) pour mettre en avant les restaurants recommandés avec des grandes images, des coins très arrondis (3xl), et des boutons d'action de couleur 'accent' vibrante (ex: un vert émeraude ou un violet néon)."
+                            </div>
+<div class="mt-6 flex gap-3 relative z-10">
+<button class="bg-primary-container text-on-primary-container px-6 py-3 rounded-full font-cta-pill text-cta-pill flex items-center gap-2 hover:bg-primary hover:text-on-primary transition-colors active:scale-95 shadow-sm">
+<span class="material-symbols-outlined text-sm" data-icon="send">send</span>
+                                    Envoyer au Générateur
+                                </button>
+<button class="bg-surface-container-highest text-on-surface px-6 py-3 rounded-full font-cta-pill text-cta-pill hover:bg-surface-dim transition-colors active:scale-95">
+                                    Modifier
+                                </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- AI Typing indicator (Simulated) -->
+<div class="flex justify-start opacity-70">
+<div class="flex gap-4">
+<div class="w-8 h-8 rounded-full bg-primary-container text-primary flex-shrink-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-sm" data-icon="psychology">psychology</span>
+</div>
+<div class="bg-surface-container-lowest px-4 py-3 rounded-2xl rounded-tl-sm bento-shadow flex items-center gap-1 border border-outline-variant/30">
+<div class="w-2 h-2 bg-primary rounded-full animate-bounce" style="animation-delay: 0ms;"></div>
+<div class="w-2 h-2 bg-primary rounded-full animate-bounce" style="animation-delay: 150ms;"></div>
+<div class="w-2 h-2 bg-primary rounded-full animate-bounce" style="animation-delay: 300ms;"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Input Area -->
+<div class="p-container-margin bg-surface/80 backdrop-blur-md border-t border-outline-variant/20 z-20">
+<div class="relative max-w-4xl mx-auto">
+<textarea class="w-full bg-surface-container-lowest border-2 border-outline-variant focus:border-primary text-on-surface rounded-2xl pl-6 pr-16 py-4 font-body-md text-body-md resize-none focus:ring-0 transition-colors shadow-sm" placeholder="Posez une question ou demandez un prompt..." rows="1"></textarea>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-on-surface text-surface-container-lowest rounded-full flex items-center justify-center hover:bg-primary transition-colors active:scale-90 shadow-md">
+<span class="material-symbols-outlined" data-icon="arrow_upward">arrow_upward</span>
+</button>
+</div>
+<div class="text-center mt-2">
+<span class="font-label-caps text-label-caps text-outline">L'IA peut faire des erreurs. Vérifiez les prompts générés.</span>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile only) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 w-full z-50 flex justify-around items-center px-8 pb-4 pt-2 bg-on-surface dark:bg-surface-container-highest rounded-t-[32px] shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
+<a class="flex flex-col items-center justify-center text-surface-variant p-3 hover:bg-primary-container/20 transition-all rounded-full w-20" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="view_quilt">view_quilt</span>
+<span class="font-cta-pill text-[10px]">Modules</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary text-on-primary rounded-full p-3 w-20 shadow-md active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="psychology" data-weight="fill">psychology</span>
+<span class="font-cta-pill text-[10px]">IA</span>
+</a>
+<a class="flex flex-col items-center justify-center text-surface-variant p-3 hover:bg-primary-container/20 transition-all rounded-full w-20" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="handyman">handyman</span>
+<span class="font-cta-pill text-[10px]">Outils</span>
+</a>
+</nav>
+<script>
+        // Simple auto-resize for textarea
+        const textarea = document.querySelector('textarea');
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+            if(this.scrollHeight > 150) {
+                 this.style.overflowY = 'auto';
+                 this.style.height = '150px';
+            } else {
+                 this.style.overflowY = 'hidden';
+            }
+        });
+    </script>
+</body></html>

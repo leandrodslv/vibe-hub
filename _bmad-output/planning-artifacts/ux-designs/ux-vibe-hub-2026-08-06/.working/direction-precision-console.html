@@ -1,0 +1,178 @@
+<!--
+DIRECTION: Precision Console
+Rationale: Treats Vibe Hub as a professional instrument, not a marketing surface — tight information density,
+a geometric grotesque paired with a monospace for all system/metadata text (tab counters, prompt block, session
+id), flat hairline-bordered panels with zero shadow, and one cool indigo accent used only for interactive/live
+state. Closest reference class: Linear's dense views or a code editor chrome — built for designers who live in pro tools all day.
+-->
+<style>
+  /*
+    PALETTE — Precision Console
+    #0E1116  ink          — primary text / panels on dark rail
+    #E7E9EC  paper        — app background
+    #FFFFFF  paper-lift   — panels
+    #C6CBD2  line         — hairline borders
+    #DEE1E6  line-soft    — subtle dividers
+    #565D68  slate        — body copy secondary
+    #8A919C  slate-soft   — meta / mono labels
+    #4F5BD5  indigo       — single accent: active tab, links, live tag, hand-off marker
+    #E9EAFB  indigo-tint  — accent background tint
+    #F4F5F7  panel-dim    — recessed / code surfaces
+  */
+  .pc * { box-sizing: border-box; }
+  .pc {
+    font-family: "Segoe UI", -apple-system, "Inter", Arial, sans-serif;
+    color: #0E1116;
+    background: #D9DCE1;
+    padding: 36px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    font-size: 13px;
+  }
+  .pc-note { max-width: 900px; font-size: 12.5px; line-height: 1.6; color: #565D68; text-align: center; }
+  .pc-note b { color: #0E1116; }
+  .mono { font-family: "SFMono-Regular", Consolas, "Cascadia Mono", monospace; }
+
+  .browser { width: 100%; max-width: 1080px; background: #fff; border: 1px solid #C6CBD2; overflow: hidden; }
+  .chrome-bar { display: flex; align-items: center; gap: 7px; padding: 8px 12px; border-bottom: 1px solid #DEE1E6; background: #F4F5F7; }
+  .dot { width: 8px; height: 8px; border-radius: 2px; background: #C6CBD2; }
+  .chrome-url { margin-left: 8px; flex: 1; font-size: 11px; color: #8A919C; background: #fff; border: 1px solid #DEE1E6; padding: 3px 8px; }
+
+  .app { display: flex; min-height: 560px; background: #fff; font-size: 13px; }
+  .rail { width: 188px; background: #0E1116; padding: 16px 10px; display: flex; flex-direction: column; gap: 2px; }
+  .brand { font-size: 12px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 16px; padding: 0 8px; color: #fff; }
+  .brand span { color: #7B84F0; }
+  .navitem { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12.5px; font-weight: 600; padding: 7px 8px; color: #8A919C; }
+  .navitem .l { display: flex; align-items: center; gap: 8px; }
+  .navitem .ic { width: 13px; height: 13px; border: 1.5px solid currentColor; flex: none; }
+  .navitem .n { font-size: 10px; font-family: "SFMono-Regular", Consolas, monospace; color: #565D68; }
+  .navitem.active { color: #fff; background: #1B2030; border-left: 2px solid #4F5BD5; padding-left: 6px; }
+  .navitem.active .n { color: #7B84F0; }
+
+  .main { flex: 1; display: flex; flex-direction: column; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 9px 18px; border-bottom: 1px solid #DEE1E6; }
+  .topbar h2 { font-size: 13px; font-weight: 700; margin: 0; }
+  .topbar .meta { font-size: 10.5px; color: #8A919C; }
+  .topbar .meta b { color: #4F5BD5; }
+
+  .thread { flex: 1; padding: 16px 22px; display: flex; flex-direction: column; gap: 12px; overflow: auto; }
+  .msg { display: flex; gap: 9px; max-width: 600px; }
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+  .avatar { width: 20px; height: 20px; flex: none; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; }
+  .avatar.ai { background: #4F5BD5; color: #fff; }
+  .avatar.u { background: #E7E9EC; color: #565D68; }
+  .bubble { font-size: 12.5px; line-height: 1.55; padding: 9px 11px; border: 1px solid #DEE1E6; }
+  .msg.user .bubble { background: #0E1116; color: #fff; border-color: #0E1116; }
+  .msg.ai .bubble { background: #F4F5F7; color: #0E1116; }
+  .bubble b.hl { color: #4F5BD5; }
+
+  .prompt-card { margin-left: 29px; max-width: 600px; border: 1px solid #4F5BD5; }
+  .prompt-head { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: #4F5BD5; }
+  .prompt-head .label { font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #fff; }
+  .copy-btn { font-size: 10.5px; font-weight: 700; color: #4F5BD5; background: #fff; border: none; padding: 3px 9px; }
+  .prompt-body { background: #0E1116; padding: 12px 13px; font-family: "SFMono-Regular", Consolas, monospace; font-size: 11px; line-height: 1.7; color: #C9CDE0; white-space: pre-wrap; }
+  .prompt-body .k { color: #7B84F0; }
+  .prompt-body .c { color: #565D68; }
+
+  .composer { padding: 10px 22px 16px; border-top: 1px solid #DEE1E6; }
+  .composer-box { border: 1px solid #C6CBD2; padding: 8px 11px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #8A919C; }
+  .send { width: 20px; height: 20px; background: #4F5BD5; }
+
+  .states { display: flex; gap: 8px; margin-left: 29px; max-width: 600px; }
+  .state-chip { font-size: 10.5px; font-weight: 700; border: 1px solid #C6CBD2; padding: 3px 8px; color: #565D68; }
+  .state-chip.copied { background: #4F5BD5; color: #fff; border-color: #4F5BD5; }
+
+  .frag-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #8A919C; align-self: flex-start; margin-left: 8px; }
+  .tools-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #DEE1E6; border: 1px solid #C6CBD2; }
+  .tool-card { background: #fff; padding: 12px; display: flex; flex-direction: column; gap: 6px; min-height: 92px; }
+  .tool-name { font-size: 11.5px; font-weight: 700; }
+  .tool-desc { font-size: 10.5px; color: #8A919C; line-height: 1.4; flex: 1; }
+  .tool-tag { font-size: 9px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; align-self: flex-start; padding: 2px 6px; }
+  .tool-tag.live { background: #4F5BD5; color: #fff; }
+  .tool-tag.soon { background: #F4F5F7; color: #8A919C; border: 1px solid #DEE1E6; }
+</style>
+
+<div class="pc">
+  <div class="pc-note">
+    <b>Precision Console</b> — Densité d'outil pro : bordures fines, aucune ombre, un seul accent indigo réservé
+    à l'état actif/live, système typographique mixant grotesque et monospace pour toute donnée technique.
+  </div>
+
+  <div class="browser">
+    <div class="chrome-bar">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="chrome-url mono">app.vibehub.io/workspace</div>
+    </div>
+    <div class="app">
+      <div class="rail">
+        <div class="brand">Vibe<span>Hub</span></div>
+        <div class="navitem"><span class="l"><span class="ic"></span> Modules</span><span class="n">12</span></div>
+        <div class="navitem active"><span class="l"><span class="ic"></span> IA</span><span class="n">●</span></div>
+        <div class="navitem"><span class="l"><span class="ic"></span> Outils</span><span class="n">04</span></div>
+      </div>
+      <div class="main">
+        <div class="topbar">
+          <h2>Assistant IA</h2>
+          <div class="meta mono">SESSION <b>#0417</b> · GÉNÉRATION UI</div>
+        </div>
+        <div class="thread">
+          <div class="msg user"><div class="avatar u">LV</div>
+            <div class="bubble">J'ai besoin d'une page d'accueil pour une appli de méditation, un peu épurée mais chaleureuse.</div>
+          </div>
+          <div class="msg ai"><div class="avatar ai">AI</div>
+            <div class="bubble">Parfait, je vois le ton que tu veux donner. <b class="hl">Je vais te rédiger le prompt parfait</b> à utiliser dans l'UI Generator, avec structure, palette et mise en page.</div>
+          </div>
+          <div class="prompt-card">
+            <div class="prompt-head">
+              <span class="label mono">prompt.generation</span>
+              <button class="copy-btn mono">COPIER</button>
+            </div>
+            <div class="prompt-body"><span class="c">// Page d'accueil — app de méditation</span>
+<span class="k">style:</span> épuré, chaleureux, espace blanc généreux
+<span class="k">structure:</span> héro, 3 bénéfices, témoignage, footer
+<span class="k">palette:</span> sable, blanc cassé, accent vert sauge
+<span class="k">composants:</span> boutons arrondis, ombre légère</div>
+          </div>
+          <div class="states">
+            <span class="state-chip mono">COPIER</span>
+            <span class="state-chip copied mono">✓ COPIÉ</span>
+          </div>
+        </div>
+        <div class="composer">
+          <div class="composer-box">
+            Décris ce que tu veux concevoir…
+            <div class="send"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="frag-label">Fragment — Onglet Outils</div>
+  <div class="browser" style="max-width:760px;">
+    <div class="tools-grid">
+      <div class="tool-card">
+        <div class="tool-name">UI Builder</div>
+        <div class="tool-desc">Génère des interfaces depuis un prompt structuré.</div>
+        <span class="tool-tag live">Live</span>
+      </div>
+      <div class="tool-card">
+        <div class="tool-name">Palette Gen</div>
+        <div class="tool-desc">Palettes cohérentes depuis une intention de marque.</div>
+        <span class="tool-tag soon">Bientôt</span>
+      </div>
+      <div class="tool-card">
+        <div class="tool-name">A11y Audit</div>
+        <div class="tool-desc">Contraste, focus, lecture d'écran.</div>
+        <span class="tool-tag soon">Bientôt</span>
+      </div>
+      <div class="tool-card">
+        <div class="tool-name">Copy Assist</div>
+        <div class="tool-desc">Microcopie UX alignée au ton de marque.</div>
+        <span class="tool-tag soon">Bientôt</span>
+      </div>
+    </div>
+  </div>
+</div>

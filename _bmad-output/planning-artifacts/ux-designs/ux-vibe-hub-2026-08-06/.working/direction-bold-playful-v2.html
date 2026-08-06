@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Vibe Hub — Direction Bold &amp; Playful v2</title>
+<style>
+/*
+  ============================================================
+  VIBE HUB — DIRECTION "BOLD & PLAYFUL" — v2 (itération post-refus)
+  Palette documentée (usage sémantique, pas décoratif) — inchangée vs v1
+  ============================================================
+  --ink        #17131F   Texte principal / titres display (quasi-noir, pointe violette)
+  --ink-soft   #4A4458   Texte secondaire sur fond clair
+  --bg         #FFF8F0   Canevas général (crème chaude)
+  --surface    #FFFFFF   Cartes / panneaux neutres (chat, topbar)
+  --line       #EDE4D8   Séparateurs discrets sur fond crème
+
+  --coral      #FF6A4D   Marque IA / actions primaires / bulle assistant, CTA "Envoyer"
+  --coral-dk   #E2502F   Coral hover/pressed, texte sur fond coral clair
+  --coral-tint #FFE4DA   Fond clair coral (halo bulle assistant)
+
+  --violet     #7B5CFA   Catégorie "Modules" (apprentissage) / nav actif
+  --violet-dk  #5B3EDB   Violet hover/pressed
+  --violet-tint#EAE3FF   Fond clair violet (carte module 1)
+
+  --blue       #2F8AFF   Catégorie "Outils" / statut "Disponible"
+  --blue-dk    #1C6FE0   Bleu hover/pressed
+  --blue-tint  #DCEBFF   Fond clair bleu (carte module 3)
+
+  --green      #21C25E   Statut positif / progression avancée / badge "Disponible"
+  --green-dk   #159A48   Vert pressed
+
+  --pink       #FF4FA0   Statut "Bientôt disponible" / accents décoratifs (stickers)
+  --pink-dk    #E23A8A   Rose pressed
+
+  --amber      #FFB020   Badge durée / accent chaud secondaire
+
+  Assignation du sens (identique à v1, conservée volontairement) :
+   - Violet   → tout ce qui touche "Modules" (apprentissage, contenu pédagogique)
+   - Coral    → tout ce qui touche "IA" (assistant, prompt, actions primaires)
+   - Bleu     → tout ce qui touche "Outils" + statut "Disponible"
+   - Rose     → statut "Bientôt disponible" / liste d'attente
+   - Vert     → confirmation, succès, progression, état "copié"
+  ============================================================
+
+  CE QUI CHANGE PAR RAPPORT À v1 (rejeté "AI slop") :
+
+  1) TYPOGRAPHIE — un seul traitement de titre, inventé et appliqué partout.
+     Tous les titres (wordmark, h1, h2 de section, titres de cartes) utilisent
+     une pile condensée/lourde (Arial Narrow Bold / Franklin Gothic Medium /
+     Haettenschweiler / Impact en secours) + tracking négatif fort (-0.04em)
+     + un skew(-8deg) + scaleX(0.94) appliqué via transform, pour simuler une
+     police display condensée "à la Move & Sync" qu'aucun système ne fournit
+     nativement. La première lettre (ou un mot-clé court) de chaque titre est
+     recolorée dans la teinte fonctionnelle de sa section — écho du "🏆" dans
+     la référence Quiz — au lieu d'un bloc de texte uniformément noir/gras
+     comme dans un template SaaS générique. Le wordmark "vibe HUB" mélange
+     bas-de-casse fin et capitales pleines pour casser l'effet "titre par
+     défaut".
+
+  2) DÉCORATIONS — plus aucun blob SVG organique flat.
+     Remplacés par deux langages, utilisés avec parcimonie (1-2 objets par
+     écran, jamais au centre des zones de travail) :
+       a. "Collage papier découpé" : formes plates à bord irrégulier
+          (clip-path polygon façon déchirure), empilées à rotation légère,
+          avec ombre portée dure et décalée (façon papier découpé/collé),
+          utilisées en coin d'écran comme accent de composition.
+       b. "Perle glacée" : un accent rond radial-gradient avec reflet interne
+          (inset highlight) façon bille de verre/sticker glossy — utilisé
+          uniquement sur 1-2 petits éléments ponctuels (avatar IA, pastille
+          de prompt), jamais en fond répété.
+
+  RATIONALE (comparaison v1 → v2) :
+  v1 avait été refusé car sa typographie (sans-serif système gras générique,
+  sans traitement distinctif) et ses blobs SVG plats en fond de carte
+  ressemblaient à n'importe quel template SaaS généré par IA. v2 conserve la
+  palette fonctionnelle et les pilules arrondies (jugées correctes) mais
+  remplace ces deux points : un traitement typographique condensé/skewé
+  inventé et récurrent donne un wordmark et des titres qui ressemblent à un
+  choix de marque assumé plutôt qu'à une valeur par défaut, et les blobs sont
+  remplacés par des accents "papier découpé" et "perle glacée" utilisés en
+  périphérie, jamais comme remplissage décoratif générique. Le résultat vise
+  la même énergie ludique-mais-crédible, sans les deux signaux qui trahissaient
+  un rendu généré automatiquement.
+  ============================================================
+*/
+
+:root{
+  --ink:#17131F; --ink-soft:#4A4458; --bg:#FFF8F0; --surface:#FFFFFF; --line:#EDE4D8;
+  --coral:#FF6A4D; --coral-dk:#E2502F; --coral-tint:#FFE4DA;
+  --violet:#7B5CFA; --violet-dk:#5B3EDB; --violet-tint:#EAE3FF;
+  --blue:#2F8AFF; --blue-dk:#1C6FE0; --blue-tint:#DCEBFF;
+  --green:#21C25E; --green-dk:#159A48;
+  --pink:#FF4FA0; --pink-dk:#E23A8A; --pink-tint:#FFE1F0;
+  --amber:#FFB020;
+
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Arial Narrow", "Arial Narrow Bold", "Franklin Gothic Medium", "Haettenschweiler", Impact, "Segoe UI", Arial, sans-serif;
+}
+
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  font-family:var(--font-body);
+  background:var(--bg);
+  color:var(--ink);
+  padding:40px 5vw 80px;
+}
+
+/* ============ distinctive display type (invented treatment) ============ */
+.display{
+  font-family:var(--font-display);
+  font-weight:800;
+  letter-spacing:-.04em;
+  transform:skewX(-8deg) scaleX(.94);
+  display:inline-block;
+  transform-origin:left center;
+  line-height:1.02;
+}
+.accent-ch{ font-style:normal; }
+
+.wordmark{
+  font-family:var(--font-display);
+  font-weight:800;
+  font-size:20px;
+  letter-spacing:-.03em;
+  transform:skewX(-8deg);
+  display:inline-flex;
+  align-items:baseline;
+  gap:1px;
+  color:#fff;
+}
+.wordmark .lc{font-weight:500; text-transform:lowercase;}
+.wordmark .uc{font-weight:800; text-transform:uppercase; color:var(--coral);}
+
+.page-head{max-width:1240px;margin:0 auto 36px; position:relative;}
+.eyebrow{
+  display:inline-block;
+  font-weight:800;
+  font-size:13px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--coral-dk);
+  background:var(--coral-tint);
+  padding:6px 16px;
+  border-radius:999px;
+  margin-bottom:14px;
+  position:relative;
+  z-index:2;
+}
+h1.page-title{
+  font-size:48px;
+  margin:0 0 10px;
+  position:relative;
+  z-index:2;
+}
+h1.page-title .accent-ch{color:var(--coral);}
+.page-sub{
+  font-size:17px;
+  color:var(--ink-soft);
+  max-width:760px;
+  line-height:1.5;
+  margin:0 0 6px;
+  position:relative;
+  z-index:2;
+}
+.rationale-caption{
+  font-size:14px;
+  color:var(--ink-soft);
+  max-width:820px;
+  line-height:1.55;
+  border-left:4px solid var(--coral);
+  padding:10px 18px;
+  background:rgba(255,255,255,.65);
+  border-radius:0 16px 16px 0;
+  margin-top:18px;
+  position:relative;
+  z-index:2;
+}
+
+/* ============ collage cutout accent (replaces blobs) ============ */
+.collage{position:absolute; z-index:1; pointer-events:none;}
+.cut-piece{
+  position:absolute;
+  clip-path:polygon(6% 0%, 92% 4%, 100% 38%, 96% 100%, 22% 96%, 0% 62%);
+}
+.cluster-header{right:0; top:-18px; width:210px; height:170px;}
+.cluster-header .cut-piece.p1{
+  width:150px;height:150px; right:10px; top:10px; background:var(--violet-tint);
+  transform:rotate(-7deg);
+  box-shadow:10px 12px 0 rgba(23,19,31,.08);
+}
+.cluster-header .cut-piece.p2{
+  width:110px;height:110px; right:46px; top:34px; background:var(--pink-tint);
+  transform:rotate(9deg);
+  box-shadow:8px 9px 0 rgba(23,19,31,.10);
+}
+.cluster-header .cut-piece.p3{
+  width:64px;height:64px; right:76px; top:56px; background:var(--coral);
+  transform:rotate(-4deg);
+  box-shadow:6px 7px 0 rgba(23,19,31,.14);
+}
+
+.cluster-phone{right:-30px; top:-24px; width:150px; height:120px;}
+.cluster-phone .cut-piece.p1{
+  width:96px;height:96px; right:0; top:0; background:var(--blue-tint);
+  transform:rotate(-8deg);
+  box-shadow:7px 8px 0 rgba(23,19,31,.10);
+}
+.cluster-phone .cut-piece.p2{
+  width:56px;height:56px; right:34px; top:26px; background:var(--pink);
+  transform:rotate(6deg);
+  box-shadow:5px 6px 0 rgba(23,19,31,.16);
+}
+
+/* ============ glossy bead accent (replaces flat blob-as-icon) ============ */
+.bead{
+  border-radius:50%;
+  position:relative;
+}
+.bead::after{
+  content:"";
+  position:absolute; left:18%; top:14%; width:38%; height:30%;
+  background:rgba(255,255,255,.75);
+  border-radius:50%;
+  filter:blur(1px);
+}
+
+.section-label{
+  max-width:1240px;
+  margin:56px auto 16px;
+  display:flex;
+  align-items:baseline;
+  gap:12px;
+  position:relative;
+  z-index:2;
+}
+.section-label .num{
+  font-weight:900;
+  font-size:14px;
+  color:#fff;
+  background:var(--ink);
+  width:28px;height:28px;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  flex:none;
+}
+.section-label h2{font-size:21px; margin:0;}
+.section-label h2 .accent-ch{color:var(--violet);}
+.section-label p{font-size:13px;color:var(--ink-soft);margin:0;}
+
+/* ============ shared frame chrome ============ */
+.stage{max-width:1240px;margin:0 auto; position:relative;}
+.frame{
+  background:var(--surface);
+  border-radius:32px;
+  box-shadow:0 30px 60px -25px rgba(23,19,31,.35), 0 2px 0 rgba(23,19,31,.04);
+  overflow:hidden;
+  position:relative;
+}
+
+/* ============ pill nav (desktop) ============ */
+.app-shell{display:flex; min-height:640px;}
+.sidebar{
+  width:220px;
+  background:var(--ink);
+  padding:26px 16px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  flex:none;
+  position:relative;
+  z-index:1;
+}
+.brand{
+  margin:2px 10px 22px;
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+.brand .dot{
+  width:14px;height:14px;flex:none;
+  background:radial-gradient(circle at 32% 26%, #FFD8CC 0%, var(--coral) 48%, var(--coral-dk) 100%);
+  box-shadow:0 0 0 4px rgba(255,106,77,.22);
+}
+.nav-pill{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 16px;
+  border-radius:999px;
+  color:#C9C2D9;
+  font-weight:700;
+  font-size:14px;
+  text-decoration:none;
+}
+.nav-pill .ico{width:18px;height:18px;border-radius:6px;flex:none;}
+.nav-pill.active{background:var(--coral); color:#fff;}
+.nav-pill.active .ico{background:#fff;}
+.nav-pill:not(.active) .ico{background:#3A3448;}
+.nav-foot{
+  margin-top:auto;
+  color:#8B84A0;
+  font-size:12px;
+  padding:0 12px;
+  line-height:1.5;
+}
+
+.main{flex:1; padding:26px 34px 34px; position:relative; z-index:1; min-width:0;}
+.topbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:22px;}
+.topbar h1{font-size:28px; margin:0;}
+.topbar h1 .accent-ch{color:var(--coral);}
+.topbar .tag{
+  font-size:12px; font-weight:800; color:var(--coral-dk);
+  background:var(--coral-tint); padding:6px 14px; border-radius:999px;
+}
+.avatar-bead{
+  width:38px;height:38px;
+  background:radial-gradient(circle at 30% 26%, #FFD8CC 0%, var(--coral) 46%, var(--coral-dk) 100%);
+  box-shadow:inset -3px -4px 8px rgba(0,0,0,.18), 0 4px 10px rgba(255,106,77,.4);
+}
+
+/* ============ chat ============ */
+.chat{display:flex; flex-direction:column; gap:16px; max-width:720px;}
+.msg{display:flex; gap:12px; align-items:flex-start;}
+.msg.user{justify-content:flex-end;}
+.bubble{
+  border-radius:22px;
+  padding:14px 18px;
+  font-size:14.5px;
+  line-height:1.55;
+  max-width:480px;
+}
+.msg.user .bubble{
+  background:var(--violet);
+  color:#fff;
+  border-bottom-right-radius:8px;
+  font-weight:600;
+}
+.msg.assistant .bubble{
+  background:var(--surface);
+  border:2px solid var(--line);
+  color:var(--ink);
+  border-bottom-left-radius:8px;
+}
+.mini-avatar{
+  width:34px;height:34px;flex:none;
+  background:radial-gradient(circle at 32% 26%, #FFE0D6 0%, var(--coral) 50%, var(--coral-dk) 100%);
+  box-shadow:inset -2px -3px 6px rgba(0,0,0,.2);
+}
+
+/* prompt hand-off block */
+.prompt-card{
+  margin-left:46px;
+  max-width:560px;
+  background:var(--ink);
+  color:#fff;
+  border-radius:22px;
+  padding:4px 4px 18px;
+  position:relative;
+}
+.prompt-card .prompt-head{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 18px 10px;
+}
+.prompt-card .prompt-head .lbl{
+  font-weight:800; font-size:13px; letter-spacing:.03em; text-transform:uppercase;
+  color:var(--coral); display:flex; align-items:center; gap:8px;
+}
+.prompt-card .prompt-head .lbl .bead-dot{width:10px;height:10px;flex:none;}
+.copy-btn{
+  border:none; cursor:default;
+  font-weight:800; font-size:12.5px;
+  padding:8px 16px;
+  border-radius:999px;
+  background:var(--coral);
+  color:#fff;
+}
+.copy-btn.copied{background:var(--green);}
+.prompt-body{
+  margin:0 18px 12px;
+  background:#241E30;
+  border-radius:14px;
+  padding:14px 16px;
+  font-size:13px;
+  line-height:1.65;
+  color:#E7E1F2;
+}
+.prompt-foot{
+  margin:0 18px;
+  font-size:12px;
+  color:#9C93B4;
+}
+.msg.assistant .bubble.followup{margin-left:46px; margin-top:4px; background:var(--coral-tint); border-color:transparent; color:var(--coral-dk); font-weight:700;}
+
+.composer{
+  margin-top:20px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  background:var(--surface);
+  border:2px solid var(--line);
+  border-radius:999px;
+  padding:8px 8px 8px 20px;
+  max-width:720px;
+}
+.composer input.fake{
+  border:none; outline:none; flex:1; font-size:14px; color:var(--ink-soft); font-family:var(--font-body);
+}
+.composer .send{
+  background:var(--coral); color:#fff; border:none; border-radius:999px;
+  width:40px;height:40px; font-weight:900; flex:none;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* ============ modules grid ============ */
+.grid-frame{padding:28px 28px 32px; position:relative;}
+.grid-title{font-size:22px; margin:0 0 4px;}
+.grid-title .accent-ch{color:var(--violet);}
+.grid-sub{font-size:13px; color:var(--ink-soft); margin:0 0 20px;}
+.cards{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
+.course-card{
+  border-radius:26px;
+  padding:20px;
+  color:#fff;
+  position:relative;
+  min-height:190px;
+  display:flex; flex-direction:column;
+  overflow:hidden;
+}
+.course-card.c-violet{background:linear-gradient(155deg, var(--violet) 0%, var(--violet-dk) 100%);}
+.course-card.c-coral{background:linear-gradient(155deg, var(--coral) 0%, var(--coral-dk) 100%);}
+.course-card.c-blue{background:linear-gradient(155deg, var(--blue) 0%, var(--blue-dk) 100%);}
+.course-card .time-badge{
+  align-self:flex-start;
+  font-size:11.5px; font-weight:800;
+  background:rgba(255,255,255,.22);
+  padding:5px 12px; border-radius:999px;
+  margin-bottom:14px;
+}
+.course-card h3{font-size:18px; margin:0 0 8px;}
+.course-card p{font-size:13px; line-height:1.45; margin:0 0 16px; opacity:.92; flex:1; font-family:var(--font-body); font-weight:400;}
+.progress-row{display:flex; align-items:center; justify-content:space-between; font-size:11.5px; font-weight:800; margin-bottom:6px;}
+.progress-track{height:8px; border-radius:999px; background:rgba(255,255,255,.28); overflow:hidden;}
+.progress-fill{height:100%; border-radius:999px; background:#fff;}
+.card-bead{
+  position:absolute; right:-18px; bottom:-18px; width:100px; height:100px;
+  background:radial-gradient(circle at 32% 28%, rgba(255,255,255,.5) 0%, rgba(255,255,255,.14) 45%, rgba(255,255,255,.04) 100%);
+  border-radius:50%;
+}
+
+/* ============ outils grid ============ */
+.tools-frame{padding:28px 28px 32px;}
+.tool-group-head{display:flex; align-items:center; gap:10px; margin:22px 0 14px;}
+.tool-group-head:first-of-type{margin-top:2px;}
+.status-badge{font-size:12px; font-weight:900; padding:6px 14px; border-radius:999px;}
+.status-badge.avail{background:#DCF7E6; color:var(--green-dk);}
+.status-badge.soon{background:var(--pink-tint); color:var(--pink-dk);}
+.tools-row{display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
+.tools-row.single{grid-template-columns:260px;}
+.tool-card{
+  border-radius:22px;
+  border:2px solid var(--line);
+  background:#fff;
+  padding:16px;
+  display:flex; flex-direction:column; gap:10px;
+}
+.tool-card.avail{border-color:var(--blue); background:var(--blue-tint);}
+.tool-ico{
+  width:42px;height:42px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:900; color:#fff; font-size:16px;
+  font-family:var(--font-display); letter-spacing:-.02em;
+}
+.tool-card h4{font-size:15px; margin:0;}
+.tool-card p{font-size:12px; color:var(--ink-soft); line-height:1.4; margin:0; flex:1; font-family:var(--font-body); font-weight:400;}
+.btn-pill{
+  border:none; font-weight:800; font-size:12.5px;
+  padding:9px 14px; border-radius:999px; text-align:center;
+}
+.btn-pill.primary{background:var(--blue); color:#fff;}
+.btn-pill.wait{background:var(--pink-tint); color:var(--pink-dk);}
+.btn-pill.wait.joined{background:var(--green); color:#fff;}
+
+/* ============ mobile frame ============ */
+.mobile-wrap{display:flex; justify-content:center; margin-top:8px; position:relative;}
+.phone{
+  width:340px;
+  border-radius:44px;
+  background:var(--ink);
+  padding:12px;
+  box-shadow:0 30px 60px -25px rgba(23,19,31,.4);
+  position:relative;
+  z-index:2;
+}
+.phone-screen{
+  background:var(--bg);
+  border-radius:34px;
+  overflow:hidden;
+  min-height:600px;
+  display:flex;
+  flex-direction:column;
+  position:relative;
+}
+.phone-top{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:18px 18px 10px;
+}
+.phone-top .brand-m{font-size:17px;}
+.phone-top .brand-m .accent-ch{color:var(--coral);}
+.phone-chat{padding:6px 16px; display:flex; flex-direction:column; gap:12px; flex:1;}
+.phone-chat .bubble{max-width:100%; font-size:13px;}
+.phone-prompt{
+  background:var(--ink); color:#fff; border-radius:18px; padding:12px 14px; margin-left:0;
+}
+.phone-prompt .prompt-head{padding:0 0 8px;}
+.phone-prompt .prompt-body{margin:0; font-size:12px;}
+.phone-composer{
+  margin:12px 16px 0; padding:6px 6px 6px 16px;
+  background:#fff; border:2px solid var(--line); border-radius:999px;
+  display:flex; align-items:center; gap:8px;
+}
+.phone-composer input.fake{font-size:13px; border:none; outline:none; flex:1; color:var(--ink-soft); font-family:var(--font-body);}
+.phone-composer .send{width:34px;height:34px; background:var(--coral); border-radius:999px; color:#fff; border:none; font-weight:900;}
+.bottom-nav{
+  margin-top:auto;
+  display:flex;
+  gap:8px;
+  padding:12px 16px 18px;
+  background:#fff;
+  border-top:2px solid var(--line);
+}
+.bottom-nav .item{
+  flex:1; text-align:center; padding:9px 4px; border-radius:16px;
+  font-size:11.5px; font-weight:800; color:var(--ink-soft);
+}
+.bottom-nav .item.active{background:var(--coral); color:#fff;}
+
+.foot-note{max-width:1240px;margin:50px auto 0; font-size:12.5px; color:var(--ink-soft); text-align:center; line-height:1.6;}
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <div class="collage cluster-header">
+    <div class="cut-piece p1"></div>
+    <div class="cut-piece p2"></div>
+    <div class="cut-piece p3"></div>
+  </div>
+
+  <span class="eyebrow">Vibe Hub · Exploration visuelle</span>
+  <h1 class="page-title"><span class="display"><span class="accent-ch">V</span>ibe Hub — Bold &amp; Playful <span class="accent-ch">v2</span></span></h1>
+  <p class="page-sub">Deuxième passe après refus du PO ("trop AI slop") : la palette et les pilules arrondies sont conservées, mais la typographie de titre devient un vrai choix de marque condensé/skewé, et les blobs SVG génériques sont remplacés par des accents papier découpé et perle glacée, utilisés en périphérie des écrans.</p>
+  <p class="rationale-caption">
+    <strong>Rationale —</strong> v1 avait été jugé trop générique à cause d'une typo sans-serif système sans traitement distinctif et de blobs organiques plats en fond de carte, deux signatures typiques d'un rendu IA par défaut. v2 introduit un traitement typographique unique (pile condensée/lourde + skew(-8deg) + lettre-accent colorée) appliqué à tous les titres, et remplace les blobs par des formes "papier découpé" à ombre dure et des accents "perle glacée" utilisés avec parcimonie — la palette fonctionnelle et le langage pilule/carte arrondie restent identiques à v1 pour ne pas perdre ce qui avait été validé.
+  </p>
+</div>
+
+<!-- ============ 1. DESKTOP — IA TAB ============ -->
+<div class="section-label">
+  <span class="num">1</span>
+  <div>
+    <h2><span class="display"><span class="accent-ch">D</span>esktop — Onglet IA, passage de relais</span></h2>
+    <p>Sidebar Modules / IA / Outils, conversation avec bloc de prompt copiable distinct des bulles classiques.</p>
+  </div>
+</div>
+<div class="stage">
+  <div class="frame">
+    <div class="app-shell">
+      <div class="sidebar">
+        <div class="brand">
+          <span class="dot bead"></span>
+          <span class="wordmark"><span class="lc">vibe</span><span class="uc">HUB</span></span>
+        </div>
+        <a class="nav-pill"><span class="ico"></span>Modules</a>
+        <a class="nav-pill active"><span class="ico"></span>IA</a>
+        <a class="nav-pill"><span class="ico"></span>Outils</a>
+        <div class="nav-foot">Connecté en tant que<br><strong style="color:#D9D2EA;">leandro45.cr7@gmail.com</strong></div>
+      </div>
+
+      <div class="main">
+        <div class="topbar">
+          <h1><span class="display"><span class="accent-ch">A</span>ssistant IA</span></h1>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span class="tag">Session en cours</span>
+            <div class="avatar-bead bead"></div>
+          </div>
+        </div>
+
+        <div class="chat">
+          <div class="msg user">
+            <div class="bubble">J'ai besoin d'une interface pour une app de suivi d'habitudes, un peu ludique, avec un dashboard.</div>
+          </div>
+
+          <div class="msg assistant">
+            <div class="mini-avatar bead"></div>
+            <div class="bubble">Parfait, je vois bien le style que tu veux viser. Je vais te rédiger le prompt parfait à utiliser dans l'UI Generator.</div>
+          </div>
+
+          <div class="prompt-card">
+            <div class="prompt-head">
+              <span class="lbl"><span class="bead-dot bead" style="background:radial-gradient(circle at 32% 26%, #FFD8CC, var(--coral) 55%, var(--coral-dk));"></span>Prompt généré</span>
+              <button class="copy-btn">Copier</button>
+            </div>
+            <div class="prompt-body">
+              Crée un dashboard mobile de suivi d'habitudes : ton ludique et chaleureux, cartes arrondies XL, palette multicolore saturée (corail, violet, bleu), typographie display condensée et affirmée, barre de progression circulaire en accroche, icônes simples. Prévoir un état vide engageant et un CTA principal en pilule.
+            </div>
+            <div class="prompt-foot">Colle-le directement dans UI Builder pour générer les écrans.</div>
+          </div>
+
+          <div class="bubble followup">Dis-moi si tu veux que j'ajuste le ton (plus sobre, plus premium) avant de lancer la génération.</div>
+        </div>
+
+        <div class="composer">
+          <input class="fake" type="text" value="Décris ton besoin design..." readonly>
+          <button class="send">➜</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 2 & 3 fragments ============ -->
+<div class="section-label">
+  <span class="num">2</span>
+  <div>
+    <h2><span class="display"><span class="accent-ch">M</span>odules — grille de cours</span></h2>
+    <p>Chaque carte porte une couleur pleine assignée par catégorie, avec estimation de temps et progression session.</p>
+  </div>
+</div>
+<div class="stage">
+  <div class="frame grid-frame">
+    <div class="grid-title"><span class="display"><span class="accent-ch">M</span>odules</span></div>
+    <div class="grid-sub">Apprends à cadrer tes demandes IA, module par module.</div>
+    <div class="cards">
+      <div class="course-card c-violet">
+        <div class="card-bead"></div>
+        <span class="time-badge">⏱ 18 min</span>
+        <h3>Les bases du prompt design</h3>
+        <p>Formuler une demande claire pour n'importe quel outil IA.</p>
+        <div class="progress-row"><span>3/5 leçons</span><span>60%</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width:60%;"></div></div>
+      </div>
+
+      <div class="course-card c-coral">
+        <div class="card-bead"></div>
+        <span class="time-badge">⏱ 25 min</span>
+        <h3>Prototyper avec l'IA</h3>
+        <p>Du brief à la maquette en un seul aller-retour.</p>
+        <div class="progress-row"><span>1/4 leçons</span><span>25%</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width:25%;"></div></div>
+      </div>
+
+      <div class="course-card c-blue">
+        <div class="card-bead"></div>
+        <span class="time-badge">⏱ 12 min</span>
+        <h3>Critiquer une UI générée</h3>
+        <p>Repérer les incohérences et affiner le résultat obtenu.</p>
+        <div class="progress-row"><span>0/3 leçons</span><span>0%</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width:4%;"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section-label">
+  <span class="num">3</span>
+  <div>
+    <h2><span class="display"><span class="accent-ch">O</span>utils — Disponible / Bientôt disponible</span></h2>
+    <p>Groupement explicite par statut ; variante d'état sur le bouton de liste d'attente.</p>
+  </div>
+</div>
+<div class="stage">
+  <div class="frame tools-frame">
+    <div class="tool-group-head"><span class="status-badge avail">● Disponible</span></div>
+    <div class="tools-row single">
+      <div class="tool-card avail">
+        <div class="tool-ico" style="background:var(--blue);">UI</div>
+        <h4>UI Builder</h4>
+        <p>Génère des interfaces complètes à partir d'un prompt structuré.</p>
+        <button class="btn-pill primary">Ouvrir</button>
+      </div>
+    </div>
+
+    <div class="tool-group-head"><span class="status-badge soon">◐ Bientôt disponible</span></div>
+    <div class="tools-row">
+      <div class="tool-card">
+        <div class="tool-ico" style="background:var(--violet);">CA</div>
+        <h4>Code Auditor</h4>
+        <p>Analyse ton code et repère les points d'attention.</p>
+        <button class="btn-pill wait">Rejoindre la liste d'attente</button>
+      </div>
+      <div class="tool-card">
+        <div class="tool-ico" style="background:var(--coral);">CW</div>
+        <h4>Content Writer</h4>
+        <p>Rédige des textes UX alignés sur ton produit.</p>
+        <button class="btn-pill wait">Rejoindre la liste d'attente</button>
+      </div>
+      <div class="tool-card">
+        <div class="tool-ico" style="background:var(--amber);">CS</div>
+        <h4>Color Studio</h4>
+        <p>Compose des palettes cohérentes en quelques clics.</p>
+        <button class="btn-pill wait">Rejoindre la liste d'attente</button>
+      </div>
+      <div class="tool-card">
+        <div class="tool-ico" style="background:var(--pink);">VL</div>
+        <h4>Vision Lens</h4>
+        <p>Décrit et audite une capture d'écran automatiquement.</p>
+        <button class="btn-pill wait joined">Sur la liste ✓</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 4. MOBILE ============ -->
+<div class="section-label">
+  <span class="num">4</span>
+  <div>
+    <h2><span class="display"><span class="accent-ch">M</span>obile — Onglet IA (responsive)</span></h2>
+    <p>Même langage visuel, navigation basse en pilules à la place de la sidebar.</p>
+  </div>
+</div>
+<div class="mobile-wrap">
+  <div class="collage cluster-phone">
+    <div class="cut-piece p1"></div>
+    <div class="cut-piece p2"></div>
+  </div>
+  <div class="phone">
+    <div class="phone-screen">
+      <div class="phone-top">
+        <span class="brand-m display"><span class="accent-ch">I</span>A</span>
+        <div class="avatar-bead bead" style="width:30px;height:30px;"></div>
+      </div>
+      <div class="phone-chat">
+        <div class="msg user"><div class="bubble" style="font-size:13px;">Il me faut une interface app suivi d'habitudes, ludique.</div></div>
+        <div class="msg assistant"><div class="mini-avatar bead" style="width:28px;height:28px;"></div><div class="bubble">Je te rédige le prompt parfait pour l'UI Generator.</div></div>
+        <div class="phone-prompt">
+          <div class="prompt-head">
+            <span class="lbl" style="font-size:11px;"><span class="bead-dot bead" style="width:8px;height:8px;background:radial-gradient(circle at 32% 26%, #FFD8CC, var(--coral) 55%, var(--coral-dk));"></span>Prompt généré</span>
+            <button class="copy-btn copied" style="font-size:11px;">Copié !</button>
+          </div>
+          <div class="prompt-body">Dashboard mobile suivi d'habitudes, ton ludique, cartes arrondies XL, palette corail/violet/bleu, typo display condensée affirmée, progression circulaire, icônes simples.</div>
+        </div>
+      </div>
+      <div class="phone-composer">
+        <input class="fake" type="text" value="Décris ton besoin..." readonly>
+        <button class="send">➜</button>
+      </div>
+      <div class="bottom-nav">
+        <div class="item">Modules</div>
+        <div class="item active">IA</div>
+        <div class="item">Outils</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="foot-note">Vibe Hub — Direction "Bold &amp; Playful" v2 · Exploration UX · 06/08/2026<br>États illustrés : bouton "Copier" → "Copié !" (bloc de prompt mobile), bouton liste d'attente "Rejoindre la liste d'attente" → "Sur la liste ✓" (Vision Lens).</p>
+
+</body>
+</html>
