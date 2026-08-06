@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@800&amp;display=swap');
+    text {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+  </style>
+  <rect width="64" height="64" rx="16" fill="#5b3cdd" />
+  <path
+    d="M14 24 C14 18.5 18.5 14 24 14 L40 14 C45.5 14 50 18.5 50 24 L50 32 C50 37.5 45.5 42 40 42 L28 42 L19 50 L21 42 C16.9 41.2 14 37.4 14 33 Z"
+    fill="#ffffff"
+  />
+  <text x="32" y="32" text-anchor="middle" font-size="16" fill="#5b3cdd">vh</text>
+</svg>
