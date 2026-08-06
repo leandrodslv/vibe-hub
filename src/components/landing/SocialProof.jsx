@@ -1,27 +1,23 @@
+// Note: the Stitch reference mockup (mockups/landing.html) shows this strip with fabricated
+// company wordmarks (AcmeStudio, GlobalArt...) as pre-rollout "social proof". The PRD explicitly
+// rules that out (no fabricated testimonials/adopters before a first real rollout) — this keeps
+// the mockup's visual treatment (centered label, bold wordmark row, grayscale/hover reveal) but
+// swaps the content for the product's real capabilities instead of fictional customers.
+const capabilities = ['Formation IA', 'Assistant IA', 'UI Builder', 'Apprentissage continu'];
+
 export default function SocialProof() {
   return (
-    <section className="border-y border-[#EAEAEA] py-10 bg-white">
-      <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16">
-        <span className="text-[13px] font-semibold text-[#888888] uppercase tracking-widest">
-          Approuvé par les designers de
-        </span>
-        <div className="flex items-center gap-12 opacity-40 grayscale">
-          <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
-            <div className="w-6 h-6 rounded bg-black"></div> ACME Corp
-          </div>
-          <div className="flex items-center gap-2 font-bold text-xl tracking-tighter">
-            <div className="w-6 h-6 rounded-full border-4 border-black"></div> Globex
-          </div>
-          <div className="flex items-center gap-2 font-bold text-xl">
-            <div className="w-6 h-6 rotate-45 bg-black"></div> Hooli
-          </div>
-          <div className="hidden md:flex items-center gap-2 font-bold text-xl">
-            <div className="flex gap-1">
-              <div className="w-2 h-6 bg-black" />
-              <div className="w-2 h-6 bg-black" />
-            </div>{' '}
-            Initech
-          </div>
+    <section className="py-12 bg-surface-container-low">
+      <div className="max-w-7xl mx-auto px-container-margin">
+        <p className="text-center font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider mb-8">
+          Ce que vous trouverez dès aujourd&apos;hui
+        </p>
+        <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+          {capabilities.map((label) => (
+            <span key={label} className="font-display-lg text-[32px] font-extrabold text-on-surface">
+              {label}
+            </span>
+          ))}
         </div>
       </div>
     </section>

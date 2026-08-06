@@ -3,7 +3,6 @@ import Navbar from '../components/landing/Navbar';
 import Hero from '../components/landing/Hero';
 import SocialProof from '../components/landing/SocialProof';
 import Programme from '../components/landing/Programme';
-import APropos from '../components/landing/APropos';
 import FAQ from '../components/landing/FAQ';
 import Footer from '../components/landing/Footer';
 
@@ -26,14 +25,13 @@ export default function LandingPage({ onEnterApp, onEnterModules }) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#F9F9F9] text-[#000000] font-sans selection:bg-black selection:text-white">
+    <div id="top" className="min-h-screen bg-surface text-on-surface font-body-md selection:bg-primary selection:text-on-primary">
       <Navbar onEnterApp={onEnterApp} />
       <Hero onEnterApp={onEnterApp} />
       <SocialProof />
-      <Programme onEnterModules={onEnterModules} />
-      <APropos />
+      <Programme onEnterApp={onEnterApp} />
       <FAQ />
-      <Footer />
+      <Footer onEnterApp={onEnterApp} />
     </div>
   );
 }
