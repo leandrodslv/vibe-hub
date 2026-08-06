@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { LayoutGrid, Wand2, ArrowRight } from 'lucide-react';
+import { LayoutGrid, CreditCard, PlaySquare, Wand2, ArrowRight } from 'lucide-react';
 import assistantIaImage from '../../assets/landing/assistant-ia.jpg';
 
 export default function Programme({ onEnterApp }) {
@@ -65,14 +65,22 @@ export default function Programme({ onEnterApp }) {
           <div className="inline-block bg-surface-container-lowest text-primary px-3 py-1 rounded-full font-label-caps text-label-caps mb-4 w-fit">
             Modules
           </div>
-          <h3 className="font-display-lg text-[28px] mb-4">Briques de formation.</h3>
+          <h3 className="font-display-lg text-[28px] mb-4">Briques intelligentes.</h3>
           <p className="font-body-md text-body-md opacity-90 mb-8 flex-grow">
-            Des modules pratiques pour intégrer l&apos;IA générative à votre flux de travail design.
+            Des composants partagés synchronisés avec votre système de design.
           </p>
           <div className="space-y-3 mt-auto">
             <div className="bg-surface-container-lowest/20 p-3 rounded-lg backdrop-blur-sm flex items-center gap-3">
               <LayoutGrid className="w-4 h-4" strokeWidth={2.25} />
-              <span className="font-label-caps text-label-caps">Catalogue de modules</span>
+              <span className="font-label-caps text-label-caps">TopAppBar.json</span>
+            </div>
+            <div className="bg-surface-container-lowest/20 p-3 rounded-lg backdrop-blur-sm flex items-center gap-3 ml-4">
+              <CreditCard className="w-4 h-4" strokeWidth={2.25} />
+              <span className="font-label-caps text-label-caps">HeroCard.json</span>
+            </div>
+            <div className="bg-surface-container-lowest/20 p-3 rounded-lg backdrop-blur-sm flex items-center gap-3">
+              <PlaySquare className="w-4 h-4" strokeWidth={2.25} />
+              <span className="font-label-caps text-label-caps">PrimaryCTA.json</span>
             </div>
           </div>
         </div>
