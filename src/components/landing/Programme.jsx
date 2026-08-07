@@ -1,27 +1,16 @@
-import { useEffect } from 'react';
 import { LayoutGrid, CreditCard, PlaySquare, Wand2, ArrowRight } from 'lucide-react';
 import assistantIaImage from '../../assets/landing/assistant-ia.jpg';
 
+// L'IntersectionObserver qui pilote les `.reveal` vit dans LandingPage : il observe déjà
+// `document.querySelectorAll('.reveal')` pour toute la page. Le dupliquer ici faisait observer
+// deux fois les mêmes nœuds.
 export default function Programme({ onEnterApp }) {
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.remove('opacity-0', 'translate-y-12');
-            entry.target.classList.add('opacity-100', 'translate-y-0');
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-    document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
-  }, []);
-
   return (
-    <section id="programme" className="py-section-padding px-container-margin max-w-7xl mx-auto">
-      <h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-center mb-16 max-w-2xl mx-auto text-on-surface reveal opacity-0 translate-y-12 transition-all duration-1000 ease-out">
+    <section id="programme" aria-labelledby="programme-titre" className="py-section-padding px-container-margin max-w-7xl mx-auto">
+      <h2
+        id="programme-titre"
+        className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-center mb-16 max-w-2xl mx-auto text-on-surface reveal opacity-0 translate-y-12 transition-all duration-1000 ease-out"
+      >
         Des outils pensés pour les designers, propulsés par l&apos;intelligence.
       </h2>
 
@@ -40,7 +29,7 @@ export default function Programme({ onEnterApp }) {
             </p>
             <button
               onClick={onEnterApp}
-              className="bg-on-tertiary-fixed text-tertiary-fixed font-cta-pill text-cta-pill px-6 py-3 rounded-full hover:scale-105 transition-transform flex items-center gap-2 w-fit focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              className="bg-on-tertiary-fixed text-tertiary-fixed font-cta-pill text-cta-pill px-6 py-3 min-h-[44px] rounded-full hover:scale-105 transition-transform flex items-center gap-2 w-fit focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
               Découvrir l&apos;IA
               <ArrowRight className="w-4 h-4" />
@@ -91,7 +80,7 @@ export default function Programme({ onEnterApp }) {
           className="md:col-span-12 bg-surface-container rounded-3xl p-8 flex flex-col md:flex-row items-center gap-12 overflow-hidden scroll-mt-24"
         >
           <div className="flex-1">
-            <div className="inline-block bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full font-label-caps text-label-caps mb-4">
+            <div lang="en" className="inline-block bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full font-label-caps text-label-caps mb-4">
               UI Builder
             </div>
             <h3 className="font-display-lg text-[36px] text-on-surface mb-4">Assemblez plus vite, sans compromis.</h3>

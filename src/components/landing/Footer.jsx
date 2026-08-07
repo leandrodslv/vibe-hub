@@ -77,7 +77,10 @@ const ICONS = [
 // evenly fills a field for arbitrary counts (works for 20 icons or 80) without the clustering a
 // naive random or fixed-ring placement would produce. A minimum radius keeps the innermost ring
 // clear of the central headline/CTA column.
-const ICON_COUNT = 140;
+// Densité calibrée pour la seule zone vitrine (bloc CTA), pas pour toute la hauteur du pied de
+// page : depuis l'ajout du plan du site, un champ étalé sur le <footer> entier passait derrière
+// des libellés et détruisait leur lisibilité.
+const ICON_COUNT = 70;
 const GOLDEN_ANGLE = 137.5;
 const MIN_RADIUS_PCT = 15;
 const MAX_RADIUS_PCT = 49;
@@ -242,60 +245,153 @@ function ConfettiIconField({ items, containerRef }) {
   );
 }
 
-export default function Footer({ onEnterApp }) {
-  const footerRef = useRef(null);
+// Plan du site (RGAA 12.2 / 12.3) — second moyen de navigation, en complément du menu principal.
+// Il doit permettre de comprendre la structure et d'atteindre l'ensemble des rubriques ET des
+// fonctionnalités : d'où les entrées vers les trois espaces applicatifs, pas seulement vers les
+// sections de la page. Les ancres sont des <a>, les espaces applicatifs des <button> — ce sont des
+// changements de vue pilotés par l'état React, pas des URLs.
+const PLAN_DU_SITE = [
+  {
+    titre: 'Le site',
+    entrees: [
+      { label: 'Accueil', href: '#top' },
+      { label: 'Modules', href: '#modules-showcase' },
+      { label: 'Outils', href: '#outils-showcase' },
+      { label: 'Le programme', href: '#programme' },
+      { label: 'Questions fréquentes', href: '#faq' },
+    ],
+  },
+  {
+    titre: 'L’application',
+    entrees: [
+      { label: 'Assistant IA', tab: 'ia' },
+      { label: 'Modules de formation', tab: 'modules' },
+      { label: 'Bibliothèque d’outils', tab: 'outils' },
+    ],
+  },
+  {
+    titre: 'Administration',
+    entrees: [{ label: 'Gestion des cours', href: '/admin' }],
+  },
+];
+
+// Style partagé par les liens du plan du site et ceux de la barre de bas de page : pas de
+// soulignement au repos, soulignement + éclaircissement au survol et anneau au focus. Ces liens
+// sont regroupés dans des blocs de navigation, pas insérés dans du texte courant — le
+// soulignement permanent qu'exige RGAA 10.6 pour les liens « dans du texte » ne s'applique pas ici.
+const LIEN_FOOTER =
+  'inline-flex items-center min-h-[44px] px-2 -mx-2 rounded text-on-primary/85 hover:text-on-primary hover:underline underline-offset-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-primary focus-visible:ring-offset-2 focus-visible:ring-offset-primary';
+
+export default function Footer({ onEnterApp, onEnterTab }) {
+  const vitrineRef = useRef(null);
+  const solRef = useRef(null);
 
   return (
-    <footer ref={footerRef} className="relative overflow-hidden bg-primary text-on-primary px-container-margin py-24 md:py-32">
-      {/* Oversized watermark wordmark — kept subtle (low opacity, heavy blur) so it reads as
-          texture, not as competing content, per the "discipline it" note from the design review. */}
-      <span
-        aria-hidden="true"
-        className="font-display-xl absolute inset-0 flex items-center justify-center text-[18vw] leading-none whitespace-nowrap text-on-primary/10 blur-[2px] select-none pointer-events-none"
+    <footer className="relative overflow-hidden bg-primary text-on-primary px-container-margin py-24 md:py-32">
+      {/* Zone « vitrine » : filigrane + confettis + CTA. Les deux décors sont ancrés sur ce
+          conteneur et non sur tout le <footer>. Centrés sur la hauteur totale, ils se
+          retrouvaient à cheval sur le plan du site depuis que celui-ci allonge le pied de page —
+          le filigrane visuellement, les confettis en passant derrière les libellés au point de
+          les rendre illisibles. Les décors restent ainsi cantonnés au bloc CTA, comme à l'origine. */}
+      <div ref={vitrineRef} className="relative py-12">
+        {/* Oversized watermark wordmark — kept subtle (low opacity, heavy blur) so it reads as
+            texture, not as competing content, per the "discipline it" note from the design review. */}
+        <span
+          aria-hidden="true"
+          className="font-display-xl absolute inset-0 flex items-center justify-center text-[18vw] leading-none whitespace-nowrap text-on-primary/10 blur-[2px] select-none pointer-events-none"
+        >
+          VIBE HUB
+        </span>
+
+        <div className="relative max-w-3xl mx-auto text-center">
+          <h2 className="font-display-lg text-headline-lg-mobile md:text-display-lg text-balance mb-4">
+            Tous les outils IA de votre équipe, au même endroit.
+          </h2>
+          <p className="font-body-lg text-body-lg text-on-primary/85 mb-10">
+            Modules, Assistant IA, UI Builder - accessibles dès aujourd&apos;hui, sans compte à créer.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button
+              onClick={onEnterApp}
+              className="bg-on-surface text-surface font-cta-pill text-cta-pill px-8 py-4 rounded-full hover:scale-105 transition-transform chunky-shadow chunky-shadow-pressed flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-primary focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
+            >
+              Découvrir Vibe Hub
+              <ArrowRight className="w-4 h-4" />
+            </button>
+            <a
+              href="#programme"
+              className="bg-on-primary/10 border border-on-primary/70 text-on-primary font-cta-pill text-cta-pill px-8 py-4 rounded-full hover:bg-on-primary/20 transition-colors flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-primary focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
+            >
+              Voir le programme
+              <PlayCircle className="w-4 h-4" />
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <nav
+        aria-labelledby="plan-du-site-titre"
+        className="relative max-w-7xl mx-auto mt-24 pt-10 border-t border-on-primary/30"
       >
-        VIBE HUB
-      </span>
-
-      {/* Confetti-like icon field — each references a real part of the product (Assistant IA,
-          UI Builder, Modules, code export, prompts) rather than being generic filler. */}
-      <ConfettiIconField items={FOOTER_ICONS} containerRef={footerRef} />
-
-      <div className="relative max-w-3xl mx-auto text-center">
-        <h2 className="font-display-lg text-headline-lg-mobile md:text-display-lg text-balance mb-4">
-          Tous les outils IA de votre équipe, au même endroit.
+        <h2 id="plan-du-site-titre" className="font-label-caps text-label-caps uppercase tracking-wider text-on-primary mb-6">
+          Plan du site
         </h2>
-        <p className="font-body-lg text-body-lg text-on-primary/80 mb-10">
-          Modules, Assistant IA, UI Builder - accessibles dès aujourd&apos;hui, sans compte à créer.
-        </p>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <button
-            onClick={onEnterApp}
-            className="bg-on-surface text-surface font-cta-pill text-cta-pill px-8 py-4 rounded-full hover:scale-105 transition-transform chunky-shadow chunky-shadow-pressed flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-primary focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
-          >
-            Découvrir Vibe Hub
-            <ArrowRight className="w-4 h-4" />
-          </button>
-          <a
-            href="#programme"
-            className="bg-on-primary/10 border border-on-primary/30 text-on-primary font-cta-pill text-cta-pill px-8 py-4 rounded-full hover:bg-on-primary/20 transition-colors flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-primary focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
-          >
-            Voir le programme
-            <PlayCircle className="w-4 h-4" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+          {PLAN_DU_SITE.map(({ titre, entrees }) => (
+            <div key={titre}>
+              <h3 className="font-cta-pill text-cta-pill text-on-primary mb-2">{titre}</h3>
+              <ul className="flex flex-col">
+                {entrees.map(({ label, href, tab }) => (
+                  <li key={label}>
+                    {href ? (
+                      <a href={href} className={LIEN_FOOTER}>
+                        {label}
+                      </a>
+                    ) : (
+                      <button type="button" onClick={() => onEnterTab?.(tab)} className={`${LIEN_FOOTER} text-left`}>
+                        {label}
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </nav>
+
+      {/*
+        TODO accessibilité (RGAA 6.1) — « Mentions légales » et « Confidentialité » pointent sur
+        href="#" : leur intitulé annonce une destination qui n'existe pas encore, et ils renvoient
+        en haut de page. Non-conformité connue et assumée le temps que les pages soient écrites :
+        remplacer les deux "#" par les URLs réelles suffit à la lever, le reste (cible tactile de
+        44px, anneau de focus, contraste) est déjà en place.
+      */}
+      <div className="relative max-w-7xl mx-auto mt-10 pt-6 border-t border-on-primary/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-[13px] text-on-primary/85">
+        <span className="font-body-md text-center sm:text-left">
+          © {new Date().getFullYear()} vibe hub. Outil interne — tous droits réservés.
+        </span>
+        <div className="flex gap-6">
+          <a href="#" className={LIEN_FOOTER}>
+            Mentions légales
+          </a>
+          <a href="#" className={LIEN_FOOTER}>
+            Confidentialité
           </a>
         </div>
       </div>
 
-      <div className="relative max-w-7xl mx-auto mt-20 pt-6 border-t border-on-primary/20 flex flex-col sm:flex-row items-center justify-between gap-3 text-[13px] text-on-primary/70">
-        <span className="font-body-md">© {new Date().getFullYear()} vibe hub. Outil interne — tous droits réservés.</span>
-        <div className="flex gap-6">
-          <a href="#" className="hover:text-on-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-primary rounded">
-            Mentions légales
-          </a>
-          <a href="#" className="hover:text-on-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-primary rounded">
-            Confidentialité
-          </a>
-        </div>
+      {/*
+        « Sol » du pied de page : le champ de confettis est ancré ici plutôt qu'autour du bloc CTA.
+        Deux raisons — la gravité et le rebond du composant ne racontent quelque chose que s'il y a
+        un vrai plancher sous les icônes (le bas de la page), et surtout aucun libellé ne passe
+        derrière : posé sur le CTA, le champ traversait le titre « Tous les outils IA… » et
+        dégradait son contraste. Le décor est dense mais ne croise plus aucun texte.
+      */}
+      <div ref={solRef} className="relative h-40 -mb-16 md:-mb-20">
+        <ConfettiIconField items={FOOTER_ICONS} containerRef={solRef} />
       </div>
     </footer>
   );

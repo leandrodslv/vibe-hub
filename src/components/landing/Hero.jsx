@@ -18,11 +18,16 @@ function buildStickerOutline(radius, color) {
 
 const STICKER_OUTLINE = buildStickerOutline(6, '#ffffff');
 
+// Rendu en <section> et non en <header> : ce bloc est la première section de contenu, pas la
+// bannière du site — un <header> de premier niveau créait un landmark `banner` en double avec la nav.
 export default function Hero({ onEnterApp }) {
   return (
-    <header className="px-container-margin py-section-padding md:py-24 max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12 bg-surface">
+    <section
+      aria-labelledby="hero-titre"
+      className="px-container-margin py-section-padding md:py-24 max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12 bg-surface"
+    >
       <div className="flex-1 space-y-8">
-        <h1 className="font-display-xl text-display-xl md:text-[80px] leading-tight text-on-surface">
+        <h1 id="hero-titre" className="font-display-xl text-display-xl md:text-[80px] leading-tight text-on-surface">
           L&apos;IA dans votre workflow créatif.
         </h1>
         <p className="font-body-lg text-body-lg text-on-surface-variant max-w-xl">
@@ -70,7 +75,7 @@ export default function Hero({ onEnterApp }) {
             so it hugs the letterforms with smooth, rounded corners (not a bounding box),
             and the lift shadow is a drop-shadow filter that follows that same silhouette. */}
         <div
-          className="absolute top-1/4 -left-6 z-20 -rotate-6"
+          className="absolute top-1/4 left-1 md:-left-6 z-20 -rotate-6"
           style={{ filter: 'drop-shadow(0 6px 10px rgba(0,0,0,0.35))' }}
         >
           <p
@@ -91,6 +96,7 @@ export default function Hero({ onEnterApp }) {
           style={{ filter: 'drop-shadow(0 6px 10px rgba(0,0,0,0.35))' }}
         >
           <p
+            lang="en"
             className="font-display-xl font-extrabold leading-tight text-lg text-black whitespace-nowrap"
             style={{ textShadow: STICKER_OUTLINE }}
           >
@@ -104,6 +110,6 @@ export default function Hero({ onEnterApp }) {
           </p>
         </div>
       </div>
-    </header>
+    </section>
   );
 }

@@ -29,6 +29,9 @@ export default function App() {
     <LandingPage
       onEnterApp={() => handleEnterApp('ia')}
       onEnterModules={() => handleEnterApp('modules')}
+      // Wrappers explicites : passer `handleEnterApp` directement à un onClick lui ferait
+      // recevoir l'événement souris comme paramètre `tab`.
+      onEnterTab={(tab) => handleEnterApp(tab)}
     />
   );
 }

@@ -6,7 +6,7 @@ import Programme from '../components/landing/Programme';
 import FAQ from '../components/landing/FAQ';
 import Footer from '../components/landing/Footer';
 
-export default function LandingPage({ onEnterApp, onEnterModules }) {
+export default function LandingPage({ onEnterApp, onEnterTab }) {
   // Scroll reveal
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -26,12 +26,24 @@ export default function LandingPage({ onEnterApp, onEnterModules }) {
 
   return (
     <div id="top" className="min-h-screen bg-surface text-on-surface font-body-md selection:bg-primary selection:text-on-primary">
+      {/* Lien d'évitement (RGAA 12.7) — masqué visuellement, révélé à la prise de focus clavier. */}
+      <a
+        href="#contenu"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:bg-primary focus:text-on-primary focus:font-cta-pill focus:text-cta-pill focus:px-6 focus:py-4 focus:rounded-full focus:outline-none focus:ring-2 focus:ring-on-surface focus:ring-offset-2"
+      >
+        Aller au contenu principal
+      </a>
+
       <Navbar onEnterApp={onEnterApp} />
-      <Hero onEnterApp={onEnterApp} />
-      <SocialProof />
-      <Programme onEnterApp={onEnterApp} />
-      <FAQ />
-      <Footer onEnterApp={onEnterApp} />
+
+      <main id="contenu">
+        <Hero onEnterApp={onEnterApp} />
+        <SocialProof />
+        <Programme onEnterApp={onEnterApp} />
+        <FAQ />
+      </main>
+
+      <Footer onEnterApp={onEnterApp} onEnterTab={onEnterTab} />
     </div>
   );
 }

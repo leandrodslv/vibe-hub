@@ -27,9 +27,9 @@ export default function FAQ() {
   const [openFaq, setOpenFaq] = useState(null);
 
   return (
-    <section id="faq" className="py-section-padding bg-surface">
+    <section id="faq" aria-labelledby="faq-titre" className="py-section-padding bg-surface">
       <div className="max-w-3xl mx-auto px-container-margin reveal opacity-0 translate-y-12 transition-all duration-1000 ease-out">
-        <h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-center mb-12 text-on-surface">
+        <h2 id="faq-titre" className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-center mb-12 text-on-surface">
           Questions fréquentes
         </h2>
 

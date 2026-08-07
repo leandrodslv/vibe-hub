@@ -7,6 +7,25 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Respect de la préférence système « réduire les animations » (RGAA 13.8 / WCAG 2.3.3).
+   Neutralise les animations infinies (halos du hero, spinners, points de saisie), les
+   transitions et le défilement animé. Le champ de confettis du pied de page gère déjà
+   le cas en JS ; cette règle couvre tout le reste. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 body {
   font-family: 'Hanken Grotesk', sans-serif;
 }
