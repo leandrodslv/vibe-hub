@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowRight, Bot, User, LayoutTemplate, Trash2, FolderPlus, Folder, ChevronLeft, X, Paperclip, Image as ImageIcon, Search, Settings, Pencil, Check, Zap } from 'lucide-react';
+import { ArrowRight, Bot, User, Trash2, FolderPlus, Folder, ChevronLeft, X, Paperclip, Search, Settings, Pencil, Check, Zap } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { generateAIResponse } from '../../../services/ai';
@@ -92,6 +92,10 @@ export default function IATab() {
     } else {
       handleNewChat(null);
     }
+    // Initialisation au montage uniquement : ajouter handleNewChat aux
+    // dépendances relancerait l'effet à chaque nouvelle identité de la
+    // fonction et recréerait des sessions en boucle.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
