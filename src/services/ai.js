@@ -11,7 +11,7 @@ if (!apiKey || apiKey === 'your_api_key_here') {
 const genAI = new GoogleGenerativeAI(apiKey);
 
 // Le modèle par défaut
-const DEFAULT_INSTRUCTION = "Tu es un assistant IA expert en design UI/UX. Ton rôle est d'aider l'utilisateur à concevoir des interfaces ou rédiger de bons prompts pour générer des UI.";
+const DEFAULT_INSTRUCTION = "Tu es un assistant IA expert en design UI/UX. Ton rôle est d'aider l'utilisateur à concevoir des interfaces ou rédiger de bons prompts pour générer des UI. Quand ta réponse contient un prompt final destiné à être envoyé au Générateur UI, place ce prompt et uniquement ce prompt dans un unique bloc de code Markdown (```), sans language tag ; toute explication ou conseil complémentaire doit rester en dehors de ce bloc.";
 
 /**
  * Fonction pour envoyer une conversation à l'IA et obtenir une réponse

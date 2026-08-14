@@ -1,59 +1,102 @@
-import { PlayCircle } from 'lucide-react';
+import { Clock, Sparkles } from 'lucide-react';
 
-export default function CourseCard({ course, onClick }) {
-  // Compatibilité champs Supabase (image_url, duration, module_name, description)
-  // et anciens champs statiques (image, time, mod, desc)
+const FOCUS_RING =
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface';
+
+export default function CourseCard({ course, onClick, variant = 'standard', accent, cardBg }) {
   const image = course.image_url || course.image || '';
   const duration = course.duration || course.time || '';
-  const moduleName = course.module_name || course.mod || '';
   const description = course.description || course.desc || '';
   const progressValue = course.progress ?? 0;
+  const isNew = progressValue === 0;
+  const Icon = accent?.icon || Sparkles;
 
-  return (
-    <div
-      onClick={() => onClick(course)}
-      className="bg-white border border-[#EAEAEA] rounded-2xl overflow-hidden hover:border-[#CCCCCC] hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] transition-all duration-300 cursor-pointer group flex flex-col"
-    >
-      {/* Thumbnail */}
-      <div className="h-44 bg-black flex items-center justify-center relative overflow-hidden flex-shrink-0">
-        {image ? (
-          <img
-            src={image}
-            alt={course.title}
-            className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-[#111]" />
-        )}
-        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors duration-300 z-10" />
-        <PlayCircle className="w-12 h-12 text-white/80 group-hover:text-white group-hover:scale-110 transition-all duration-300 z-20 drop-shadow-md" />
-        {duration && (
-          <div className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-sm text-white text-[11px] font-bold px-2 py-1 rounded-md z-20">
-            {duration}
+  const label = `${course.title}${duration ? `, ${duration}` : ''}, ${progressValue}% complété`;
+
+  if (variant === 'featured') {
+    return (
+      <button
+        type="button"
+        onClick={() => onClick(course)}
+        aria-label={label}
+        className={`col-span-1 lg:col-span-2 text-left bg-surface-container-lowest rounded-3xl p-6 md:p-8 flex flex-col justify-between chunky-shadow-coral relative overflow-hidden group border-2 border-transparent hover:border-secondary-container transition-all duration-300 ${FOCUS_RING}`}
+      >
+        <div
+          className="absolute -right-10 -top-10 w-48 h-48 bg-secondary-container/20 rounded-full blur-2xl group-hover:bg-secondary-container/30 transition-colors"
+          aria-hidden="true"
+        />
+        {isNew && (
+          <div className="absolute right-4 top-4">
+            <span className="inline-flex items-center justify-center px-4 py-1.5 bg-secondary-container text-on-secondary-container rounded-full font-label-caps text-label-caps tracking-widest">
+              NOUVEAU
+            </span>
           </div>
         )}
-      </div>
-
-      {/* Content */}
-      <div className="p-6 flex flex-col flex-1">
-        <span className="text-[10px] font-extrabold text-black uppercase tracking-wider mb-2 block">
-          {moduleName}
-        </span>
-        <h3 className="font-bold text-[17px] leading-tight mb-2 tracking-tight">{course.title}</h3>
-        <p className="text-[13px] text-[#666666] mb-6 line-clamp-2 leading-relaxed">{description}</p>
-
-        <div className="mt-auto">
-          <div className="w-full h-1 bg-[#F4F4F4] rounded-full overflow-hidden mb-2">
+        {image && (
+          <img
+            src={image}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover opacity-10 group-hover:opacity-15 transition-opacity duration-500"
+          />
+        )}
+        <div className="relative z-10 w-full md:w-2/3 mb-12">
+          <div className="w-12 h-12 bg-secondary-container rounded-lg flex items-center justify-center mb-6">
+            <Icon className="w-6 h-6 text-on-secondary-container" aria-hidden="true" />
+          </div>
+          <h3 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-3 leading-tight">
+            {course.title}
+          </h3>
+          <p className="font-body-md text-body-md text-on-surface-variant mb-6 line-clamp-2">{description}</p>
+        </div>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 w-full mt-auto">
+          <div className="flex items-center gap-4">
+            {duration && (
+              <div className="flex items-center gap-2 text-on-surface-variant">
+                <Clock className="w-4 h-4" aria-hidden="true" />
+                <span className="font-label-caps text-label-caps">{duration}</span>
+              </div>
+            )}
+            <div className="w-1 h-1 bg-outline rounded-full" aria-hidden="true" />
+            <span className="font-label-caps text-label-caps text-on-surface-variant">{progressValue}% COMPLÉTÉ</span>
+          </div>
+          <div className="w-full md:w-48 h-2 bg-surface-variant rounded-full overflow-hidden">
             <div
-              className="h-full bg-black rounded-full transition-all duration-1000"
+              className="h-full bg-secondary-container rounded-full transition-all duration-1000"
               style={{ width: `${progressValue}%` }}
             />
           </div>
-          <div className="text-[11px] text-[#999999] font-semibold text-right">
-            {progressValue}% complété
-          </div>
+        </div>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(course)}
+      aria-label={label}
+      className={`text-left ${cardBg} rounded-3xl p-6 flex flex-col justify-between chunky-shadow relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300 border border-surface-variant ${FOCUS_RING}`}
+    >
+      <div className="relative z-10 mb-8">
+        <div className={`w-10 h-10 ${accent.chipBg} rounded-lg flex items-center justify-center mb-4`}>
+          <Icon className={`w-5 h-5 ${accent.chipText}`} aria-hidden="true" />
+        </div>
+        <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-2">{course.title}</h3>
+        <p className="font-body-md text-body-md text-on-surface-variant line-clamp-2">{description}</p>
+      </div>
+      <div className="relative z-10 flex flex-col gap-4 mt-auto">
+        <div className="flex justify-between text-on-surface-variant">
+          {duration && <span className="font-label-caps text-label-caps">{duration}</span>}
+          <span className="font-label-caps text-label-caps">{progressValue}% COMPLÉTÉ</span>
+        </div>
+        <div className="w-full h-2 bg-surface-variant rounded-full overflow-hidden">
+          <div
+            className={`h-full ${accent.barBg} rounded-full transition-all duration-1000`}
+            style={{ width: `${progressValue}%` }}
+          />
         </div>
       </div>
-    </div>
+    </button>
   );
 }

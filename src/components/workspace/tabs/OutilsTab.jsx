@@ -65,8 +65,13 @@ const TOOLS = [
 
 const CATEGORIES = ['Tous', 'Design', 'Dev', 'Texte', 'IA'];
 
-export default function OutilsTab() {
+export default function OutilsTab({ initialPrompt }) {
   const [activeToolId, setActiveToolId] = useState(null);
+
+  // Hand-off depuis l'Assistant IA : un prompt "envoyé au Générateur" ouvre directement l'UI Builder.
+  useEffect(() => {
+    if (initialPrompt) setActiveToolId('ui-builder');
+  }, [initialPrompt]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('Tous');
 
@@ -185,7 +190,7 @@ export default function OutilsTab() {
       ) : (
         <ToolViewWrapper tool={activeTool} onBack={() => setActiveToolId(null)}>
           {activeToolId === 'ui-builder' ? (
-            <UIBuilderView />
+            <UIBuilderView initialPrompt={initialPrompt} />
           ) : (
             <ComingSoonView tool={activeTool} onBack={() => setActiveToolId(null)} />
           )}
@@ -468,10 +473,14 @@ function NotifyModal({ tool, onClose, onSuccess }) {
 }
 
 /* ─── UI Builder View ─── */
-function UIBuilderView() {
+function UIBuilderView({ initialPrompt }) {
   const [inputValue, setInputValue] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGenerated, setIsGenerated] = useState(false);
+
+  useEffect(() => {
+    if (initialPrompt) setInputValue(initialPrompt);
+  }, [initialPrompt]);
 
   const handleGenerate = () => {
     if (!inputValue.trim() || isGenerating) return;
