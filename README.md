@@ -64,9 +64,12 @@ L'onglet actif du workspace est écrit dans l'URL (`history.replaceState`) : le 
 copiable et un rafraîchissement retombe sur le même onglet. Toutes ces routes se construisent
 via `src/lib/routes.js` — ne pas écrire les chemins en dur dans les composants.
 
-> **Déploiement :** ces routes sont servies côté client. L'hébergeur doit réécrire toute
-> requête inconnue vers `index.html` (SPA fallback), sinon `/app` et `/admin` renverront un
-> 404 en production. `npm run dev` et `npm run preview` le font déjà nativement.
+> **Déploiement (Vercel) :** ces routes sont résolues côté client. Sans réécriture côté
+> serveur, un accès direct à `/app` ou `/admin` chercherait un fichier qui n'existe pas et
+> renverrait un 404. Le `vercel.json` à la racine réécrit donc toute requête inconnue vers
+> `index.html` — les fichiers statiques (`/assets/**`) restent servis normalement, les
+> rewrites ne s'appliquant qu'après le check du système de fichiers. `npm run dev` et
+> `npm run preview` le font déjà nativement.
 
 ## Installation & démarrage
 
