@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ArrowRight, Menu, X } from 'lucide-react';
+import { appHref, MENTION_NOUVEL_ONGLET, NOUVEL_ONGLET } from '../../lib/routes';
 
 const LINKS = [
   { href: '#top', label: 'Accueil', current: true },
@@ -7,7 +8,7 @@ const LINKS = [
   { href: '#outils-showcase', label: 'Outils' },
 ];
 
-export default function Navbar({ onEnterApp }) {
+export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
@@ -56,13 +57,15 @@ export default function Navbar({ onEnterApp }) {
           ))}
 
           {/* CTA — desktop */}
-          <button
-            onClick={onEnterApp}
+          <a
+            href={appHref()}
+            {...NOUVEL_ONGLET}
             className="hidden md:flex items-center gap-2 min-h-[44px] bg-primary text-on-primary font-cta-pill text-cta-pill px-6 py-3 rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors chunky-shadow chunky-shadow-pressed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             Découvrir Vibe Hub
-            <ArrowRight className="w-4 h-4" />
-          </button>
+            <span className="sr-only">{MENTION_NOUVEL_ONGLET}</span>
+            <ArrowRight className="w-4 h-4" aria-hidden="true" />
+          </a>
 
           {/* Déclencheur du menu — mobile */}
           <button
@@ -99,16 +102,16 @@ export default function Navbar({ onEnterApp }) {
             ))}
           </ul>
 
-          <button
-            onClick={() => {
-              setIsMenuOpen(false);
-              onEnterApp();
-            }}
+          <a
+            href={appHref()}
+            {...NOUVEL_ONGLET}
+            onClick={() => setIsMenuOpen(false)}
             className="mt-3 w-full flex items-center justify-center gap-2 min-h-[44px] bg-primary text-on-primary font-cta-pill text-cta-pill px-6 py-3 rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors chunky-shadow chunky-shadow-pressed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             Découvrir Vibe Hub
+            <span className="sr-only">{MENTION_NOUVEL_ONGLET}</span>
             <ArrowRight className="w-4 h-4" aria-hidden="true" />
-          </button>
+          </a>
         </div>
       )}
     </nav>

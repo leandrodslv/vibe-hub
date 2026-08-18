@@ -32,15 +32,41 @@ src/
 │           └── CourseDetail.jsx
 ├── data/
 │   └── courses.js        # Données des cours et FAQs
+├── lib/
+│   └── routes.js         # Routes de l'app + helpers de liens (`/`, `/app`, `/admin`)
 ├── hooks/
 │   └── useTypewriter.js  # Hook effet machine à écrire
 ├── pages/
 │   ├── LandingPage.jsx
-│   └── WorkspacePage.jsx
-├── App.jsx               # Router principal (landing ↔ workspace)
+│   ├── WorkspacePage.jsx
+│   └── AdminPage.jsx
+├── App.jsx               # Router principal (résolution de la route au chargement)
 ├── main.jsx
 └── index.css
 ```
+
+## Routes
+
+La landing et le logiciel sont **débranchés** : ce sont deux URLs distinctes, pas deux états
+d'un même composant. Les CTA « Découvrir Vibe Hub » sont de vrais liens qui ouvrent le
+logiciel dans un **nouvel onglet** (`target="_blank"` + `rel="noopener noreferrer"`), en
+laissant la landing intacte dans l'onglet d'origine.
+
+| URL | Écran |
+|---|---|
+| `/` | Landing page publique |
+| `/app` | Logiciel — onglet Assistant IA (défaut) |
+| `/app?tab=modules` | Logiciel — onglet Cours |
+| `/app?tab=outils` | Logiciel — onglet Outils |
+| `/admin` | Administration des cours |
+
+L'onglet actif du workspace est écrit dans l'URL (`history.replaceState`) : le lien reste
+copiable et un rafraîchissement retombe sur le même onglet. Toutes ces routes se construisent
+via `src/lib/routes.js` — ne pas écrire les chemins en dur dans les composants.
+
+> **Déploiement :** ces routes sont servies côté client. L'hébergeur doit réécrire toute
+> requête inconnue vers `index.html` (SPA fallback), sinon `/app` et `/admin` renverront un
+> 404 en production. `npm run dev` et `npm run preview` le font déjà nativement.
 
 ## Installation & démarrage
 
@@ -61,7 +87,7 @@ Ouvre [http://localhost:5173](http://localhost:5173) dans ton navigateur.
 
 ## Prochaines étapes suggérées
 
-- [ ] Ajouter React Router pour des URLs propres (`/`, `/workspace`)
+- [ ] Passer à React Router si le besoin de routes imbriquées apparaît (routage maison pour l'instant, cf. `src/lib/routes.js`)
 - [ ] Connecter un vrai backend (Supabase, Firebase) pour la progression des cours
 - [ ] Brancher l'IA réelle sur l'onglet IA (Anthropic API / OpenAI)
 - [ ] Ajouter TypeScript

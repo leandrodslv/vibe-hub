@@ -1,37 +1,15 @@
-import { useState } from 'react';
 import LandingPage from './pages/LandingPage';
 import WorkspacePage from './pages/WorkspacePage';
 import AdminPage from './pages/AdminPage';
+import { currentRoute } from './lib/routes';
 
-const isAdminRoute = window.location.pathname === '/admin';
+// Le routage est résolu une seule fois, au chargement du document : chaque route est une
+// URL à part entière, donc chaque changement de route est une navigation (ou un nouvel
+// onglet). La landing ne connaît plus l'état du logiciel, et inversement.
+const route = currentRoute();
 
 export default function App() {
-  const [view, setView] = useState('landing'); // 'landing' | 'app'
-  const [initialTab, setInitialTab] = useState('ia');
-
-  if (isAdminRoute) return <AdminPage />;
-
-  const handleEnterApp = (tab = 'ia') => {
-    setInitialTab(tab);
-    setView('app');
-  };
-
-  if (view === 'app') {
-    return (
-      <WorkspacePage
-        initialTab={initialTab}
-        onBack={() => setView('landing')}
-      />
-    );
-  }
-
-  return (
-    <LandingPage
-      onEnterApp={() => handleEnterApp('ia')}
-      onEnterModules={() => handleEnterApp('modules')}
-      // Wrappers explicites : passer `handleEnterApp` directement à un onClick lui ferait
-      // recevoir l'événement souris comme paramètre `tab`.
-      onEnterTab={(tab) => handleEnterApp(tab)}
-    />
-  );
+  if (route === 'admin') return <AdminPage />;
+  if (route === 'app') return <WorkspacePage />;
+  return <LandingPage />;
 }

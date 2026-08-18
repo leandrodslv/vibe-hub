@@ -1,10 +1,11 @@
 import { LayoutGrid, CreditCard, PlaySquare, Wand2, ArrowRight } from 'lucide-react';
 import assistantIaImage from '../../assets/landing/assistant-ia.jpg';
+import { appHref, MENTION_NOUVEL_ONGLET, NOUVEL_ONGLET } from '../../lib/routes';
 
 // L'IntersectionObserver qui pilote les `.reveal` vit dans LandingPage : il observe déjà
 // `document.querySelectorAll('.reveal')` pour toute la page. Le dupliquer ici faisait observer
 // deux fois les mêmes nœuds.
-export default function Programme({ onEnterApp }) {
+export default function Programme() {
   return (
     <section id="programme" aria-labelledby="programme-titre" className="py-section-padding px-container-margin max-w-7xl mx-auto">
       <h2
@@ -27,13 +28,15 @@ export default function Programme({ onEnterApp }) {
             <p className="font-body-md text-body-md text-on-tertiary-fixed-variant mb-6">
               Décrivez une idée de design en langage naturel et recevez un prompt structuré, prêt à générer.
             </p>
-            <button
-              onClick={onEnterApp}
+            <a
+              href={appHref('ia')}
+              {...NOUVEL_ONGLET}
               className="bg-on-tertiary-fixed text-tertiary-fixed font-cta-pill text-cta-pill px-6 py-3 min-h-[44px] rounded-full hover:scale-105 transition-transform flex items-center gap-2 w-fit focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
               Découvrir l&apos;IA
-              <ArrowRight className="w-4 h-4" />
-            </button>
+              <span className="sr-only">{MENTION_NOUVEL_ONGLET}</span>
+              <ArrowRight className="w-4 h-4" aria-hidden="true" />
+            </a>
           </div>
           {/* Approved brand illustration from the Stitch design system (mockups/landing.html) */}
           <div className="absolute right-0 bottom-0 w-2/3 h-2/3 translate-x-1/4 translate-y-1/4 group-hover:translate-x-[15%] transition-transform duration-700 rounded-tl-[100px] overflow-hidden">

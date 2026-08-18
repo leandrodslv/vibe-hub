@@ -1,5 +1,6 @@
 import { ArrowRight, PlayCircle } from 'lucide-react';
 import heroCollage from '../../assets/landing/hero-collage.png';
+import { appHref, MENTION_NOUVEL_ONGLET, NOUVEL_ONGLET } from '../../lib/routes';
 
 // Builds a smooth, rounded text-shadow outline (concentric rings of offsets)
 // so the sticker border hugs the letterforms without the sharp/jagged corners
@@ -20,7 +21,7 @@ const STICKER_OUTLINE = buildStickerOutline(6, '#ffffff');
 
 // Rendu en <section> et non en <header> : ce bloc est la première section de contenu, pas la
 // bannière du site — un <header> de premier niveau créait un landmark `banner` en double avec la nav.
-export default function Hero({ onEnterApp }) {
+export default function Hero() {
   return (
     <section
       aria-labelledby="hero-titre"
@@ -35,13 +36,15 @@ export default function Hero({ onEnterApp }) {
           les outils que votre équipe design a déjà à sa disposition.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 pt-4">
-          <button
-            onClick={onEnterApp}
+          <a
+            href={appHref()}
+            {...NOUVEL_ONGLET}
             className="bg-on-surface text-surface font-cta-pill text-cta-pill px-8 py-4 rounded-full hover:scale-105 transition-transform chunky-shadow chunky-shadow-pressed flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             Découvrir Vibe Hub
-            <ArrowRight className="w-4 h-4" />
-          </button>
+            <span className="sr-only">{MENTION_NOUVEL_ONGLET}</span>
+            <ArrowRight className="w-4 h-4" aria-hidden="true" />
+          </a>
           <a
             href="#programme"
             className="bg-surface-container text-on-surface font-cta-pill text-cta-pill px-8 py-4 rounded-full hover:bg-surface-variant transition-colors flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"

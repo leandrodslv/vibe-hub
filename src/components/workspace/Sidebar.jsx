@@ -1,4 +1,5 @@
 import { Bot, Wrench, Bell, Settings } from 'lucide-react';
+import { ROUTES } from '../../lib/routes';
 
 // "view_quilt" reprend l'icône du nav Modules/Cours telle que produite par Stitch
 // (mockups/modules.html), d'où le glyphe Material Symbols plutôt qu'un icône Lucide
@@ -28,20 +29,22 @@ function TabIcon({ tab, active }) {
   return <Icon className="w-5 h-5" aria-hidden="true" />;
 }
 
-export default function Sidebar({ activeTab, onTabChange, onBack }) {
+// Le logo est un lien vers la landing et non un bouton : le logiciel vit à sa propre URL,
+// « revenir à l'accueil » est donc une navigation, pas un changement d'état local.
+export default function Sidebar({ activeTab, onTabChange }) {
   return (
     <>
       {/* Sidebar desktop */}
       <header className="hidden md:flex flex-col w-64 bg-surface h-screen fixed left-0 top-0 border-r-2 border-surface-variant p-6 z-40">
-        <button
-          onClick={onBack}
+        <a
+          href={ROUTES.landing}
           aria-label="Retour à l'accueil Vibe Hub"
           className={`mb-12 w-fit text-left rounded-lg ${FOCUS_RING}`}
         >
           <span className="font-display-lg text-display-lg text-on-surface font-extrabold tracking-tight">
             vibe hub
           </span>
-        </button>
+        </a>
 
         <nav aria-label="Navigation workspace" className="flex flex-col gap-2 flex-1">
           {TABS.map((tab) => (
@@ -77,15 +80,15 @@ export default function Sidebar({ activeTab, onTabChange, onBack }) {
 
       {/* Top bar mobile */}
       <header className="md:hidden flex justify-between items-center px-container-margin py-4 w-full bg-surface sticky top-0 z-40 border-b-2 border-surface-variant">
-        <button
-          onClick={onBack}
+        <a
+          href={ROUTES.landing}
           aria-label="Retour à l'accueil Vibe Hub"
           className={`rounded-lg ${FOCUS_RING}`}
         >
           <span className="font-display-lg text-headline-lg-mobile text-on-surface font-extrabold tracking-tight">
             vibe hub
           </span>
-        </button>
+        </a>
         <div className="flex gap-4" aria-hidden="true">
           <Bell className="w-5 h-5 text-on-surface-variant" />
           <Settings className="w-5 h-5 text-on-surface-variant" />
