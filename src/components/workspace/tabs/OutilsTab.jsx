@@ -1,7 +1,10 @@
 import { useState, useDeferredValue, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {
   Sparkles, ArrowRight, Network, LayoutTemplate, ShieldCheck,
-  PenTool, Palette, Eye, ChevronLeft, Search, X, Zap, Bell, Check, Mail
+  PenTool, Palette, Eye, ChevronLeft, Search, X, Zap, Bell, Check, Mail,
+  Accessibility, ScanSearch, Wand2, AlertTriangle
 } from 'lucide-react';
 import { addToWaitlist } from '../../../services/supabase';
 
@@ -61,9 +64,20 @@ const TOOLS = [
     status: 'coming',
     category: 'IA',
   },
+  {
+    id: 'diagnostic-rgaa',
+    name: 'Diagnostic RGAA',
+    description: "Analysez l'accessibilité d'un code HTML/JSX : contraste, ARIA, clavier, lecteur d'écran — conforme RGAA 4.1 / WCAG 2.1 AA.",
+    icon: Accessibility,
+    gradient: 'from-cyan-500 to-teal-600',
+    shadowColor: 'shadow-cyan-500/20',
+    tags: ['A11y', 'RGAA'],
+    status: 'live',
+    category: 'Accessibilité',
+  },
 ];
 
-const CATEGORIES = ['Tous', 'Design', 'Dev', 'Texte', 'IA'];
+const CATEGORIES = ['Tous', 'Design', 'Dev', 'Texte', 'IA', 'Accessibilité'];
 
 export default function OutilsTab({ initialPrompt }) {
   const [activeToolId, setActiveToolId] = useState(null);
@@ -191,6 +205,8 @@ export default function OutilsTab({ initialPrompt }) {
         <ToolViewWrapper tool={activeTool} onBack={() => setActiveToolId(null)}>
           {activeToolId === 'ui-builder' ? (
             <UIBuilderView initialPrompt={initialPrompt} />
+          ) : activeToolId === 'diagnostic-rgaa' ? (
+            <DiagnosticRGAAView />
           ) : (
             <ComingSoonView tool={activeTool} onBack={() => setActiveToolId(null)} />
           )}
@@ -634,6 +650,238 @@ function UIBuilderView({ initialPrompt }) {
             <ArrowRight className="w-5 h-5" />
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Diagnostic RGAA View ─── */
+function DiagnosticRGAAView() {
+  const SAMPLE_HTML = `<div class="card">
+  <img src="chart.png">
+  <div onclick="openDetails()" class="btn">Voir plus</div>
+  <input type="text" placeholder="Votre email">
+  <p style="color:#999">Erreur : champ requis</p>
+</div>`;
+
+  const [code, setCode] = useState('');
+  const [axeResult, setAxeResult] = useState(null);
+  const [axeError, setAxeError] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [aiReport, setAiReport] = useState(null);
+  const [isDeepening, setIsDeepening] = useState(false);
+
+  const severityMeta = {
+    bloquant: { emoji: '🔴', className: 'bg-red-50 border-red-200 text-red-700' },
+    majeur: { emoji: '🟠', className: 'bg-orange-50 border-orange-200 text-orange-700' },
+    mineur: { emoji: '🟡', className: 'bg-yellow-50 border-yellow-200 text-yellow-700' },
+  };
+
+  const handleAnalyze = async () => {
+    if (!code.trim() || isAnalyzing) return;
+    setIsAnalyzing(true);
+    setAxeError(null);
+    setAxeResult(null);
+    setAiReport(null);
+    try {
+      const { runAxeAudit } = await import('../../../services/rgaa');
+      const result = await runAxeAudit(code);
+      setAxeResult(result);
+    } catch (err) {
+      setAxeError(err.message || "L'analyse a échoué.");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const handleDeepen = async () => {
+    if (!axeResult || isDeepening) return;
+    setIsDeepening(true);
+    try {
+      const { generateRgaaDiagnostic } = await import('../../../services/rgaa');
+      const report = await generateRgaaDiagnostic(code, axeResult);
+      setAiReport(report);
+    } finally {
+      setIsDeepening(false);
+    }
+  };
+
+  const counts = axeResult
+    ? axeResult.violations.reduce((acc, v) => {
+        acc[v.severity] = (acc[v.severity] || 0) + 1;
+        return acc;
+      }, {})
+    : {};
+
+  return (
+    <div className="flex-1 h-full flex flex-col md:flex-row overflow-hidden">
+      {/* Left — input */}
+      <div className="w-full md:w-[38%] flex flex-col border-r border-[#EAEAEA] bg-[#FAFAFA] overflow-hidden">
+        <div className="p-5 flex-1 flex flex-col overflow-hidden">
+          <div className="flex items-center justify-between mb-3">
+            <label className="text-[12px] font-bold text-black uppercase tracking-wider">Code à analyser</label>
+            <button
+              onClick={() => setCode(SAMPLE_HTML)}
+              className="text-[12px] font-semibold text-[#666] hover:text-black underline underline-offset-2 cursor-pointer"
+            >
+              Essayer un exemple
+            </button>
+          </div>
+          <textarea
+            value={code}
+            onChange={e => setCode(e.target.value)}
+            placeholder="Collez ici un extrait HTML ou JSX…"
+            spellCheck={false}
+            className="flex-1 w-full bg-white border border-[#EAEAEA] rounded-xl p-4 text-[13px] font-mono text-black outline-none focus:border-black transition-all resize-none placeholder:text-[#999]"
+          />
+          <button
+            onClick={handleAnalyze}
+            disabled={!code.trim() || isAnalyzing}
+            className="mt-4 w-full flex items-center justify-center gap-2 bg-black text-white text-sm font-bold py-3 rounded-xl hover:bg-[#333] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-lg shadow-black/10"
+          >
+            {isAnalyzing ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Analyse en cours…
+              </>
+            ) : (
+              <>
+                <ScanSearch className="w-4 h-4" />
+                Analyser
+              </>
+            )}
+          </button>
+          <p className="mt-3 text-[11px] text-[#999] leading-relaxed">
+            Analyse locale via axe-core — aucune donnée envoyée à un serveur pour cette étape, aucune clé requise.
+          </p>
+        </div>
+      </div>
+
+      {/* Right — results */}
+      <div className="flex-1 overflow-y-auto p-6">
+        {!axeResult && !axeError && !isAnalyzing && (
+          <div className="h-full flex flex-col items-center justify-center text-center py-16">
+            <div className="w-14 h-14 bg-[#F4F4F4] rounded-2xl flex items-center justify-center mb-4">
+              <Accessibility className="w-6 h-6 text-[#CCCCCC]" />
+            </div>
+            <p className="text-black font-semibold mb-1">Prêt à diagnostiquer</p>
+            <p className="text-[#666] text-sm max-w-xs">Collez du code à gauche et lancez l'analyse, ou testez avec l'exemple fourni.</p>
+          </div>
+        )}
+
+        {isAnalyzing && (
+          <div className="h-full flex flex-col items-center justify-center text-center py-16">
+            <div className="w-10 h-10 border-[3px] border-[#EAEAEA] border-t-black rounded-full animate-spin mb-4" />
+            <p className="text-black font-semibold">Analyse en cours…</p>
+          </div>
+        )}
+
+        {axeError && (
+          <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4">
+            <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-red-700">{axeError}</p>
+          </div>
+        )}
+
+        {axeResult && (
+          <div className="space-y-6">
+            {/* Score header */}
+            <div className="flex items-center gap-4 bg-white border border-[#EAEAEA] rounded-2xl p-5">
+              <div
+                className={`w-16 h-16 rounded-2xl flex items-center justify-center text-lg font-bold flex-shrink-0 ${
+                  axeResult.score >= 80
+                    ? 'bg-emerald-50 text-emerald-600'
+                    : axeResult.score >= 50
+                    ? 'bg-orange-50 text-orange-600'
+                    : 'bg-red-50 text-red-600'
+                }`}
+              >
+                {axeResult.score}%
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-black font-bold text-[15px] mb-1">Score de conformité axe-core</p>
+                <div className="flex items-center gap-3 text-[12px] font-semibold flex-wrap">
+                  <span className="text-red-600">🔴 {counts.bloquant || 0} bloquant{(counts.bloquant || 0) > 1 ? 's' : ''}</span>
+                  <span className="text-orange-600">🟠 {counts.majeur || 0} majeur{(counts.majeur || 0) > 1 ? 's' : ''}</span>
+                  <span className="text-yellow-600">🟡 {counts.mineur || 0} mineur{(counts.mineur || 0) > 1 ? 's' : ''}</span>
+                  <span className="text-[#999]">· {axeResult.passesCount} règles conformes</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Violations list */}
+            {axeResult.violations.length === 0 ? (
+              <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-sm font-semibold">
+                <Check className="w-4 h-4" />
+                Aucun problème détecté par axe-core sur ce code.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {axeResult.violations.map((v, i) => {
+                  const meta = severityMeta[v.severity];
+                  return (
+                    <div key={i} className={`border rounded-xl p-4 ${meta.className}`}>
+                      <div className="flex items-center justify-between gap-3 mb-2">
+                        <span className="text-[13px] font-bold">{meta.emoji} {v.help}</span>
+                        <a
+                          href={v.helpUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[11px] font-semibold underline underline-offset-2 opacity-70 hover:opacity-100 flex-shrink-0"
+                        >
+                          En savoir plus
+                        </a>
+                      </div>
+                      <p className="text-[12px] opacity-80 mb-2">{v.description}</p>
+                      {v.nodes.slice(0, 3).map((n, j) => (
+                        <pre key={j} className="bg-white/60 border border-black/5 rounded-lg p-2 text-[11px] font-mono overflow-x-auto mt-1 whitespace-pre-wrap">
+                          {n.target} → {n.html}
+                        </pre>
+                      ))}
+                      {v.nodes.length > 3 && (
+                        <p className="text-[11px] opacity-70 mt-1">+ {v.nodes.length - 3} autre(s) occurrence(s)</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* AI deepen */}
+            <div className="border-t border-[#EAEAEA] pt-5">
+              {!aiReport && (
+                <button
+                  onClick={handleDeepen}
+                  disabled={isDeepening}
+                  className="flex items-center gap-2 text-sm font-bold bg-white border border-[#EAEAEA] text-black px-4 py-2.5 rounded-xl hover:border-black transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {isDeepening ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                      L'IA analyse le contexte…
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="w-4 h-4" />
+                      Approfondir avec l'IA
+                    </>
+                  )}
+                </button>
+              )}
+              {!aiReport && !isDeepening && (
+                <p className="mt-2 text-[11px] text-[#999]">
+                  Va au-delà d'axe-core : pertinence des textes alternatifs, qualité des libellés, corrections de code prêtes à copier.
+                </p>
+              )}
+
+              {aiReport && (
+                <div className="mt-2 bg-white border border-[#EAEAEA] rounded-2xl p-5 prose prose-sm max-w-none prose-p:leading-relaxed">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{aiReport}</ReactMarkdown>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
