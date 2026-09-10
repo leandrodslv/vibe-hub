@@ -33,7 +33,9 @@ test.describe('Chaos réseau — dégradation gracieuse', () => {
     await expect(page.getByRole('alert')).toHaveCount(0);
   });
 
-  test('proxy IA en panne → l’assistant répond une erreur lisible, sans crash', async ({ page }) => {
+  test('proxy IA en panne → l’assistant répond une erreur lisible, sans crash', async ({
+    page,
+  }) => {
     // AD-1 : `ai.js` appelle l'Edge Function `gemini-proxy`, plus Gemini en direct.
     await page.route('**/gemini-proxy*', (route) =>
       route.fulfill({
