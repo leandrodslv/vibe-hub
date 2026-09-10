@@ -55,7 +55,7 @@ src/
 
 supabase/
   migrations/             RLS (AD-3) + get_waitlist_counts (AD-4)
-  functions/gemini-proxy/ Edge Function cible pour AD-1 (à déployer)
+  functions/gemini-proxy/ Edge Function AD-1 — ai.js la fetch() (reste : la déployer)
 
 scripts/perf/             Tests de charge/stress k6 (smoke, load, spike, stress)
 e2e/                      Tests Playwright

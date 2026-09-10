@@ -83,20 +83,25 @@ if (existsSync(SPINE)) {
 const targets = [];
 
 const aiSrc = existsSync('src/services/ai.js') ? readFileSync('src/services/ai.js', 'utf8') : '';
-if (/@google\/generative-ai/.test(aiSrc) && /env\.geminiApiKey/.test(aiSrc)) {
-  targets.push({
-    item: 'AD-1 — appels Gemini depuis le navigateur, clé dans le bundle',
-    evidence:
-      'src/services/ai.js importe @google/generative-ai + utilise env.geminiApiKey ; edge function gemini-proxy fournie mais non branchée',
-    severity: '🔴 critique',
-  });
-}
 const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
-if (pkg.dependencies?.['@google/generative-ai']) {
+// AD-1 est résolu (fix/ad-1-gemini-proxy) : `ai.js` passe par `fetch()` vers
+// l'Edge Function. On détecte désormais une RÉGRESSION — retour d'un SDK Gemini
+// côté client ou réapparition d'une clé `VITE_GEMINI_*`.
+const geminiSdkBack =
+  /@google\/(generative-ai|genai)/.test(aiSrc) ||
+  Boolean(pkg.dependencies?.['@google/generative-ai']);
+const geminiKeyBack = /VITE_GEMINI_API_KEY|geminiApiKey/.test(aiSrc);
+if (geminiSdkBack || geminiKeyBack) {
   targets.push({
-    item: '@google/generative-ai — déprécié par Google',
-    evidence: `dependencies["@google/generative-ai"]=${pkg.dependencies['@google/generative-ai']} ; le Spine impose @google/genai pour le proxy`,
-    severity: '🟠 moyen',
+    item: 'AD-1 — RÉGRESSION : Gemini rappelé côté navigateur',
+    evidence: [
+      geminiSdkBack && 'un SDK Gemini est de retour côté client (dépendance ou import dans ai.js)',
+      geminiKeyBack && 'une clé VITE_GEMINI_* / env.geminiApiKey est de retour dans ai.js',
+      'ai.js doit rester un simple fetch() vers env.geminiProxyUrl',
+    ]
+      .filter(Boolean)
+      .join(' ; '),
+    severity: '🔴 critique',
   });
 }
 if (existsSync('src/data/courses.js')) {

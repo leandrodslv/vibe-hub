@@ -1,13 +1,15 @@
 import { describe, it, expect, vi } from 'vitest';
 import { makeRng, pickFaults, applyFaults, writeReport } from './harness.js';
 
-// Env mocké : clé factice reconnaissable (on vérifie qu'elle ne FUIT jamais dans
-// une réponse rendue à l'utilisateur), Supabase/IA « configurés ».
-const FAKE_KEY = 'AQ.sim-key-DO-NOT-LEAK';
+// Env mocké : depuis la migration AD-1, la clé Gemini ne vit plus côté client —
+// `ai.js` ne connaît que l'URL (publique) du proxy. `FAKE_SECRET` sert de
+// sentinelle : on vérifie qu'aucun secret ne FUIT dans une réponse rendue à
+// l'utilisateur (le proxy est mocké par MSW, il ne renvoie jamais ce marqueur).
+const FAKE_SECRET = 'AQ.sim-key-DO-NOT-LEAK';
 
 vi.mock('../../config/env.js', () => ({
   env: {
-    geminiApiKey: FAKE_KEY,
+    geminiProxyUrl: 'https://proxy.test/gemini-proxy',
     supabaseUrl: 'https://sim.supabase.co',
     supabaseAnonKey: 'sim-anon',
     mode: 'test',
@@ -54,8 +56,8 @@ describe('simulation de résilience (seedée)', () => {
         return fail('generateAIResponse', 'doit renvoyer une string non vide', reply);
       }
 
-      // ── Invariant 2 : la clé API ne fuit jamais dans la réponse ─────────────
-      if (reply.includes(FAKE_KEY) || reply.includes('sim-anon')) {
+      // ── Invariant 2 : aucun secret ne fuit dans la réponse ─────────────────
+      if (reply.includes(FAKE_SECRET) || reply.includes('sim-anon')) {
         return fail('generateAIResponse', 'la réponse ne doit jamais contenir un secret', reply);
       }
 

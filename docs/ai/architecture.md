@@ -14,20 +14,22 @@ src/pages/, components/  src/services/*.js             Supabase (PG + Auth)
         └────────────►───────────┴────────────►─────────
 ```
 
-Un composant **n'importe jamais** `@supabase/supabase-js` ni `@google/generative-ai`.
-Il appelle une fonction de `src/services/`. (ESLint `no-restricted-imports` + règle Semgrep
+Un composant **n'importe jamais** `@supabase/supabase-js` ni un SDK Gemini
+(`@google/generative-ai` / `@google/genai`). Il appelle une fonction de `src/services/`.
+Depuis AD-1, même `services/ai.js` n'utilise plus de SDK Gemini : il fait un `fetch()` vers
+l'Edge Function `gemini-proxy`. (ESLint `no-restricted-imports` + règle Semgrep
 `external-sdk-import-outside-services` le vérifient.)
 
 ## Les 6 invariants (AD-1 … AD-6)
 
-| #        | Invariant                                                                                                          | État                                                                                                       |
-| -------- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
-| **AD-1** | Les appels Gemini ne tournent **jamais** côté navigateur (clé exposée)                                             | ⚠️ **violé** — `services/ai.js` appelle Gemini depuis le front. Cible : `supabase/functions/gemini-proxy`. |
-| **AD-2** | Seuls `src/services/*` importent un SDK externe / parlent à un système externe                                     | ✅ appliqué (`AdminPage` migré vers les wrappers `signIn/signOut/getSession/onAuthChange`)                 |
-| **AD-3** | L'autorité d'écriture sur `courses` / `waitlist` = RLS Postgres, pas le React                                      | 🟡 migration fournie (`supabase/migrations/0001`), **à appliquer + auditer l'existant**                    |
-| **AD-4** | La demande waitlist se lit via un **agrégat** (`get_waitlist_counts`), jamais les lignes brutes                    | 🟡 fonction fournie, `getWaitlistCounts()` à ajouter dans `services/supabase.js`                           |
-| **AD-5** | Le code généré par l'IA ne s'affiche que dans un **iframe sandbox** isolé                                          | 🟡 UI Builder encore mocké ; `isAllowedVideoUrl` déjà en place pour les embeds cours                       |
-| **AD-6** | Deux tiers de persistance : Supabase (durable/partagé) · `localStorage` préfixé (`ai_*`, `progress_*`) — pas de 3ᵉ | ✅ respecté                                                                                                |
+| #        | Invariant                                                                                                          | État                                                                                                                                                                            |
+| -------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **AD-1** | Les appels Gemini ne tournent **jamais** côté navigateur (clé exposée)                                             | ✅ code réglé — `services/ai.js` = `fetch()` vers `supabase/functions/gemini-proxy` (clé serveur). Reste : déployer le proxy + révoquer l'ancienne clé (cf. security-rules.md). |
+| **AD-2** | Seuls `src/services/*` importent un SDK externe / parlent à un système externe                                     | ✅ appliqué (`AdminPage` migré vers les wrappers `signIn/signOut/getSession/onAuthChange`)                                                                                      |
+| **AD-3** | L'autorité d'écriture sur `courses` / `waitlist` = RLS Postgres, pas le React                                      | 🟡 migration fournie (`supabase/migrations/0001`), **à appliquer + auditer l'existant**                                                                                         |
+| **AD-4** | La demande waitlist se lit via un **agrégat** (`get_waitlist_counts`), jamais les lignes brutes                    | 🟡 fonction fournie, `getWaitlistCounts()` à ajouter dans `services/supabase.js`                                                                                                |
+| **AD-5** | Le code généré par l'IA ne s'affiche que dans un **iframe sandbox** isolé                                          | 🟡 UI Builder encore mocké ; `isAllowedVideoUrl` déjà en place pour les embeds cours                                                                                            |
+| **AD-6** | Deux tiers de persistance : Supabase (durable/partagé) · `localStorage` préfixé (`ai_*`, `progress_*`) — pas de 3ᵉ | ✅ respecté                                                                                                                                                                     |
 
 ## Conventions structurantes
 

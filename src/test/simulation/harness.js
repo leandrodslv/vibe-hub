@@ -46,6 +46,8 @@ const GEMINI_FAULTS = [
   'malformedJson',
   'empty',
   'blocked',
+  'proxyNotConfigured',
+  'badRequest',
   'promptInjectionInReply',
 ];
 

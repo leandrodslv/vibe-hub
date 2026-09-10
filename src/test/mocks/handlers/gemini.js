@@ -1,10 +1,12 @@
 // @ts-check
 /**
- * Handlers MSW pour l'API Gemini (`:generateContent`).
+ * Handlers MSW pour l'Edge Function `gemini-proxy`.
  *
- * Interception au niveau réseau (fetch) plutôt que `vi.mock('@google/generative-ai')` :
- *  - survit à la migration AD-1 (quand `ai.js` passera par `fetch()` vers le proxy) ;
- *  - teste le VRAI code de gestion d'erreur (mapping 429 / 503, parse, retries).
+ * Interception au niveau réseau (fetch) plutôt que `vi.mock` du service :
+ *  - on teste le VRAI code de `src/services/ai.js` (parse de la réponse du proxy,
+ *    mapping 429 / 502+status / complétion vide) ;
+ *  - le handler matche toute URL contenant `gemini-proxy`, quel que soit l'hôte
+ *    (`*.functions.supabase.co/gemini-proxy` ou `*.supabase.co/functions/v1/...`).
  *
  * Le scénario actif se règle avec `setGeminiScenario('quotaExceeded')` — défaut
  * `nominal`, remis à zéro entre chaque test par `server.resetHandlers()` +
@@ -14,8 +16,11 @@
 import { http, HttpResponse, delay } from 'msw';
 import { geminiScenarios } from '../scenarios/gemini.js';
 
-/** URL de l'API : `.../v1beta/models/<model>:generateContent`. */
-const GEMINI_URL = /generativelanguage\.googleapis\.com\/.+:generateContent/;
+/** URL utilisée par les mocks d'env dans la suite de tests. */
+export const GEMINI_PROXY_TEST_URL = 'https://proxy.test/gemini-proxy';
+
+/** Toute requête POST vers un endpoint `gemini-proxy`. */
+const PROXY_URL = /\/gemini-proxy(\?|$)/;
 
 /** @type {import('../scenarios/gemini.js').GeminiScenarioName} */
 let active = 'nominal';
@@ -41,13 +46,14 @@ export function resetGeminiScenario() {
 }
 
 /**
- * Dernières requêtes reçues (pour asserter sur le corps envoyé au modèle).
- * @type {Array<{ contents: Array<{ role: string, parts: Array<{ text: string }> }> }>}
+ * Derniers corps de requête envoyés au proxy (pour asserter sur `history` /
+ * `systemInstruction`).
+ * @type {Array<{ history: Array<{ role: string, text: string, image?: string }>, systemInstruction?: string | null }>}
  */
 export const geminiRequests = [];
 
 export const geminiHandlers = [
-  http.post(GEMINI_URL, async ({ request }) => {
+  http.post(PROXY_URL, async ({ request }) => {
     geminiRequests.push(
       /** @type {(typeof geminiRequests)[number]} */ (await request.clone().json())
     );
@@ -56,8 +62,8 @@ export const geminiHandlers = [
 
     const scenario = geminiScenarios[active];
 
-    // JSON volontairement cassé : on renvoie une string non-JSON avec un
-    // content-type JSON pour simuler un proxy en vrac.
+    // JSON volontairement cassé : une string non-JSON avec un content-type JSON
+    // pour simuler un proxy qui répond en vrac.
     if (typeof scenario.body === 'string') {
       return new HttpResponse(scenario.body, {
         status: scenario.status,

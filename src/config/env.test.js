@@ -38,13 +38,14 @@ describe('config/env', () => {
     expect(isSupabaseConfigured()).toBe(false);
   });
 
-  it('isAiConfigured suit VITE_GEMINI_API_KEY', async () => {
-    vi.stubEnv('VITE_GEMINI_API_KEY', '');
+  it('isAiConfigured suit VITE_GEMINI_PROXY_URL', async () => {
+    vi.stubEnv('VITE_GEMINI_PROXY_URL', '');
     let mod = await loadEnv();
     expect(mod.isAiConfigured()).toBe(false);
 
-    vi.stubEnv('VITE_GEMINI_API_KEY', 'AQ.some-key');
+    vi.stubEnv('VITE_GEMINI_PROXY_URL', 'https://ref.functions.supabase.co/gemini-proxy');
     mod = await loadEnv();
     expect(mod.isAiConfigured()).toBe(true);
+    expect(mod.env.geminiProxyUrl).toBe('https://ref.functions.supabase.co/gemini-proxy');
   });
 });

@@ -61,8 +61,24 @@ rules:
     pattern-either:
       - pattern-regex: 'from [''"]@supabase/supabase-js[''"]'
       - pattern-regex: 'from [''"]@google/generative-ai[''"]'
+      - pattern-regex: 'from [''"]@google/genai[''"]'
     paths:
       include: ['src/components/', 'src/pages/']
+
+  # ── AD-1 : aucun SDK Gemini nulle part dans src/ (même la couche services
+  #    passe par un fetch() vers l'Edge Function gemini-proxy) ──────────────
+  - id: gemini-sdk-in-client
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: >
+      AD-1 : le SDK Gemini a été retiré du client. src/services/ai.js fait un
+      fetch() vers l'Edge Function gemini-proxy ; le SDK @google/genai ne vit que
+      dans supabase/functions/gemini-proxy (Deno).
+    pattern-either:
+      - pattern-regex: 'from [''"]@google/generative-ai[''"]'
+      - pattern-regex: 'from [''"]@google/genai[''"]'
+    paths:
+      include: ['src/']
 
   # ── Secrets ──────────────────────────────────────────────────────────────
   - id: hardcoded-google-api-key

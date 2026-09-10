@@ -52,7 +52,10 @@ Deno.serve(async (req) => {
     return json({ error: 'Proxy non configuré (GEMINI_API_KEY absente).' }, 503, cors);
   }
 
-  let body: { history?: Array<{ role: string; text: string }>; systemInstruction?: string | null };
+  let body: {
+    history?: Array<{ role: string; text: string; image?: string }>;
+    systemInstruction?: string | null;
+  };
   try {
     body = await req.json();
   } catch {
@@ -63,10 +66,19 @@ Deno.serve(async (req) => {
   if (history.length === 0) return json({ error: 'history requis.' }, 400, cors);
 
   const contents = history
-    .map((m) => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: String(m.text ?? '').slice(0, MAX_CHARS) }],
-    }))
+    .map((m) => {
+      const parts: Array<Record<string, unknown>> = [
+        { text: String(m.text ?? '').slice(0, MAX_CHARS) },
+      ];
+      // Image jointe : data URL `data:<mime>;base64,<data>` → `inlineData`.
+      if (typeof m.image === 'string' && m.image.startsWith('data:')) {
+        const comma = m.image.indexOf(',');
+        const mimeType = m.image.slice(5, m.image.indexOf(';'));
+        const data = comma > -1 ? m.image.slice(comma + 1) : '';
+        if (mimeType && data) parts.push({ inlineData: { mimeType, data } });
+      }
+      return { role: m.role === 'assistant' ? 'model' : 'user', parts };
+    })
     // Gemini exige que le premier message vienne de l'utilisateur.
     .filter((_, i, arr) => !(i === 0 && arr[0].role === 'model'));
 

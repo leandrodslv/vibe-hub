@@ -31,8 +31,8 @@
 
 ## Frontières à ne jamais franchir (rappel Architecture Spine)
 
-1. Un composant **n'importe pas** `@supabase/supabase-js` / `@google/generative-ai`
-   → passer par `src/services/`. (AD-2)
+1. Un composant **n'importe pas** `@supabase/supabase-js` ni un SDK Gemini
+   → passer par `src/services/`. Gemini : `services/ai.js` = `fetch()` vers `gemini-proxy`. (AD-1/AD-2)
 2. Un secret **ne passe pas** par `import.meta.env.VITE_*`. Accès env uniquement via
    `src/config/env.js`. (AD-1)
 3. Pas d'`eval`, `new Function`, `dangerouslySetInnerHTML` sans sanitizer + justification. (AD-5)
