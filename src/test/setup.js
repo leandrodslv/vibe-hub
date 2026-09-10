@@ -1,6 +1,14 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
-import { afterEach, beforeEach, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest';
+import { server, resetScenarios } from './mocks/server.js';
+
+// ─── MSW : mocks réseau déterministes (V3) ────────────────────────────────────
+// `onUnhandledRequest: 'bypass'` — les tests qui mockent au niveau module
+// (vi.mock) ne touchent pas le réseau ; MSW ne s'occupe que des tests qui
+// appellent réellement fetch (services via HTTP, futurs tests de composants).
+beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
+afterAll(() => server.close());
 
 // Silence les logs applicatifs (logger.js) pendant les tests : les chemins d'erreur
 // testés déverseraient sinon des lignes JSON dans la sortie CI. Les tests qui
@@ -15,6 +23,8 @@ beforeEach(() => {
 // Démonte l'arbre React et purge le DOM entre chaque test — évite les fuites d'état
 // d'un test à l'autre (portails de modales, listeners globaux).
 afterEach(() => {
+  server.resetHandlers();
+  resetScenarios();
   cleanup();
   localStorage.clear();
   sessionStorage.clear();

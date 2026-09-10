@@ -108,12 +108,29 @@ Objectif : arrêter de tout mocker — vérifier que le programme « communique 
 
 Objectif : « 1 bug corrigé = 1 test qui empêche sa réapparition » + isoler l'IA externe.
 
-- [ ] `msw` : handlers pour Gemini (`src/test/mocks/gemini.js`) et Supabase REST — réponses figées, cas d'erreur (429, 500, JSON tronqué, prompt injection dans la réponse).
-- [ ] `src/test/mocks/scenarios/` : jeux de données nommés (comme « simuler une bourse » → ici « simuler un catalogue », « simuler un quota Gemini atteint »).
-- [ ] `scripts/new-regression-test.mjs` : `npm run test:new-regression -- "<slug-du-bug>"` scaffolde `src/test/regression/<slug>.test.jsx` + lie l'issue.
-- [ ] Convention : toute PR `fix:` **doit** ajouter/modifier un fichier sous `regression/` (check CI `pr-title.yml` étendu ou danger).
-- **Trigger** : CI sur PR `fix:`.
-- **DoD** : impossible de merger un correctif sans test de non-régression.
+- [x] `msw` (dev). `src/test/mocks/` : `server.js` (setupServer partagé), `handlers/gemini.js`
+      (intercepte `:generateContent` au niveau fetch), `handlers/supabase.js` (PostgREST
+      `courses` / `waitlist` / `rpc`), `index.js` (barrel).
+- [x] `src/test/mocks/scenarios/` : jeux nommés déterministes — `gemini.js` (nominal,
+      withCodeBlock, empty, blocked, malformedJson, quotaExceeded, overloaded, serverError,
+      promptInjectionInReply) ; `courses.js` (nominal, empty, malformedRow).
+- [x] Câblé dans `src/test/setup.js` : `listen({ onUnhandledRequest: 'bypass' })` +
+      `resetHandlers()` / `resetScenarios()` entre chaque test → aucune régression sur les
+      tests qui mockent au niveau module.
+- [x] `ai.test.js` **migré vers MSW** : teste le vrai code de mapping d'erreur d'`ai.js`
+      (429 → quota, 503 → surcharge, 500 → générique, JSON tronqué, complétion vide, injection
+      de prompt inerte) — survivra à la migration AD-1 (`fetch` vers le proxy).
+- [x] `src/services/supabase.msw.test.js` : `getCourses`/`addToWaitlist` de bout en bout
+      via HTTP mocké, y compris `malformedRow` → `SchemaError` (V1) et conflit `23505`.
+- [x] `scripts/new-regression-test.mjs` + `npm run test:regression:new -- "<slug>" [issue]`
+      → scaffolde `src/test/regression/<slug>.test.js` (gabarit rouge-puis-vert). Dossier +
+      README créés.
+- [x] `.github/workflows/fix-needs-test.yml` : sur une PR au titre `fix…`, échoue si le
+      diff ne touche aucun `*.test.*`. À ajouter à la protection de branche pour rendre
+      bloquant (contexte : « Fix needs test »).
+- **Trigger** : `npm test` (mocks) + CI `fix-needs-test` sur PR `fix:`.
+- **DoD atteint** : la réponse externe (Gemini / Supabase) est simulée de façon
+  déterministe, cas de panne inclus ; un `fix:` sans test est signalé en CI.
 
 ### V4 — Simulation / injection de fautes à chaque commit _(~4 j)_ ← cœur « vidéo »
 

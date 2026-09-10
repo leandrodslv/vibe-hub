@@ -24,21 +24,50 @@
 ## Écrire un test unitaire
 
 - `describe` / `it` en français, un comportement par `it`.
-- Mocker les dépendances externes avec `vi.mock` + `vi.hoisted` (voir
-  `src/services/supabase.test.js` pour le patron du query-builder chaînable mocké).
+- Deux façons de mocker l'externe :
+  1. **`vi.mock` + `vi.hoisted`** — quand on teste une fonction en isolant ses imports
+     (voir `src/services/supabase.test.js`, query-builder chaînable).
+  2. **MSW** (`src/test/mocks/`) — quand le code fait un vrai `fetch` et qu'on veut
+     tester le chemin réseau réel (mapping d'erreur, parsing). Voir `ai.test.js` et
+     `supabase.msw.test.js`. Préférer MSW dès qu'un `fetch` est en jeu : ça survit aux
+     refactors d'implémentation.
 - Pas d'accès réseau réel, pas de vraie clé, pas de vrai Supabase.
 - Hooks : `renderHook` + `vi.useFakeTimers()` (voir `useTypewriter.test.js`).
-- `src/test/setup.js` stubbe `matchMedia`, `scrollIntoView`, `navigator.clipboard` et nettoie
-  le DOM + `localStorage` après chaque test.
+- `src/test/setup.js` stubbe `matchMedia`, `scrollIntoView`, `navigator.clipboard`, démarre
+  MSW (`onUnhandledRequest: 'bypass'`) et nettoie le DOM + `localStorage` + les scénarios
+  après chaque test.
+
+## Mocks réseau déterministes (MSW)
+
+> `src/test/mocks/` — l'équivalent du « simuler une bourse » de la vidéo : on ne teste
+> jamais contre le vrai Gemini / la vraie base, mais contre des réponses **figées**,
+> cas de panne compris.
+
+- **Scénarios** : `src/test/mocks/scenarios/` (`gemini.js`, `courses.js`) — jeux nommés.
+- **Activer un scénario** dans un test :
+  ```js
+  import { setGeminiScenario, setSupabaseScenario } from '../test/mocks';
+  setGeminiScenario('quotaExceeded'); // 429
+  setSupabaseScenario({ courses: 'malformedRow' }); // ligne au mauvais format
+  ```
+  Remis à `nominal` automatiquement après chaque test.
+- **Ajouter un cas de panne** : nouvelle entrée dans le fichier `scenarios/` concerné,
+  puis un `it(...)` qui l'active. Cas déjà couverts : quota, surcharge, 500, JSON tronqué,
+  complétion vide, blocage sécurité, injection de prompt dans la réponse.
 
 ## Tests de régression (obligatoire)
 
 > **Chaque bug corrigé produit un test qui échoue avant le fix et passe après.**
 
-1. Reproduire le bug dans un `it('régression #123 : …')`.
-2. Vérifier qu'il échoue sur le code buggé.
-3. Corriger. Le test passe.
-4. Commit `fix:` incluant le test.
+```bash
+npm run test:regression:new -- "<slug-du-bug>" [numero-issue]
+```
+
+1. Le script crée `src/test/regression/<slug>.test.js` (gabarit rouge-puis-vert).
+2. Écris l'assertion qui reproduit le bug ; vérifie qu'elle **échoue** sur le code actuel.
+3. Corrige. Le test passe.
+4. Commit `fix:` incluant le test — la CI **`fix-needs-test`** échoue si une PR au titre
+   `fix…` ne touche aucun `*.test.*`.
 
 ## Tests d'intégration réels (Testcontainers)
 
@@ -96,6 +125,10 @@
 
 ## Ce que la CI exécute (dans l'ordre)
 
-format → lint → typecheck → semgrep → **tests unitaires + intégration** → **e2e** →
-audit sécurité → **couverture (seuil)** → Lighthouse (informatif) → build → budget bundle.
+format → lint → typecheck → semgrep → **tests unitaires (MSW inclus)** → **intégration
+(Testcontainers)** → **e2e** → audit sécurité → **couverture (seuil)** → Lighthouse
+(informatif) → build → budget bundle.
 Un échec sur une étape critique casse le job `CI` (seul required check).
+
+Workflows séparés : **`fix-needs-test`** (PR `fix:` sans test → rouge), **`PR Title`**
+(Conventional Commits), **`Load / Stress test`** (manuel).

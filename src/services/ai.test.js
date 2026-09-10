@@ -1,93 +1,85 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { setGeminiScenario, geminiRequests } from '../test/mocks';
 
-const h = vi.hoisted(() => {
-  const state = {
-    aiConfigured: true,
-    sendMessage: vi.fn(),
-    lastStartChatArg: null,
-  };
-  return { state };
-});
+// Seul l'accès env est mocké : le SDK Gemini tourne pour de vrai et ses appels
+// réseau sont interceptés par MSW (src/test/mocks/handlers/gemini.js). On teste
+// donc le VRAI code de mapping d'erreur d'ai.js, pas un double du SDK.
+const h = vi.hoisted(() => ({ aiConfigured: true }));
 
 vi.mock('../config/env.js', () => ({
   env: { geminiApiKey: 'AQ.test-key', mode: 'test', isProd: false },
-  isAiConfigured: () => h.state.aiConfigured,
-}));
-
-vi.mock('@google/generative-ai', () => ({
-  GoogleGenerativeAI: class {
-    getGenerativeModel() {
-      return {
-        startChat: (arg) => {
-          h.state.lastStartChatArg = arg;
-          return { sendMessage: h.state.sendMessage };
-        },
-      };
-    }
-  },
+  isAiConfigured: () => h.aiConfigured,
 }));
 
 const { generateAIResponse } = await import('./ai.js');
 
 beforeEach(() => {
-  h.state.aiConfigured = true;
-  h.state.sendMessage.mockReset();
-  h.state.lastStartChatArg = null;
+  h.aiConfigured = true;
 });
 
-const ok = (text) => ({ response: Promise.resolve({ text: () => text }) });
-
 describe('generateAIResponse', () => {
-  it('renvoie un message d’erreur explicite si l’IA n’est pas configurée', async () => {
-    h.state.aiConfigured = false;
+  it("renvoie un message d'erreur explicite si l'IA n'est pas configurée", async () => {
+    h.aiConfigured = false;
     const out = await generateAIResponse([{ role: 'user', text: 'salut' }]);
     expect(out).toMatch(/clé API Gemini/i);
-    expect(h.state.sendMessage).not.toHaveBeenCalled();
+    expect(geminiRequests).toHaveLength(0);
   });
 
   it('renvoie le texte généré en cas de succès', async () => {
-    h.state.sendMessage.mockResolvedValue(ok('Voici ta réponse'));
     const out = await generateAIResponse([
       { role: 'assistant', text: 'Bonjour' },
       { role: 'user', text: 'Fais-moi un bouton' },
     ]);
-    expect(out).toBe('Voici ta réponse');
+    expect(out).toBe('Voici une piste de design pour ton interface.');
   });
 
-  it('ignore les messages "model" en tête d’historique (contrainte Gemini)', async () => {
-    h.state.sendMessage.mockResolvedValue(ok('x'));
+  it("ignore les messages 'model' en tête d'historique (contrainte Gemini)", async () => {
     await generateAIResponse([
       { role: 'assistant', text: 'accueil' },
       { role: 'user', text: 'q1' },
       { role: 'assistant', text: 'r1' },
       { role: 'user', text: 'q2' },
     ]);
-    const history = h.state.lastStartChatArg.history;
-    expect(history[0].role).toBe('user');
-    expect(history).toHaveLength(2); // q1, r1 — q2 est le message courant, envoyé à part
+    const { contents } = geminiRequests[0];
+    expect(contents[0].role).toBe('user');
+    expect(contents.map((c) => c.parts[0].text)).toEqual(['q1', 'r1', 'q2']);
   });
 
   it('mappe une erreur 429 sur un message de quota', async () => {
-    h.state.sendMessage.mockRejectedValue(Object.assign(new Error('quota'), { status: 429 }));
+    setGeminiScenario('quotaExceeded');
     const out = await generateAIResponse([{ role: 'user', text: 'x' }]);
     expect(out).toMatch(/limite d.utilisation|Quota/i);
   });
 
   it('mappe une erreur 503 sur un message de surcharge', async () => {
-    h.state.sendMessage.mockRejectedValue(Object.assign(new Error('down'), { status: 503 }));
+    setGeminiScenario('overloaded');
     const out = await generateAIResponse([{ role: 'user', text: 'x' }]);
     expect(out).toMatch(/surchargé/i);
   });
 
-  it('renvoie un message générique sur erreur inconnue', async () => {
-    h.state.sendMessage.mockRejectedValue(new Error('???'));
+  it('renvoie un message générique sur erreur serveur inconnue (500)', async () => {
+    setGeminiScenario('serverError');
     const out = await generateAIResponse([{ role: 'user', text: 'x' }]);
     expect(out).toMatch(/une erreur s.est produite/i);
   });
 
   it('traite une complétion vide comme une défaillance (pas de "" silencieux)', async () => {
-    h.state.sendMessage.mockResolvedValue(ok(''));
+    setGeminiScenario('empty');
     const out = await generateAIResponse([{ role: 'user', text: 'x' }]);
     expect(out).toMatch(/une erreur s.est produite/i);
+  });
+
+  it('ne casse pas sur du JSON tronqué renvoyé par le proxy', async () => {
+    setGeminiScenario('malformedJson');
+    const out = await generateAIResponse([{ role: 'user', text: 'x' }]);
+    expect(out).toMatch(/une erreur s.est produite/i);
+  });
+
+  it("renvoie le texte d'une injection de prompt sans l'évaluer (texte inerte)", async () => {
+    setGeminiScenario('promptInjectionInReply');
+    const out = await generateAIResponse([{ role: 'user', text: 'x' }]);
+    // C'est bien une string rendue telle quelle — aucune exécution.
+    expect(out).toContain('<script>alert(1)</script>');
+    expect(typeof out).toBe('string');
   });
 });
