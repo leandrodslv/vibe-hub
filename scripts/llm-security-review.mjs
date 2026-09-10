@@ -8,14 +8,14 @@
  *   GEMINI_API_KEY=…  npm run pentest:llm
  * En CI : secret `GEMINI_API_KEY` (le workflow `pentest` l'utilise s'il existe).
  *
- * Sortie : `reports/pentest-gemini.md`. Exit 1 si Gemini répond `FAIL:`.
+ * Sortie : `reports/pentest-gemini.md`. Exit 1 si un finding critical/high.
  */
 
 import { execFileSync } from 'node:child_process';
 import { writeFileSync, mkdirSync } from 'node:fs';
+import { askGemini } from './lib/gemini.mjs';
 
-const KEY = process.env.GEMINI_API_KEY;
-if (!KEY) {
+if (!process.env.GEMINI_API_KEY) {
   console.log(
     'GEMINI_API_KEY absente — revue LLM ignorée (non bloquant).\n' +
       'Pour la revue Claude Code (plan Pro, sans clé) : `npm run pentest:review`.'
@@ -50,7 +50,7 @@ Cherche : XSS (HTML non échappé depuis une entrée), injection (SQL/PostgREST 
 concaténation, prompt, eval/new Function), secret en dur ou derrière VITE_*, service_role
 côté client, SSRF dans l'edge function gemini-proxy, contrôle d'accès fait dans le React
 au lieu de la RLS, CSRF, target="_blank" sans rel="noopener", CSP affaiblie dans
-vercel.json (unsafe-eval/inline, connect-src élargi), entrée non validée avant DOM/stockage.
+vercel.json, entrée non validée avant DOM/stockage.
 
 Pour chaque finding RÉEL : une ligne JSON
 {"severity":"critical|high|medium|low","file":"…","line":N,"issue":"…","fix":"…"}
@@ -58,39 +58,26 @@ Aucun finding => écris exactement "AUCUN FINDING".
 Termine par: PENTEST_VERDICT: PASS  (aucun critical/high)  ou  FAIL: <résumé>.
 
 \`\`\`diff
-${diff.slice(0, 60000)}
+${diff}
 \`\`\``;
 
-const body = JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }] });
-const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${KEY}`;
-
-const res = await fetch(url, {
-  method: 'POST',
-  headers: { 'content-type': 'application/json' },
-  body,
-});
-
-if (!res.ok) {
-  console.error(`Gemini a répondu ${res.status}. Revue LLM ignorée (non bloquant).`);
-} else {
-  const data = await res.json();
-  const text = data?.candidates?.[0]?.content?.parts?.map((p) => p.text).join('') ?? '';
-
-  mkdirSync('reports', { recursive: true });
-  writeFileSync(
-    'reports/pentest-gemini.md',
-    `# Revue de sécurité Gemini — \`${range}\`\n\n${text}\n`,
-    'utf8'
-  );
-  console.log('Écrit : reports/pentest-gemini.md');
-
-  // Bloquant seulement sur un finding critical/high RÉEL (pas sur le verdict prose).
-  if (/"severity"\s*:\s*"(critical|high)"/i.test(text)) {
-    console.error('❌ Gemini : finding critical/high — voir reports/pentest-gemini.md');
-    process.exitCode = 1;
-  } else {
-    console.log('✅ Gemini : pas de finding critical/high.');
-  }
+const text = await askGemini(prompt, { maxChars: 64_000 });
+if (text === null) {
+  console.log('Revue Gemini indisponible (non bloquant).');
+  process.exit(0);
 }
-// process.exit() abrupt après fetch fait planter libuv sur Windows — on laisse
-// la boucle d'événements se vider, exitCode est déjà positionné.
+
+mkdirSync('reports', { recursive: true });
+writeFileSync(
+  'reports/pentest-gemini.md',
+  `# Revue de sécurité Gemini — \`${range}\`\n\n${text}\n`,
+  'utf8'
+);
+console.log('Écrit : reports/pentest-gemini.md');
+
+if (/"severity"\s*:\s*"(critical|high)"/i.test(text)) {
+  console.error('❌ Gemini : finding critical/high — voir reports/pentest-gemini.md');
+  process.exitCode = 1;
+} else {
+  console.log('✅ Gemini : pas de finding critical/high.');
+}

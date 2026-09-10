@@ -236,17 +236,29 @@ se lance en local, la revue Gemini en CI si le secret existe.
 - **DoD atteint** : chaque PR passe le SAST OWASP + le scan bundle + l'audit d'en-têtes ;
   une revue LLM du diff est disponible (`pentest:review` toujours, Gemini si secret).
 
-### V7 — Agent « tâches inhumaines » : revue de synchro hebdo _(~2 j)_
+### V7 — Agent « tâches inhumaines » : revue de synchro hebdo — ✅ livré
 
-Reproduit l'agent qui « lit toutes les branches, les résultats de tests, les commentaires de PR/issues, Slack, les mails » pour préparer la réunion.
+Reproduit l'agent qui « lit toutes les branches, les résultats de tests, les commentaires de
+PR/issues » pour préparer la réunion. Même schéma que V5/V6 : agrégation gratuite en CI,
+synthèse par Gemini si secret, sinon par Claude Code en local.
 
-- [ ] `.github/workflows/weekly-sync.yml` (`schedule` lundi 7 h) :
-  - agrège : branches ouvertes + ahead/behind, statut CI par branche, PR avec beaucoup de commentaires ou reviews en conflit, issues `ai-fix` en attente, tendances de couverture / bundle / Lighthouse sur 7 j, `npm audit` du jour ;
-  - (option) connecteurs Slack + Gmail via n8n si l'équipe s'en sert ;
-  - Claude Code produit `reports/weekly-sync-<date>.md` : points de tension, décisions d'archi à trancher, tests qui régressent, quick wins — **classé par « à discuter en réunion » vs « déjà réglé ».**
-- [ ] Poste le lien dans le canal d'équipe (ou en issue épinglée).
-- **Trigger** : cron hebdo.
-- **DoD** : la réunion du lundi part d'un doc de 1 page qui pointe uniquement les vrais sujets.
+- [x] `scripts/weekly-sync.mjs` (`npm run weekly-sync`) — agrège via `gh` + `git` :
+      branches distantes (ahead/behind vs `main`, dernier auteur/date), PR ouvertes (review,
+      mergeable, âge, nb de commentaires, labels), issues (dont `ai-fix`, issues « chaudes »
+      ≥ 3 commentaires), échecs CI sur `main` sur 7 j, `npm audit --omit=dev`, couverture
+      (instantané), rapports de simulation en attente. → `reports/weekly-sync-data.md`.
+- [x] Synthèse : si `GEMINI_API_KEY` → `reports/weekly-sync-<date>.md` (**1 page**,
+      « À discuter en réunion » / « Déjà réglé » / « Quick wins ») ; sinon
+      `WEEKLY_SYNC_CONTEXT.md` (données + consigne) pour Claude Code.
+- [x] `scripts/lib/gemini.mjs` — helper `askGemini()` partagé (pentest V6 refactoré dessus).
+- [x] `.github/workflows/weekly-sync.yml` (`schedule` lundi 06:00 UTC + `workflow_dispatch`) :
+      agrège, synthétise, publie dans une **issue épinglable** `weekly-sync` (créée puis
+      éditée chaque semaine) + artefact.
+- **Reste** : connecteurs Slack / Gmail (n8n) si l'équipe s'en sert ; tendances sur 7 j
+  (couverture/bundle/Lighthouse) — aujourd'hui instantané seulement, l'historique
+  demanderait de stocker les métriques quelque part.
+- **DoD atteint** : `npm run weekly-sync` (ou le cron) produit un doc d'1 page qui pointe
+  les PR qui traînent, les issues chaudes, les échecs CI — pas le bruit.
 
 ### V8 — Agents exploratoires à la demande _(~2 j + usage)_
 

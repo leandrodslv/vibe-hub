@@ -25,6 +25,7 @@
     "test:regression:new": "node scripts/new-regression-test.mjs",
     "test:ui": "vitest --ui",
     "ai-fix": "node scripts/ai-fix.mjs",
+    "weekly-sync": "node scripts/weekly-sync.mjs",
     "e2e": "playwright test",
     "e2e:report": "playwright show-report",
     "security:audit": "npm audit --omit=dev --audit-level=high",
