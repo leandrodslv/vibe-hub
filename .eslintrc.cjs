@@ -30,6 +30,8 @@ module.exports = {
     '.eslintrc.cjs',
   ],
   parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+  // Constante injectée à la compilation par Vite (`define`, cf. vite.config.js).
+  globals: { __APP_RELEASE__: 'readonly' },
   settings: { react: { version: 'detect' } },
   plugins: ['react-refresh', 'jsx-a11y'],
   rules: {

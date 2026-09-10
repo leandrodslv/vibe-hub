@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { logger, setLogSink, serializeError } from './logger.js';
+import { logger, setLogSink, setLogContext, serializeError } from './logger.js';
 
 describe('logger', () => {
   let logSpy;
@@ -14,6 +14,7 @@ describe('logger', () => {
 
   afterEach(() => {
     setLogSink(null);
+    setLogContext({ release: undefined, sessionId: undefined });
     vi.restoreAllMocks();
   });
 
@@ -38,6 +39,19 @@ describe('logger', () => {
     expect(entry.email).toBe('[redacted]');
     expect(entry.apiKey).toBe('[redacted]');
     expect(entry.keep).toBe('ok');
+  });
+
+  it('joint le contexte de base (release/sessionId) à chaque entrée', () => {
+    setLogContext({ release: '1.2.3+abc', sessionId: 's-1' });
+    logger.info('x');
+    const entry = JSON.parse(logSpy.mock.calls[0][0]);
+    expect(entry).toMatchObject({ release: '1.2.3+abc', sessionId: 's-1' });
+  });
+
+  it('le contexte d’appel écrase le contexte de base', () => {
+    setLogContext({ release: 'base' });
+    logger.info('x', { release: 'appel' });
+    expect(JSON.parse(logSpy.mock.calls[0][0]).release).toBe('appel');
   });
 
   it('transmet l’entrée au sink branché et survit à un sink qui lève', () => {

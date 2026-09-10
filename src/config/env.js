@@ -73,6 +73,12 @@ export const env = Object.freeze({
    * ⚠️ Clé exposée dans le bundle (AD-1). Usage transitoire jusqu'au proxy serveur.
    */
   geminiApiKey: read('VITE_GEMINI_API_KEY', { required: false }),
+
+  /** Endpoint de collecte des métriques / erreurs (V10). Vide → log seul. */
+  metricsUrl: read('VITE_METRICS_URL', { required: false }),
+
+  /** DSN Sentry (V10). Vide → pas de Sentry, `setLogSink` reste dispo. */
+  sentryDsn: read('VITE_SENTRY_DSN', { required: false }),
 });
 
 /** @returns {boolean} true si Supabase peut être contacté. */

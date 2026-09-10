@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import { logger, serializeError } from '../lib/logger.js';
+import { reportError } from '../lib/observability.js';
 
 /**
  * Filet de sécurité : une exception dans le rendu d'un sous-arbre React casse
@@ -16,8 +16,8 @@ export default class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, info) {
-    logger.error('react:error-boundary', {
-      ...serializeError(error),
+    // Loggé + envoyé à l'endpoint de collecte (V10), corrélé release/sessionId.
+    reportError('react:error-boundary', error, {
       componentStack: info?.componentStack,
       boundary: this.props.name || 'root',
     });

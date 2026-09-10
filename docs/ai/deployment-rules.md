@@ -36,32 +36,58 @@
 
 ### Logs structurés — `src/lib/logger.js`
 
-- Une ligne = un objet JSON (`ts`, `level`, `message`, `env`, contexte).
+- Une ligne = un objet JSON (`ts`, `level`, `message`, `env`, `release`, `sessionId`, contexte).
 - En prod : seuls `warn` / `error` sortent.
 - Les clés sensibles (`*key*`, `*token*`, `*secret*`, `email`, `password`, `authorization`)
   sont **caviardées** automatiquement.
-- `setLogSink(fn)` : point de branchement pour Sentry / Logtail / un POST `/logs`.
-  **Aucune dépendance imposée aujourd'hui** — à activer quand un collecteur existe.
+- `setLogContext({ … })` : contexte joint à **chaque** entrée (posé au boot :
+  `release`, `sessionId`). `setLogSink(fn)` : point de branchement collecteur.
 
-### Métriques — `src/lib/observability.js`
+### Métriques & erreurs — `src/lib/observability.js` (V10)
 
-- **Core Web Vitals** : CLS, INP, LCP, FCP, TTFB → `logger.info('web-vital', …)`.
-- Capture globale : `window.onerror`, `unhandledrejection`.
-- `initObservability()` appelé une fois dans `main.jsx`.
-- **TODO** : `navigator.sendBeacon('/metrics', …)` quand l'endpoint de collecte existe
-  (Vercel Analytics ou Edge Function `/metrics`).
+- **Core Web Vitals** : CLS, INP, LCP, FCP, TTFB.
+- Capture globale : `window.onerror`, `unhandledrejection`, + `reportError()` (utilisé par
+  l'ErrorBoundary).
+- **`release`** = `version` package.json `+` court SHA (injecté par Vite `define`,
+  `__APP_RELEASE__`). **`sessionId`** = identifiant d'onglet (`sessionStorage`, aucune PII).
+- **Collecte** : si `VITE_METRICS_URL` est défini → `navigator.sendBeacon` vers cet endpoint
+  (Edge Function `metrics` ou Vercel). Sinon : log console seulement. `initObservability()`
+  dans `main.jsx`.
+- **Edge Function `metrics`** (`supabase/functions/metrics/`) : insère dans `public.metrics`
+  (migration `0002`) via `service_role`. Table sans policy `anon` (personne ne lit en brut) ;
+  agrégat admin `get_metrics_summary(hours)`. Défense en profondeur : la fonction re-nettoie
+  clés/JWT/e-mails. Tests : `src/test/integration/rls.metrics.test.js`.
+
+### Sentry (optionnel, sans dépendance imposée)
+
+`sourcemap: 'hidden'` (V6) est déjà le bon réglage. Pour activer :
+
+1. Ajouter `@sentry/browser` en dépendance.
+2. Créer `src/lib/sentry.js` : si `env.sentryDsn`, `Sentry.init({ dsn, release: __APP_RELEASE__, environment: env.mode })`, puis `setLogSink((entry) => { if (entry.level === 'error') Sentry.captureMessage(String(entry.message), { extra: entry }); })`.
+3. Importer `src/lib/sentry.js` depuis `main.jsx` (avant `initObservability()`).
+4. CI : `sentry-cli sourcemaps upload --release <__APP_RELEASE__> dist/assets`, puis **exclure
+   les `.map` du déploiement** (le mode `hidden` garde déjà le finding `sourcemap-referenced`
+   de `security:bundle` à zéro).
 
 ### Erreurs UI — `src/components/ErrorBoundary.jsx`
 
-Enveloppe `<App/>`. Une exception de rendu → log `react:error-boundary` + écran de repli
-« Recharger la page » au lieu d'une page blanche.
+Enveloppe `<App/>`. Une exception de rendu → `reportError('react:error-boundary', …)` (log +
+beacon, corrélé `release`/`sessionId`) + écran de repli au lieu d'une page blanche.
 
-### Ce qu'il reste à mettre en place (roadmap observabilité)
+### Boucle erreur → correction (V5)
 
-- [ ] Endpoint de collecte des métriques + logs (Edge Function ou service tiers).
-- [ ] Dashboard (Grafana / Vercel Analytics / Logtail).
-- [ ] Alertes : taux d'erreur `services/*`, p95 LCP, échecs `gemini-proxy`, quota Gemini.
-- [ ] Traces distribuées navigateur → `gemini-proxy` → Gemini (propager un `request-id`).
+Une erreur prod récurrente (via le dashboard `get_metrics_summary` ou Sentry) → ouvrir une
+issue `ai-fix` avec la trace + `release` → `npm run ai-fix <n>`. Un webhook Sentry →
+`repository_dispatch` peut automatiser la création d'issue (même schéma que
+`ci-failure-to-issue.yml`).
+
+### Ce qu'il reste
+
+- [ ] Dashboard (une page admin lisant `get_metrics_summary`, ou Grafana/Vercel Analytics).
+- [ ] Alertes : p75 LCP en régression, taux d'erreur `services/*`, échecs `gemini-proxy`,
+      quota Gemini → canal d'équipe.
+- [ ] Purge `metrics` > 30 j (pg_cron).
+- [ ] Traces distribuées navigateur → `gemini-proxy` → Gemini (propager `sessionId`/`request-id`).
 - [ ] Rate limiting + plafond de coût dans `gemini-proxy` (point d'application, cf. Spine).
 
 ## Rollback

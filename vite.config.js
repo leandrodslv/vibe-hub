@@ -1,10 +1,19 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { readFileSync } from 'node:fs';
+
+const version = JSON.parse(readFileSync('./package.json', 'utf8')).version;
+// Release = version package.json + court SHA si dispo (Vercel expose VERCEL_GIT_COMMIT_SHA).
+const sha = (process.env.VERCEL_GIT_COMMIT_SHA || process.env.GITHUB_SHA || '').slice(0, 7);
+const RELEASE = sha ? `${version}+${sha}` : version;
 
 // Build + test config partagent le même fichier : une seule source de vérité pour
 // les alias, l'environnement et la résolution des modules.
 export default defineConfig({
   plugins: [react()],
+
+  // Corrélation observabilité (V10) : chaque log/erreur porte la release.
+  define: { __APP_RELEASE__: JSON.stringify(RELEASE) },
 
   build: {
     // Repart d'un dossier propre à chaque build : sinon les anciens chunks
@@ -65,10 +74,8 @@ export default defineConfig({
         'src/**/*.{test,spec}.{js,jsx}',
         'src/test/**',
         'src/**/index.{js,jsx}',
-        // Câblage navigateur pur (web-vitals + listeners globaux) : couvert par les
-        // tests e2e / Lighthouse, pas par les tests unitaires. À réintégrer quand un
-        // endpoint de collecte existe et mérite des tests d'intégration.
-        'src/lib/observability.js',
+        // `observability.js` est réintégré au périmètre depuis V10 (endpoint de
+        // collecte + tests `observability.test.js`).
       ],
       thresholds: {
         lines: 80,

@@ -33,6 +33,18 @@ export function setLogSink(fn) {
 }
 
 /**
+ * Contexte joint à CHAQUE entrée (corrélation V10) : `release`, `sessionId`…
+ * Défini une fois au boot par `initObservability()`.
+ * @type {Record<string, unknown>}
+ */
+let baseContext = {};
+
+/** @param {Record<string, unknown>} ctx */
+export function setLogContext(ctx) {
+  baseContext = { ...baseContext, ...ctx };
+}
+
+/**
  * @param {Level} level
  * @param {string} message
  * @param {Record<string, unknown>} [context]
@@ -45,6 +57,7 @@ function emit(level, message, context = {}) {
     level,
     message,
     env: env.mode,
+    ...baseContext,
     ...scrub(context),
   };
 

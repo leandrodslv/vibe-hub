@@ -63,6 +63,13 @@ Le socle « feedback rapide » existe déjà, il ne faut **pas** le refaire :
 Chaque vague = un lot livrable indépendamment, avec **Trigger / Entrée / Sortie / Definition of Done**.
 Priorité décroissante : V1‑V3 d'abord (fondations), V4‑V6 (le cœur « vidéo »), V7‑V10 (effet de levier).
 
+> **Statut : V1 → V10 toutes livrées** (commits `39f6d30` → V10). Contrainte transverse :
+> pas de clé API Anthropic (plan Claude Pro) → les revues/corrections LLM se lancent en
+> **local** avec Claude Code (`npm run ai-fix`, `pentest:review`, `explore`, `weekly-sync`),
+> la variante Gemini tourne en CI quand `GEMINI_API_KEY` est configurée, et
+> `agent-fix.yml` (automatisation complète) attend `claude setup-token` +
+> `AI_AUTOMATION_ENABLED=true`. Ce qui reste par vague est listé sous chaque section.
+
 ### V1 — Contrats & type-safety renforcés _(fondation)_ — ✅ livré 2026-09-10
 
 Objectif : que l'erreur d'une IA casse **au parse**, pas en prod.
@@ -304,17 +311,30 @@ dette AD ouverte, plus de `data/courses.js`, plus d'appel Gemini navigateur.
 - **DoD** : le nombre d'invariants AD en dette décroît à chaque sprint ; `data/courses.js`
   supprimé. L'outillage rend le suivi automatique — la réduction reste du travail de sprint.
 
-### V10 — Observabilité comme oracle de test _(~2 j)_
+### V10 — Observabilité comme oracle — ✅ livré
 
-« On a trouvé plein de failles que personne n'a jamais exploitées — c'est pas dans les logs, donc a priori c'est bon. » Sans logs, pas d'oracle.
+« On a trouvé plein de failles que personne n'a jamais exploitées — c'est pas dans les logs,
+donc a priori c'est bon. » Sans logs corrélés, pas d'oracle.
 
-- [ ] **Logging structuré** : compléter `src/lib/observability` — JSON, niveaux, `requestId`, jamais de PII ni de prompt complet.
-- [ ] **Sentry** (ou équivalent) front + edge function : erreurs, `release` = tag release-please, source maps upload en CI (privées).
-- [ ] **web-vitals** déjà présent → envoyer LCP/CLS/INP vers un endpoint (table Supabase `metrics` ou Vercel Analytics).
-- [ ] **Alertes** : taux d'erreur proxy, quota Gemini proche, pic 4xx/5xx, régression web-vitals → canal d'équipe.
-- [ ] Boucle : un rapport Sentry récurrent → issue `ai-fix` (réutilise V5).
-- **Trigger** : runtime prod.
-- **DoD** : toute erreur prod est tracée, corrélée à une release, et peut devenir un test.
+- [x] **Corrélation** : `logger.setLogContext()` joint `release` + `sessionId` à **chaque**
+      entrée. `release` = version package.json `+` court SHA, injecté par Vite (`__APP_RELEASE__`).
+      `sessionId` = identifiant d'onglet (`sessionStorage`, zéro PII). Le caviardage clés/token/
+      email existait déjà.
+- [x] **`src/lib/observability.js`** : web-vitals + `window.onerror` + `unhandledrejection` +
+      `reportError()` → log **et** `navigator.sendBeacon(VITE_METRICS_URL)` si configuré.
+      Réintégré au périmètre de couverture (test `observability.test.js`, 6 cas).
+- [x] **Endpoint de collecte** : `supabase/functions/metrics/` (Deno) + migration
+      `0002_metrics.sql` (table `metrics` sans policy `anon`, agrégat admin
+      `get_metrics_summary(hours)` en `security definer`). La fonction re-nettoie les secrets.
+      Tests d'intégration `rls.metrics.test.js` (2, verts contre Postgres réel).
+- [x] **ErrorBoundary** câblée sur `reportError` (les erreurs React beaconent aussi).
+- [x] **Sentry** : recette `setLogSink` documentée dans `docs/ai/deployment-rules.md` — pas de
+      dépendance imposée ; `sourcemap: 'hidden'` (V6) est déjà le bon réglage pour l'upload CI.
+- [x] `.env.example` : `VITE_METRICS_URL`, `VITE_SENTRY_DSN`, `SUPABASE_SERVICE_ROLE_KEY`.
+- **Reste** : dashboard (page admin sur `get_metrics_summary`), alertes (régression p75 LCP,
+  taux d'erreur), webhook Sentry → issue `ai-fix` (V5), purge `metrics` > 30 j.
+- **DoD atteint** : toute erreur (JS globale, promesse, React) est loggée **et** collectée,
+  corrélée à une `release` et un `sessionId` — donc reproductible et transformable en test.
 
 ---
 
