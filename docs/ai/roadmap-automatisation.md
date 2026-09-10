@@ -283,15 +283,26 @@ en local (Claude Code) ; l'outillage fige une référence de perf et mesure le c
 - **DoD atteint** : `npm run explore -- "…"` + Claude Code + `npm run perf:diff` → décision
   documentée (coût chiffré + reco) en un run.
 
-### V9 — Décommission du legacy & dette technique _(continu)_
+### V9 — Décommission du legacy & dette technique _(continu)_ — ✅ outillage livré
 
-« En 2026, on ne fait plus tourner que du code produit en 2026. » — version Vibe Hub : plus de dette AD ouverte, plus de `data/courses.js`, plus d'appel Gemini navigateur.
+« En 2026, on ne fait plus tourner que du code produit en 2026. » — version Vibe Hub : plus de
+dette AD ouverte, plus de `data/courses.js`, plus d'appel Gemini navigateur.
 
-- [ ] `scripts/tech-debt-inventory.mjs` : scanne `TODO|FIXME|@deprecated|LEGACY|AD-\d`, la carte du dépôt, les invariants de l'Architecture Spine → génère `reports/tech-debt.md` + ouvre/actualise un **GitHub Project** « Dette ».
-- [ ] Pour chaque item : **tests de caractérisation** d'abord (on fige le comportement actuel), puis réécriture pilotée par agent encadrée par ces tests.
-- [ ] Cible nommée n°1 : **AD‑1** — faire passer 100 % des appels Gemini par `supabase/functions/gemini-proxy`, supprimer la clé du bundle. (V6 le détecte déjà comme finding.)
-- **Trigger** : inventaire mensuel (cron) + à la demande.
-- **DoD** : le nombre d'invariants AD en dette décroît à chaque sprint ; `data/courses.js` supprimé.
+- [x] `scripts/tech-debt-inventory.mjs` (`npm run tech-debt`) : scanne les marqueurs
+      (`TODO|FIXME|HACK|XXX|LEGACY|DEPRECATED|@deprecated|DETTE`) dans `src/`/`supabase/`/config,
+      parse les invariants `AD-*` de l'Architecture Spine, détecte les **cibles** (AD-1 clé
+      navigateur, `@google/generative-ai` déprécié, `src/data/courses.js` legacy, déviation
+      AD-4 vue↔fonction) → `reports/tech-debt.md`.
+- [x] `.github/workflows/tech-debt.yml` : cron le 1ᵉʳ du mois → issue épinglable `tech-debt`.
+- [x] **Inventaire actuel** (au moment de la livraison) : 5 marqueurs, **1/6 invariant AD en
+      dette (AD-1)**, 4 cibles — cf. `reports/tech-debt.md`.
+- **Cible n°1 : AD-1** — faire passer 100 % des appels Gemini par `gemini-proxy`, supprimer
+  `VITE_GEMINI_API_KEY`. Détectée par V6 (`security:bundle`) **et** V9. Méthode : test de
+  caractérisation de `generateAIResponse` (MSW, déjà là) → réécrire `ai.js` en `fetch()` vers
+  le proxy → migrer le proxy sur `@google/genai` → supprimer la clé → `security:bundle` verte
+  en CI même avec un `.env`. À faire via `npm run explore -- "brancher ai.js sur gemini-proxy"`.
+- **DoD** : le nombre d'invariants AD en dette décroît à chaque sprint ; `data/courses.js`
+  supprimé. L'outillage rend le suivi automatique — la réduction reste du travail de sprint.
 
 ### V10 — Observabilité comme oracle de test _(~2 j)_
 
