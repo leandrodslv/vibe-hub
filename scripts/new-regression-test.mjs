@@ -10,7 +10,7 @@
  * Crée src/test/regression/<slug>.test.js à partir d'un gabarit rouge-puis-vert.
  */
 
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const [, , rawSlug, issue] = process.argv;
@@ -34,11 +34,6 @@ if (!slug) {
 
 const dir = join('src', 'test', 'regression');
 const file = join(dir, `${slug}.test.js`);
-
-if (existsSync(file)) {
-  console.error(`Existe déjà : ${file}`);
-  process.exit(1);
-}
 
 const ref = issue ? `#${issue}` : slug;
 const link = issue ? `\n * @see https://github.com/OWNER/vibe-hub/issues/${issue}` : '';
@@ -65,7 +60,17 @@ describe('régression ${ref}', () => {
 `;
 
 mkdirSync(dir, { recursive: true });
-writeFileSync(file, template, 'utf8');
+try {
+  // `wx` : création atomique — échoue si le fichier existe déjà (pas de
+  // vérification séparée, donc pas de course TOCTOU).
+  writeFileSync(file, template, { encoding: 'utf8', flag: 'wx' });
+} catch (err) {
+  if (err && /** @type {NodeJS.ErrnoException} */ (err).code === 'EEXIST') {
+    console.error(`Existe déjà : ${file}`);
+    process.exit(1);
+  }
+  throw err;
+}
 
 console.log(`✅ Créé : ${file}
 
