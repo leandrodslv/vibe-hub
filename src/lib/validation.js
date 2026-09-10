@@ -59,9 +59,22 @@ const ALLOWED_VIDEO_HOSTS = [
  */
 export function isAllowedVideoUrl(value) {
   if (!isSafeHttpUrl(value)) return false;
+  return matchesHost(value, ALLOWED_VIDEO_HOSTS);
+}
+
+/**
+ * `true` si le hostname de `value` est l'un des `hosts` (ou un sous-domaine).
+ * Comparaison sur le hostname parsé — jamais un `.includes()` sur l'URL entière
+ * (`youtube.com` peut apparaître n'importe où : `youtube.com.evil.tld`, chemin, query).
+ * @param {unknown} value
+ * @param {readonly string[]} hosts
+ * @returns {boolean}
+ */
+export function matchesHost(value, hosts) {
   try {
     const { hostname } = new URL(/** @type {string} */ (value));
-    return ALLOWED_VIDEO_HOSTS.some((h) => hostname === h || hostname.endsWith(`.${h}`));
+    const h = hostname.toLowerCase();
+    return hosts.some((allowed) => h === allowed || h.endsWith(`.${allowed}`));
   } catch {
     return false;
   }

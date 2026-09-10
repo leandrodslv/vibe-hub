@@ -3,6 +3,7 @@ import {
   isValidEmail,
   isSafeHttpUrl,
   isAllowedVideoUrl,
+  matchesHost,
   sanitizeText,
   safeJsonParse,
 } from './validation.js';
@@ -54,6 +55,22 @@ describe('isAllowedVideoUrl', () => {
     'https://vimeo.com/123',
   ])('rejette %s', (v) => {
     expect(isAllowedVideoUrl(v)).toBe(false);
+  });
+});
+
+describe('matchesHost', () => {
+  it('compare le hostname parsé, pas un substring de l’URL', () => {
+    expect(matchesHost('https://youtube.com/x', ['youtube.com'])).toBe(true);
+    expect(matchesHost('https://www.youtube.com/x', ['youtube.com'])).toBe(true);
+    // « youtube.com » ailleurs dans l’URL ne doit jamais matcher.
+    expect(matchesHost('https://youtube.com.evil.tld/x', ['youtube.com'])).toBe(false);
+    expect(matchesHost('https://evil.tld/youtube.com', ['youtube.com'])).toBe(false);
+    expect(matchesHost('https://evil.tld/?r=youtube.com', ['youtube.com'])).toBe(false);
+  });
+
+  it('renvoie false sur une URL illisible', () => {
+    expect(matchesHost('pas une url', ['youtube.com'])).toBe(false);
+    expect(matchesHost(null, ['youtube.com'])).toBe(false);
   });
 });
 

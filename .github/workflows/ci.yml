@@ -67,12 +67,17 @@ jobs:
   secrets:
     name: Secrets (gitleaks)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write # gitleaks-action v2 : commentaire de résumé sur la PR
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: gitleaks/gitleaks-action@v2
         env:
+          # Requis depuis la v2 pour scanner les PR (commentaire de résumé + API).
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_CONFIG: .gitleaks.toml
 
   # ─── 10b. Audit des dépendances ──────────────────────────────────────────

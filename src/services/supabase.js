@@ -11,7 +11,18 @@ import {
 
 // Adaptateur unique vers Supabase (Architecture Spine AD-2) : aucun composant
 // n'importe `@supabase/supabase-js` ni n'appelle `supabase.auth.*` directement.
-export const supabase = createClient(env.supabaseUrl, env.supabaseAnonKey);
+//
+// `createClient` lève SYNCHRONEMENT (`supabaseUrl is required.`) si l'URL est
+// vide → sans garde, tout le bundle plante au chargement (page blanche) dès que
+// l'env n'est pas renseigné (preview CI, fork sans secrets). On passe alors une
+// URL sentinelle : le client existe, l'app démarre, et chaque appel réseau
+// échoue proprement — les adaptateurs dégradent (cf. `isSupabaseConfigured`,
+// `ModulesTab` : spinner → message d'erreur, jamais l'ErrorBoundary).
+const FALLBACK_URL = 'https://unconfigured.supabase.invalid';
+export const supabase = createClient(
+  env.supabaseUrl || FALLBACK_URL,
+  env.supabaseAnonKey || 'unconfigured-anon-key'
+);
 
 /**
  * Loggue et relance : le contexte part dans l'observabilité, l'appelant garde la

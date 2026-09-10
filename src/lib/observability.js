@@ -19,13 +19,30 @@ import { env } from '../config/env.js';
 
 const RELEASE = typeof __APP_RELEASE__ === 'string' ? __APP_RELEASE__ : 'dev';
 
+/**
+ * Identifiant aléatoire — corrélation d'onglet, aucune valeur de sécurité, mais
+ * on reste sur le CSPRNG (`crypto`) plutôt que `Math.random()` : rien qui touche
+ * à une graine faible dans le bundle.
+ * @returns {string}
+ */
+function randomId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    const bytes = crypto.getRandomValues(new Uint8Array(16));
+    return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+  }
+  return `s-${Date.now().toString(36)}`;
+}
+
 /** Identifiant d'onglet — pas un identifiant utilisateur. */
 function sessionId() {
   try {
     const KEY = 'obs_session_id';
     let id = sessionStorage.getItem(KEY);
     if (!id) {
-      id = (crypto.randomUUID?.() ?? String(Date.now() + Math.random())).slice(0, 36);
+      id = randomId().slice(0, 36);
       sessionStorage.setItem(KEY, id);
     }
     return id;

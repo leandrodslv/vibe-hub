@@ -38,9 +38,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Toutes les entrées `workflow_dispatch` transitent par `env:` puis sont
+      # référencées en `"$VAR"` — jamais interpolées directement dans un `run:`
+      # (sinon injection shell, cf. semgrep run-shell-injection).
       - name: Garde-fou — refuser une cible qui ressemble à la prod
+        env:
+          BASE_URL: ${{ inputs.base_url }}
         run: |
-          case "${{ inputs.base_url }}" in
+          case "$BASE_URL" in
             *vibehub.fr|*vibehub.fr/|https://vibe-hub.vercel.app*)
               echo "::error::Cible interdite (prod). Utiliser une URL de préproduction."
               exit 1 ;;
@@ -52,13 +57,23 @@ jobs:
           sudo mv k6-v0.53.0-linux-amd64/k6 /usr/local/bin/
 
       - name: Lancer le scénario
+        env:
+          BASE_URL: ${{ inputs.base_url }}
+          SCENARIO: ${{ inputs.scenario }}
+          TEST_API: ${{ inputs.test_api }}
+          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
         run: |
           mkdir -p perf-results
-          k6 run \
-            -e BASE_URL='${{ inputs.base_url }}' \
-            ${{ inputs.test_api && format('-e SUPABASE_URL={0} -e SUPABASE_ANON_KEY={1}', secrets.STAGING_SUPABASE_URL, secrets.STAGING_SUPABASE_ANON_KEY) || '' }} \
-            --summary-export=perf-results/${{ inputs.scenario }}-summary.json \
-            scripts/perf/${{ inputs.scenario }}.js
+          # `scenario` est un `choice` (valeurs figées) mais on le garde en variable
+          # pour éviter toute interpolation dans le `run:`.
+          args=(-e "BASE_URL=$BASE_URL")
+          if [ "$TEST_API" = "true" ]; then
+            args+=(-e "SUPABASE_URL=$STAGING_SUPABASE_URL" -e "SUPABASE_ANON_KEY=$STAGING_SUPABASE_ANON_KEY")
+          fi
+          k6 run "${args[@]}" \
+            --summary-export="perf-results/${SCENARIO}-summary.json" \
+            "scripts/perf/${SCENARIO}.js"
 
       - if: always()
         uses: actions/upload-artifact@v4
