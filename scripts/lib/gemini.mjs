@@ -16,12 +16,13 @@ export async function askGemini(prompt, { maxChars = 120_000 } = {}) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return null;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${key}`;
+  // Clé dans l'en-tête `x-goog-api-key`, jamais dans l'URL (query loggable).
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
   let res;
   try {
     res = await fetch(url, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: prompt.slice(0, maxChars) }] }],
       }),
