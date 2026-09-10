@@ -20,6 +20,7 @@ perf-results/
 .playwright-cli/
 .playwright/
 reports/
+AI_FIX_CONTEXT.md
 
 # Editor files
 .vscode/*

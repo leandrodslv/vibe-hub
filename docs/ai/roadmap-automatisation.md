@@ -165,19 +165,35 @@ Vibe Hub n'est pas distribué, mais les mêmes principes s'appliquent aux **fron
 - **DoD atteint** : un échec de simulation est reproductible par sa graine et produit un
   rapport Markdown exploitable par un agent.
 
-### V5 — Boucle agent → issue → agent _(~3 j)_ ← cœur « vidéo »
+### V5 — Boucle rapport → issue → agent ← cœur « vidéo » — ✅ livré (moitié auto, moitié locale)
 
 Le rapport de bug est « posté dans une issue, dépilé par un autre agent qui va le résoudre ».
+**Contrainte** : pas de clé API Anthropic — seulement un plan Claude Pro. Donc la 1ʳᵉ moitié
+(rapport → issue) est automatique en CI, la 2ᵉ (issue → correctif) se lance **en local** avec
+Claude Code. Un workflow d'automatisation complète est fourni **désactivé**, activable via un
+token OAuth.
 
-- [ ] `.github/workflows/report-to-issue.yml` : quand un job (`simulation`, `pentest`, `e2e`, `integration`) échoue sur main ou sur run nocturne → crée/actualise une issue avec label `ai-fix`, corps = le `reports/*.md`, dédup par signature.
-- [ ] `.github/workflows/agent-fix.yml` (`workflow_dispatch` + `schedule` nuit) :
-  - prend les issues `ai-fix` non assignées, une par run ;
-  - lance **Claude Code headless** (`claude -p` en mode non-interactif) sur une branche `ai-fix/<issue>` avec le contexte `docs/ai/*` + le rapport ;
-  - contrainte : la PR doit passer `validate` **et** ajouter un test de régression (V3), sinon l'agent itère jusqu'à 3 fois ;
-  - ouvre une **PR en draft** liée à l'issue, jamais de merge auto — relecture humaine obligatoire (checkpoint).
-- [ ] Garde-fous : budget tokens/temps par run, `paths-ignore` sur `docs/`, label `no-ai` pour opt-out, CODEOWNERS sur `supabase/migrations/` et `src/config/`.
-- **Trigger** : échec CI (post) + cron nuit.
-- **DoD** : un échec de simulation nocturne se retrouve le matin en PR draft avec correctif + test, prête à relire.
+- [x] **Label `ai-fix`** créé sur le repo.
+- [x] `.github/workflows/ci-failure-to-issue.yml` (`workflow_run` sur `CI`) : un échec CI sur
+      `main` ouvre une issue `ai-fix` (lien du run + jobs fautifs), dédup par short-sha.
+- [x] `.github/workflows/simulation-nightly.yml` (V4) : chaque `reports/simulation-seed-<n>.md`
+      d'un run nocturne en échec → une issue `ai-fix` avec le rapport en corps.
+- [x] **`npm run ai-fix`** (`scripts/ai-fix.mjs`) : liste les issues `ai-fix` ouvertes ;
+      `npm run ai-fix <n>` crée la branche `ai-fix/<n>`, écrit `AI_FIX_CONTEXT.md` (rapport +
+      mission + contraintes d'archi + « ouvre une PR draft ») → tu lances `claude` dessus.
+- [x] `.github/workflows/agent-fix.yml` — **automatisation complète, OFF par défaut**.
+      Pour l'activer : `claude setup-token` → secret `CLAUDE_CODE_OAUTH_TOKEN` + variable
+      `AI_AUTOMATION_ENABLED=true`. Utilise `anthropics/claude-code-action`, ouvre une **PR
+      draft**, jamais de merge auto.
+- [x] **Garde-fous** : `.github/CODEOWNERS` (`supabase/migrations/`, `src/config/`, `.github/`,
+      `docs/ai/` → review obligatoire si la protection de branche l'exige) ; le script et le
+      prompt d'agent interdisent de toucher ces zones sans le signaler ; `AI_FIX_CONTEXT.md`
+      git-ignoré.
+- **Politique PR** : **draft, merge humain obligatoire** (choix retenu).
+- **Trigger** : échec CI sur `main` (auto) + run nocturne (auto) ; résolution manuelle/locale
+  (`npm run ai-fix`) — ou auto si le token OAuth est configuré.
+- **DoD atteint** : un échec nocturne se retrouve le matin en issue `ai-fix` avec le rapport ;
+  `npm run ai-fix <n>` amène à une PR draft en quelques minutes.
 
 ### V6 — Pentest multi-modèles sur chaque PR _(~3 j)_ ← cœur « vidéo »
 

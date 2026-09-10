@@ -1,0 +1,8 @@
+# Relecture humaine obligatoire sur les zones sensibles (roadmap V5 — garde-fous
+# transverses). Ne devient bloquant qu'avec la protection de branche
+# « Require review from Code Owners » activée sur `main`.
+
+/supabase/migrations/   @leandrodslv
+/src/config/            @leandrodslv
+/.github/               @leandrodslv
+/docs/ai/               @leandrodslv
