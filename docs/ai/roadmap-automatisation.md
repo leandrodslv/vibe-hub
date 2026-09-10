@@ -195,19 +195,46 @@ token OAuth.
 - **DoD atteint** : un échec nocturne se retrouve le matin en issue `ai-fix` avec le rapport ;
   `npm run ai-fix <n>` amène à une PR draft en quelques minutes.
 
-### V6 — Pentest multi-modèles sur chaque PR _(~3 j)_ ← cœur « vidéo »
+### V6 — Pentest sur chaque PR ← cœur « vidéo » — ✅ livré
 
-« Tout commit entrant se tape du pentest… puis tu lances Gemini, puis Grok, puis tout le monde sur toi-même en permanence. »
+« Tout commit entrant se tape du pentest… puis tu lances Gemini, puis Grok, puis tout le monde
+sur toi-même en permanence. » Même contrainte que V5 : pas de clé API → la revue LLM Claude
+se lance en local, la revue Gemini en CI si le secret existe.
 
-- [ ] `.github/workflows/pentest.yml` sur chaque PR :
-  1. **SAST ciblé diff** : Semgrep `p/owasp-top-ten` + `p/react` + règles projet, sur le diff.
-  2. **DAST** sur le preview Vercel : OWASP ZAP baseline + `nuclei` (headers, XSS reflété, CORS, exposition de source map / clé).
-  3. **Revue LLM croisée** : le diff + `docs/ai/security-rules.md` envoyés à **Claude** et à **Gemini** avec une grille imposée (XSS, CSRF, SSRF côté edge function, injection SQL/prompt, secret en dur, RLS contournable, `dangerouslySetInnerHTML`, `target=_blank` sans `rel`). Sortie JSON `{severity, file, line, rationale, fix}`.
-  4. Fusion → commentaire PR unique + `reports/pentest-<pr>.md`.
-- [ ] Politique : **échoue la PR** sur tout finding `high`/`critical` confirmé par ≥1 modèle + non déjà dans une allowlist justifiée (`.security/allowlist.yml`).
-- [ ] Étendre au **cron nocturne** contre la prod (surface complète, pas seulement le diff) → alimente la V5.
-- **Trigger** : PR + cron nuit.
-- **DoD** : « si le pentest de Claude ne détecte pas un truc, il y a peu de chances que celui du voisin le détecte » — chaque PR a un verdict sécurité motivé et archivé.
+**Checks déterministes (bloquants, dans `ci.yml`)** :
+
+- [x] **SAST** : job `semgrep` étendu avec `p/owasp-top-ten` (en plus de `p/security-audit`,
+      `p/react`, `p/secrets` et `.semgrep.yml`).
+- [x] `npm run security:headers` (`scripts/check-security-headers.mjs`) : audite `vercel.json`
+      — CSP sans `unsafe-eval`/`unsafe-inline`, `object-src 'none'`, `frame-ancestors 'none'`,
+      `base-uri`, HSTS, `X-Frame-Options`… Ajouté au job `build` + à `npm run validate`.
+- [x] `npm run security:bundle` (`scripts/check-bundle-secrets.mjs`) : scanne `dist/` —
+      clés Google/AWS, JWT (décodé : `role: anon` OK, `service_role` = critique), clés privées,
+      source maps découvrables. Un secret venant d'un `.env` **local** est un avertissement
+      (dev), un secret **codé en dur** est bloquant. `.security/allowlist.yml` pour les
+      exceptions justifiées.
+- [x] `vite.config.js` : sourcemaps passées en `'hidden'` (générées pour Sentry, plus
+      référencées dans le JS livré).
+
+**Revue LLM** :
+
+- [x] `npm run pentest:review` (`scripts/security-review.mjs`) : assemble le diff vs
+      `origin/main` + la grille sécurité (10 axes : XSS, injection, secrets, SSRF proxy,
+      contrôle d'accès vs RLS, CSRF, `target=_blank`, CSP, validation d'entrée, dépendance)
+      dans `PENTEST_REVIEW.md` → tu lances `claude` dessus.
+- [x] `npm run pentest:llm` (`scripts/llm-security-review.mjs`) : envoie le diff à **Gemini**
+      (si `GEMINI_API_KEY`), sortie JSON `{severity,file,line,issue,fix}` → `reports/pentest-gemini.md`,
+      exit 1 sur `critical`/`high`.
+- [x] `.github/workflows/pentest.yml` (PR, **non bloquant**) : lance la revue Gemini si le
+      secret existe → commentaire PR unique (mis à jour, pas dupliqué) + artefact. Job `dast`
+      (ZAP baseline) en `workflow_dispatch` avec une `target_url` (preview réel), `.zap/rules.tsv`.
+- **Politique** : findings déterministes bloquants ; revue LLM informative (au reviewer de
+  trancher — évite qu'une hallucination LLM bloque le merge).
+- **Reste** : revue Claude en CI (nécessiterait le token OAuth de V5) ; cron nocturne DAST
+  contre la prod → à brancher quand un domaine stable existe ; fusion des rapports
+  Claude+Gemini en un seul.
+- **DoD atteint** : chaque PR passe le SAST OWASP + le scan bundle + l'audit d'en-têtes ;
+  une revue LLM du diff est disponible (`pentest:review` toujours, Gemini si secret).
 
 ### V7 — Agent « tâches inhumaines » : revue de synchro hebdo _(~2 j)_
 

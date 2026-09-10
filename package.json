@@ -30,13 +30,17 @@
     "security:audit": "npm audit --omit=dev --audit-level=high",
     "security:secrets": "gitleaks detect --no-banner --redact --config .gitleaks.toml",
     "security:semgrep": "semgrep scan --config .semgrep.yml --error",
+    "security:headers": "node scripts/check-security-headers.mjs",
+    "security:bundle": "node scripts/check-bundle-secrets.mjs",
+    "pentest:review": "node scripts/security-review.mjs",
+    "pentest:llm": "node scripts/llm-security-review.mjs",
     "size": "size-limit",
     "perf:smoke": "k6 run scripts/perf/smoke.js",
     "perf:load": "k6 run scripts/perf/load.js",
     "perf:stress": "k6 run scripts/perf/stress.js",
     "perf:spike": "k6 run scripts/perf/spike.js",
     "lighthouse": "lhci autorun",
-    "validate": "npm run format:check && npm run lint && npm run typecheck && npm run test:cov && npm run test:integration && npm run test:simulation && npm run build && npm run size",
+    "validate": "npm run format:check && npm run lint && npm run typecheck && npm run test:cov && npm run test:integration && npm run test:simulation && npm run security:headers && npm run build && npm run security:bundle && npm run size",
     "prepare": "husky || true"
   },
   "dependencies": {

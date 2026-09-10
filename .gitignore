@@ -21,6 +21,7 @@ perf-results/
 .playwright/
 reports/
 AI_FIX_CONTEXT.md
+PENTEST_REVIEW.md
 
 # Editor files
 .vscode/*

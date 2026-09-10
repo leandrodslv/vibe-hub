@@ -1,0 +1,11 @@
+# ZAP baseline — ajustement des règles (pentest V6, job DAST opt-in).
+# Colonnes : <ruleId>\t<IGNORE|WARN|FAIL>\t<commentaire>
+#
+# Les en-têtes CSP/HSTS/etc. viennent de vercel.json et sont audités par
+# `npm run security:headers` — inutile de FAIL ici si on scanne un preview
+# `vite preview` qui ne les applique pas.
+10015	WARN	Incomplete or No Cache-control Header
+10020	WARN	Missing Anti-clickjacking Header (couvert par security:headers sur la prod)
+10038	WARN	CSP header not set (couvert par security:headers sur la prod)
+10063	WARN	Permissions Policy Header Not Set (couvert par security:headers)
+90004	WARN	Insufficient Site Isolation Against Spectre

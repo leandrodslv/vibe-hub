@@ -41,16 +41,20 @@ Le contrôle de session dans `AdminPage.jsx` est **UX only**, jamais la frontiè
 
 ## Règles de codage sécurité (vérifiées automatiquement)
 
-| Règle                                                                            | Outil                                                   |
-| -------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| Pas d'`eval` / `new Function`                                                    | ESLint `no-restricted-syntax`, Semgrep `no-eval-family` |
-| Pas de `dangerouslySetInnerHTML` sans sanitizer + justification                  | Semgrep `no-dangerously-set-inner-html`                 |
-| `<iframe>` de contenu non maîtrisé → `sandbox` (AD-5)                            | Semgrep `iframe-without-sandbox`                        |
-| Lien `target="_blank"` → `rel="noopener noreferrer"` (constante `NOUVEL_ONGLET`) | Semgrep + `jsx-a11y`                                    |
-| Import SDK externe hors `services/` (AD-2)                                       | ESLint `no-restricted-imports`, Semgrep                 |
-| Secret derrière `VITE_*`                                                         | Semgrep `secret-behind-vite-prefix`                     |
-| Clé API en dur                                                                   | Semgrep `hardcoded-google-api-key`, gitleaks            |
-| `JSON.parse` sans try/catch                                                      | Semgrep `json-parse-without-try-catch` (info)           |
+| Règle                                                                            | Outil                                                                           |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Pas d'`eval` / `new Function`                                                    | ESLint `no-restricted-syntax`, Semgrep `no-eval-family`                         |
+| Pas de `dangerouslySetInnerHTML` sans sanitizer + justification                  | Semgrep `no-dangerously-set-inner-html`                                         |
+| `<iframe>` de contenu non maîtrisé → `sandbox` (AD-5)                            | Semgrep `iframe-without-sandbox`                                                |
+| Lien `target="_blank"` → `rel="noopener noreferrer"` (constante `NOUVEL_ONGLET`) | Semgrep + `jsx-a11y`                                                            |
+| Import SDK externe hors `services/` (AD-2)                                       | ESLint `no-restricted-imports`, Semgrep                                         |
+| Secret derrière `VITE_*`                                                         | Semgrep `secret-behind-vite-prefix`                                             |
+| Clé API en dur                                                                   | Semgrep `hardcoded-google-api-key`, gitleaks                                    |
+| `JSON.parse` sans try/catch                                                      | Semgrep `json-parse-without-try-catch` (info)                                   |
+| Secret / JWT `service_role` / source map dans le bundle livré                    | `npm run security:bundle` (job `build`, V6)                                     |
+| En-têtes de prod affaiblis (CSP `unsafe-*`, directive retirée, HSTS…)            | `npm run security:headers` (job `build`, V6)                                    |
+| OWASP Top 10 (patterns)                                                          | Semgrep `p/owasp-top-ten` (job `semgrep`, V6)                                   |
+| Revue de sécurité du diff par un LLM                                             | `npm run pentest:review` (Claude, local) · `pentest:llm` (Gemini, CI si secret) |
 
 ## Validation des entrées
 

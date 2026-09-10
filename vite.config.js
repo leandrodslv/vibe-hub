@@ -10,11 +10,13 @@ export default defineConfig({
     // Repart d'un dossier propre à chaque build : sinon les anciens chunks
     // (hash différent) s'accumulent et faussent les mesures de budget bundle.
     emptyOutDir: true,
-    // Sourcemaps de prod : indispensables pour symboliser les stack traces remontées
-    // par l'ErrorBoundary / web-vitals (cf. src/lib/observability). Coût disque
-    // négligeable pour un SPA de cette taille, elles ne sont pas servies au client
-    // si l'hébergeur ne les référence pas.
-    sourcemap: true,
+    // Sourcemaps de prod en mode « hidden » : les fichiers `.map` sont générés
+    // (Sentry / symbolisation des stack traces — cf. src/lib/observability) mais
+    // AUCUN commentaire `//# sourceMappingURL` n'est écrit dans le JS livré → un
+    // visiteur (ou un scanner) ne les découvre pas automatiquement.
+    // Vérifié par `npm run security:bundle` (pentest V6).
+    // TODO(V10) : uploader les `.map` vers Sentry en CI puis les exclure du déploiement.
+    sourcemap: 'hidden',
     rollupOptions: {
       output: {
         // Sépare les grosses dépendances tierces du code applicatif : un changement
