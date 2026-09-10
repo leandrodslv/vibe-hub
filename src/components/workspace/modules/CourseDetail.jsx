@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { isAllowedVideoUrl, isSafeHttpUrl } from '../../../lib/validation';
+import { isAllowedVideoUrl, isSafeHttpUrl, matchesHost } from '../../../lib/validation';
 import {
   ChevronRight,
   PlayCircle,
@@ -113,13 +113,12 @@ export default function CourseDetail({ course, onBack, onMarkComplete }) {
             (() => {
               const url = course.video_url;
               const embeddable = isAllowedVideoUrl(url);
-              const isYouTube =
-                embeddable && (url.includes('youtube.com') || url.includes('youtu.be'));
+              // Choix du lecteur d'après le hostname parsé (jamais un substring
+              // de l'URL entière — cf. `matchesHost`).
+              const isYouTube = embeddable && matchesHost(url, ['youtube.com', 'youtu.be']);
               const isStream =
                 embeddable &&
-                (url.includes('sharepoint.com') ||
-                  url.includes('microsoftstream.com') ||
-                  url.includes('stream.office.com'));
+                matchesHost(url, ['sharepoint.com', 'microsoftstream.com', 'stream.office.com']);
 
               // YouTube embed
               if (isYouTube) {
