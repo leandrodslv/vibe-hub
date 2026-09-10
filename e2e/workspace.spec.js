@@ -31,11 +31,11 @@ test.describe('Workspace (/app)', () => {
     await input.fill('Bonjour');
     await input.press('Enter');
 
-    // Selon que VITE_GEMINI_API_KEY est configurée (dev) ou non (CI), on obtient
-    // soit une vraie réponse, soit le message d'erreur explicite — jamais un crash.
+    // Selon que le proxy IA est configuré (dev) ou non (CI), on obtient soit une
+    // vraie réponse, soit le message d'erreur explicite — jamais un crash.
     // `.first()` : le message d'erreur est lui-même rendu dans un bloc `.prose`
     // (react-markdown) → sans ça, `.or()` matche 2 nœuds et viole le mode strict.
-    const configError = page.getByText(/clé API Gemini n.est pas configurée/i);
+    const configError = page.getByText(/proxy IA n.est pas configuré/i);
     const anyAssistantReply = page.locator('.prose').first();
     await expect(configError.or(anyAssistantReply).first()).toBeVisible({ timeout: 20_000 });
 
