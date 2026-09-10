@@ -32,8 +32,10 @@ jobs:
 
       - name: Simulation (200 graines par défaut)
         id: sim
+        env:
+          SEEDS_INPUT: ${{ github.event.inputs.seeds }}
         run: |
-          SEEDS="${{ github.event.inputs.seeds }}"
+          SEEDS="$SEEDS_INPUT"
           if [ -z "$SEEDS" ]; then SEEDS=$(seq -s, 1 200); fi
           SIM_SEEDS="$SEEDS" npm run test:simulation
 
