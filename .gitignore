@@ -7,6 +7,18 @@ node_modules/
 dist/
 dist-ssr/
 *.local
+*.tsbuildinfo
+
+# Test & quality artifacts
+coverage/
+playwright-report/
+test-results/
+.lighthouseci/
+.vitest/
+.eslintcache
+perf-results/
+.playwright-cli/
+.playwright/
 
 # Editor files
 .vscode/*

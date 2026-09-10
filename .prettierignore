@@ -1,0 +1,16 @@
+dist
+coverage
+node_modules
+playwright-report
+test-results
+.playwright
+.playwright-cli
+_bmad
+_bmad-output
+.claude
+.github/chatmodes
+docs/diagnostic-rgaa.md
+package-lock.json
+CHANGELOG.md
+src/assets
+public

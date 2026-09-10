@@ -1,0 +1,36 @@
+# Configuration gitleaks — détection de secrets commités.
+# Étend le jeu de règles par défaut avec des règles spécifiques au projet.
+# Exécution locale : `npm run security:secrets`
+# CI : job `secrets` dans .github/workflows/ci.yml (scan de tout l'historique sur push main,
+#      scan du diff sur PR).
+
+title = "Vibe Hub gitleaks config"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "google-api-key-modern"
+description = "Google API key (format moderne AQ.*)"
+regex = '''AQ\.[A-Za-z0-9_\-]{40,}'''
+keywords = ["AQ."]
+
+[[rules]]
+id = "supabase-service-role-jwt"
+description = "Supabase service_role JWT (ne doit JAMAIS quitter le serveur)"
+regex = '''eyJ[A-Za-z0-9_\-]+\.eyJ[A-Za-z0-9_\-]*(role"?\s*:\s*"?service_role)[A-Za-z0-9_\-]*\.[A-Za-z0-9_\-]+'''
+keywords = ["service_role"]
+
+[allowlist]
+description = "Faux positifs connus"
+paths = [
+  '''\.env\.example$''',
+  '''(^|/)package-lock\.json$''',
+  '''(^|/)_bmad-output/''',
+  '''(^|/)docs/''',
+]
+# La clé anon Supabase est publique par conception (protégée par RLS) : on ne la
+# traite pas comme un secret. Ajoutez ici le hash si gitleaks la signale.
+regexes = [
+  '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZS[^"]*"role":"anon"''',
+]

@@ -11,7 +11,9 @@ export const ROUTES = {
   admin: '/admin',
 };
 
-export const WORKSPACE_TABS = ['modules', 'ia', 'outils'];
+// « notifications » n'apparaît pas dans la nav principale des onglets (Cours/IA/Outils) :
+// on y accède via l'icône cloche (Sidebar, TopBar mobile, Navbar landing), pas via ces tabs.
+export const WORKSPACE_TABS = ['modules', 'ia', 'outils', 'notifications'];
 export const DEFAULT_TAB = 'ia';
 
 // URL du logiciel, éventuellement ciblée sur un onglet. L'onglet par défaut n'est pas
@@ -36,7 +38,10 @@ export function currentRoute(pathname = window.location.pathname) {
   const path = pathname.replace(/\/+$/, '') || '/';
   if (path === ROUTES.admin) return 'admin';
   if (path === ROUTES.app) return 'app';
-  return 'landing';
+  if (path === ROUTES.landing) return 'landing';
+  // Le rewrite Vercel (cf. vercel.json) sert index.html pour toute URL inconnue avec un
+  // statut 200 : la résolution 404 se fait donc ici, côté client.
+  return 'notFound';
 }
 
 export function tabFromSearch(search = window.location.search) {

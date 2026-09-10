@@ -1,0 +1,93 @@
+<!DOCTYPE html><html lang="fr"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>404 - Page Non Trouvée | Vibe Hub</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Bricolage Grotesque -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&amp;display=swap" rel="stylesheet">
+<!-- Custom Configuration & Styles -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Bricolage Grotesque"', 'sans-serif'],
+          },
+          colors: {
+            vibe: {
+              purple: '#7b61ff',
+              purpleDark: '#624be0',
+            }
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-utilities">
+    body {
+      /* Smooth rendering */
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+  </style>
+</head>
+<body class="bg-white text-slate-900 min-h-screen flex flex-col font-sans overflow-x-hidden">
+<!-- BEGIN: MainHeader -->
+<header class="w-full absolute top-0 left-0 right-0 z-50">
+<div class="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center">
+<!-- Logo -->
+<a class="text-2xl font-black tracking-tighter flex items-center gap-2 group" href="/">
+<span class="w-8 h-8 bg-vibe-purple rounded-lg flex items-center justify-center text-white text-lg group-hover:rotate-12 transition-transform duration-300">V</span>
+        Vibe Hub
+      </a>
+<!-- Navigation -->
+<nav class="hidden md:flex gap-8 font-semibold text-slate-600">
+<a class="hover:text-vibe-purple transition-colors duration-200" href="#">Modules</a>
+<a class="hover:text-vibe-purple transition-colors duration-200" href="#">IA</a>
+<a class="hover:text-vibe-purple transition-colors duration-200" href="#">Outils</a>
+</nav>
+<!-- Mobile Menu Button (Visual Only for context) -->
+<button class="md:hidden p-2 text-slate-600 hover:text-vibe-purple">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</div>
+</header>
+<!-- END: MainHeader -->
+<!-- BEGIN: ErrorMainContent -->
+<main class="flex-grow flex flex-col items-center justify-center pt-24 pb-12 px-4 relative">
+<!-- Hero Illustration Container -->
+<div class="w-full max-w-5xl mx-auto flex justify-center mb-8 relative z-10" data-purpose="illustration-wrapper">
+<!-- 
+        The illustration is treated as the primary visual element. 
+        Using object-contain and setting a large max-width ensures it dominates the screen.
+      -->
+<img alt="Illustration 404 - Personnage confus avec un ordinateur portable" class="w-full h-auto object-contain drop-shadow-sm max-h-[60vh] md:max-h-[70vh] pointer-events-none" src="https://lh3.googleusercontent.com/aida-public/AB6AXuClYSVPGOrkraPSj2atq0rEx0MTrsquVXmxLG_nBk2Ol5AGG8MOOIzaAx4dCM9aCwTVmdjaH7c3i4z1m9YJDQ1K_w5XswhFOMMDXocChnsatZI1O5SABuNbc2wqFjzGkSkNfPGgfIH2_2HlwifWzmX8T4vlsFehLfbytBfC8qlwf6ZDVQlJtu55H-OlTuKL2bUgA-42S0hynJmrx6XmMF-xrFOVnbV2mpSYk4XpsLIZdGztc-o1r3G9Oe7RM-CAThVl21A">
+</div>
+<!-- Messaging & CTA Container -->
+<div class="max-w-3xl mx-auto text-center relative z-20" data-purpose="error-messaging">
+<h1 class="text-3xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight uppercase leading-tight">
+        Oups ! Cette page s'est<br class="hidden md:block"> perdue dans le workflow
+      </h1>
+<p class="text-lg md:text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+        Il semble que vous ayez pris un mauvais chemin créatif. L'assistant IA n'a pas pu générer cette route.
+      </p>
+<!-- CTA Button -->
+<a class="inline-flex items-center justify-center px-10 py-4 bg-vibe-purple text-white rounded-full font-bold text-lg hover:bg-vibe-purpleDark hover:-translate-y-1 hover:shadow-xl hover:shadow-vibe-purple/30 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-vibe-purple/50 active:translate-y-0" data-purpose="return-home-cta" href="/">
+<span>Retour à l'accueil</span>
+<svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</a>
+</div>
+<!-- Decorative subtle background elements (optional, to tie the clean background together) -->
+<div class="absolute inset-0 z-0 overflow-hidden pointer-events-none flex items-center justify-center opacity-40">
+<div class="w-[800px] h-[800px] bg-vibe-purple/5 rounded-full blur-3xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 mix-blend-multiply"></div>
+</div>
+</main>
+<!-- END: ErrorMainContent -->
+</body></html>

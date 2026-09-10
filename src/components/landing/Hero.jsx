@@ -11,7 +11,9 @@ function buildStickerOutline(radius, color) {
     const steps = Math.max(8, Math.round(r * 4));
     for (let i = 0; i < steps; i++) {
       const angle = (i / steps) * Math.PI * 2;
-      shadows.push(`${(r * Math.cos(angle)).toFixed(2)}px ${(r * Math.sin(angle)).toFixed(2)}px 0 ${color}`);
+      shadows.push(
+        `${(r * Math.cos(angle)).toFixed(2)}px ${(r * Math.sin(angle)).toFixed(2)}px 0 ${color}`
+      );
     }
   }
   return shadows.join(', ');
@@ -28,12 +30,15 @@ export default function Hero() {
       className="px-container-margin py-section-padding md:py-24 max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12 bg-surface"
     >
       <div className="flex-1 space-y-8">
-        <h1 id="hero-titre" className="font-display-xl text-display-xl md:text-[80px] leading-tight text-on-surface">
+        <h1
+          id="hero-titre"
+          className="font-display-xl text-display-xl md:text-[80px] leading-tight text-on-surface"
+        >
           L&apos;IA dans votre workflow créatif.
         </h1>
         <p className="font-body-lg text-body-lg text-on-surface-variant max-w-xl">
-          Vibe Hub fusionne des modules de formation, un assistant IA et un générateur d&apos;interfaces. Découvrez
-          les outils que votre équipe design a déjà à sa disposition.
+          Vibe Hub fusionne des modules de formation, un assistant IA et un générateur
+          d&apos;interfaces. Découvrez les outils que votre équipe design a déjà à sa disposition.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 pt-4">
           <a
@@ -71,7 +76,11 @@ export default function Hero() {
         <div className="absolute bottom-10 left-10 w-32 h-32 bg-primary-container rounded-full opacity-80 blur-2xl animate-pulse [animation-delay:700ms]"></div>
 
         <div className="relative z-10 w-full max-w-md h-full rotate-2 hover:rotate-0 transition-transform duration-500">
-          <img src={heroCollage} alt="Illustration de la marque Vibe Hub" className="w-full h-full object-contain" />
+          <img
+            src={heroCollage}
+            alt="Illustration de la marque Vibe Hub"
+            className="w-full h-full object-contain"
+          />
         </div>
 
         {/* Floating UI Stickers — the white outline is a ring of concentric text-shadows,

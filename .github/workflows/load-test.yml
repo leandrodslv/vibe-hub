@@ -1,0 +1,68 @@
+name: Load / Stress test
+
+# Déclenché À LA MAIN uniquement (jamais sur push/PR) : un stress à 10 000 VUs
+# consomme de la bande passante facturée et peut faire tomber la cible.
+#
+# Prérequis :
+#   - un déploiement de préproduction dédié (variable/secret STAGING_URL) ;
+#   - NE PAS pointer vers la prod ni le Supabase de prod.
+#
+# Pour de très gros volumes (> ~1000 VUs soutenus depuis un seul runner GitHub),
+# préférer k6 Cloud (secret K6_CLOUD_TOKEN) — un runner ubuntu-latest sature bien
+# avant 10 000 VUs.
+
+on:
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: Scénario k6 à lancer
+        type: choice
+        default: smoke
+        options: [smoke, load, spike, stress]
+      base_url:
+        description: URL cible (préproduction — jamais la prod)
+        type: string
+        required: true
+      test_api:
+        description: Inclure le chemin API Supabase (lecture cours)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  k6:
+    name: k6 – ${{ inputs.scenario }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Garde-fou — refuser une cible qui ressemble à la prod
+        run: |
+          case "${{ inputs.base_url }}" in
+            *vibehub.fr|*vibehub.fr/|https://vibe-hub.vercel.app*)
+              echo "::error::Cible interdite (prod). Utiliser une URL de préproduction."
+              exit 1 ;;
+          esac
+
+      - name: Installer k6
+        run: |
+          curl -sSL https://github.com/grafana/k6/releases/download/v0.53.0/k6-v0.53.0-linux-amd64.tar.gz | tar xz
+          sudo mv k6-v0.53.0-linux-amd64/k6 /usr/local/bin/
+
+      - name: Lancer le scénario
+        run: |
+          mkdir -p perf-results
+          k6 run \
+            -e BASE_URL='${{ inputs.base_url }}' \
+            ${{ inputs.test_api && format('-e SUPABASE_URL={0} -e SUPABASE_ANON_KEY={1}', secrets.STAGING_SUPABASE_URL, secrets.STAGING_SUPABASE_ANON_KEY) || '' }} \
+            --summary-export=perf-results/${{ inputs.scenario }}-summary.json \
+            scripts/perf/${{ inputs.scenario }}.js
+
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-${{ inputs.scenario }}-results
+          path: perf-results/
+          retention-days: 30

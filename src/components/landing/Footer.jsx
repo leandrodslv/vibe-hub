@@ -144,7 +144,10 @@ function ConfettiIconField({ items, containerRef }) {
         const prevTransform = node.el.style.transform;
         node.el.style.transform = 'none'; // measure the untranslated rest position
         const iconRect = node.el.getBoundingClientRect();
-        node.base = { x: iconRect.left + iconRect.width / 2, y: iconRect.top + iconRect.height / 2 };
+        node.base = {
+          x: iconRect.left + iconRect.width / 2,
+          y: iconRect.top + iconRect.height / 2,
+        };
         node.radius = iconRect.width / 2;
         if (node.x === undefined) {
           node.x = node.base.x;
@@ -309,7 +312,8 @@ export default function Footer() {
             Tous les outils IA de votre équipe, au même endroit.
           </h2>
           <p className="font-body-lg text-body-lg text-on-primary/85 mb-10">
-            Modules, Assistant IA, UI Builder - accessibles dès aujourd&apos;hui, sans compte à créer.
+            Modules, Assistant IA, UI Builder - accessibles dès aujourd&apos;hui, sans compte à
+            créer.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -337,7 +341,10 @@ export default function Footer() {
         aria-labelledby="plan-du-site-titre"
         className="relative max-w-7xl mx-auto mt-24 pt-10 border-t border-on-primary/30"
       >
-        <h2 id="plan-du-site-titre" className="font-label-caps text-label-caps uppercase tracking-wider text-on-primary mb-6">
+        <h2
+          id="plan-du-site-titre"
+          className="font-label-caps text-label-caps uppercase tracking-wider text-on-primary mb-6"
+        >
           Plan du site
         </h2>
 

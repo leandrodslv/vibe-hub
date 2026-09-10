@@ -3,6 +3,7 @@ import Sidebar from '../components/workspace/Sidebar';
 import IATab from '../components/workspace/tabs/IATab';
 import ModulesTab from '../components/workspace/tabs/ModulesTab';
 import OutilsTab from '../components/workspace/tabs/OutilsTab';
+import NotificationsTab from '../components/workspace/tabs/NotificationsTab';
 import { appHref, tabFromSearch } from '../lib/routes';
 
 export default function WorkspacePage() {
@@ -30,19 +31,30 @@ export default function WorkspacePage() {
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
       <main className="flex-1 w-full md:ml-64 flex overflow-hidden p-container-margin md:p-10 pb-32 md:pb-10 gap-6 max-w-7xl mx-auto min-h-0">
-        {/* Les 3 onglets restent montés en permanence (juste masqués) pour éviter de recharger
+        {/* Les 4 onglets restent montés en permanence (juste masqués) pour éviter de recharger
             leurs données et de reperdre leur état à chaque changement d'onglet. `min-h-0` est
             nécessaire ici et sur chaque enfant flex de la chaîne : un flex item refuse par défaut
             de rétrécir sous la hauteur de son contenu, ce qui neutralise silencieusement tout
             `overflow-hidden`/`overflow-y-auto` plus bas dans l'arbre. */}
-        <div className={`w-full h-full min-h-0 overflow-hidden ${activeTab === 'modules' ? '' : 'hidden'}`}>
+        <div
+          className={`w-full h-full min-h-0 overflow-hidden ${activeTab === 'modules' ? '' : 'hidden'}`}
+        >
           <ModulesTab />
         </div>
-        <div className={`w-full h-full min-h-0 overflow-hidden ${activeTab === 'ia' ? '' : 'hidden'}`}>
+        <div
+          className={`w-full h-full min-h-0 overflow-hidden ${activeTab === 'ia' ? '' : 'hidden'}`}
+        >
           <IATab onSendToGenerator={sendToGenerator} />
         </div>
-        <div className={`w-full h-full min-h-0 overflow-hidden ${activeTab === 'outils' ? '' : 'hidden'}`}>
+        <div
+          className={`w-full h-full min-h-0 overflow-hidden ${activeTab === 'outils' ? '' : 'hidden'}`}
+        >
           <OutilsTab initialPrompt={uiBuilderPrompt} />
+        </div>
+        <div
+          className={`w-full h-full min-h-0 overflow-hidden ${activeTab === 'notifications' ? '' : 'hidden'}`}
+        >
+          <NotificationsTab />
         </div>
       </main>
     </div>

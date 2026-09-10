@@ -1,6 +1,7 @@
 import LandingPage from './pages/LandingPage';
 import WorkspacePage from './pages/WorkspacePage';
 import AdminPage from './pages/AdminPage';
+import NotFoundPage from './pages/NotFoundPage';
 import { currentRoute } from './lib/routes';
 
 // Le routage est résolu une seule fois, au chargement du document : chaque route est une
@@ -11,5 +12,6 @@ const route = currentRoute();
 export default function App() {
   if (route === 'admin') return <AdminPage />;
   if (route === 'app') return <WorkspacePage />;
-  return <LandingPage />;
+  if (route === 'landing') return <LandingPage />;
+  return <NotFoundPage />;
 }

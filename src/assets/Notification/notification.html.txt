@@ -1,0 +1,488 @@
+<!DOCTYPE html><html class="light" lang="fr" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Vibe Hub - Notifications</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration (Provided by Design System) -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary": "#a7391e",
+                        "on-secondary-fixed-variant": "#862208",
+                        "surface-container-high": "#eae7e7",
+                        "primary-container": "#7459f7",
+                        "on-background": "#1c1b1b",
+                        "tertiary": "#00647c",
+                        "outline": "#797587",
+                        "error": "#ba1a1a",
+                        "surface": "#fcf9f8",
+                        "inverse-primary": "#c9bfff",
+                        "surface-container-highest": "#e5e2e1",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed-dim": "#ffb4a2",
+                        "on-error": "#ffffff",
+                        "secondary-container": "#fd7958",
+                        "on-surface-variant": "#484555",
+                        "secondary-fixed": "#ffdad2",
+                        "on-secondary-container": "#6e1500",
+                        "primary": "#5b3cdd",
+                        "surface-bright": "#fcf9f8",
+                        "inverse-surface": "#313030",
+                        "on-primary-container": "#fffbff",
+                        "surface-container": "#f0eded",
+                        "on-secondary-fixed": "#3c0700",
+                        "background": "#fcf9f8",
+                        "on-primary": "#ffffff",
+                        "surface-tint": "#5d3fe0",
+                        "primary-fixed-dim": "#c9bfff",
+                        "outline-variant": "#c9c4d8",
+                        "surface-dim": "#dcd9d9",
+                        "tertiary-fixed": "#b7eaff",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed-variant": "#004e60",
+                        "surface-container-low": "#f6f3f2",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed-dim": "#4cd6ff",
+                        "on-tertiary-fixed": "#001f28",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-container": "#007f9c",
+                        "surface-variant": "#e5e2e1",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed-variant": "#441cc8",
+                        "on-primary-fixed": "#1a0063",
+                        "on-surface": "#1c1b1b",
+                        "inverse-on-surface": "#f3f0ef",
+                        "primary-fixed": "#e5deff",
+                        "on-tertiary-container": "#fafdff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px",
+                        "3xl": "1.5rem",
+                        "4xl": "2rem",
+                        "bento": "32px"
+                    },
+                    "spacing": {
+                        "grid-gutter": "20px",
+                        "container-margin": "24px",
+                        "section-padding": "40px",
+                        "base": "8px",
+                        "stack-gap": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Bricolage Grotesque", "sans-serif"],
+                        "display-xl": ["Bricolage Grotesque", "sans-serif"],
+                        "cta-pill": ["Hanken Grotesk", "sans-serif"],
+                        "headline-lg-mobile": ["Bricolage Grotesque", "sans-serif"],
+                        "display-lg": ["Bricolage Grotesque", "sans-serif"],
+                        "label-caps": ["JetBrains Mono", "monospace"],
+                        "body-md": ["Hanken Grotesk", "sans-serif"],
+                        "body-lg": ["Hanken Grotesk", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "display-xl": ["64px", { "lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "800" }],
+                        "cta-pill": ["16px", { "lineHeight": "1", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.03em", "fontWeight": "800" }],
+                        "label-caps": ["12px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&amp;family=Hanken+Grotesk:wght@400;700&amp;family=JetBrains+Mono:wght@600&amp;display=swap" rel="stylesheet">
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        /* Custom Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #fcf9f8; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #dcd9d9; 
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #c9c4d8; 
+        }
+
+        /* Tonal Layering Shadows */
+        .shadow-3d-accent {
+            box-shadow: 0 10px 30px -5px rgba(91, 60, 221, 0.15); /* Tinted with Primary */
+        }
+        .shadow-pressed {
+            box-shadow: none;
+            transform: translateY(2px);
+        }
+        
+        /* Toggle Switch Custom CSS */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #5b3cdd; /* primary */
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #5b3cdd; /* primary */
+        }
+        .toggle-checkbox:checked + .toggle-label:after {
+            transform: translateX(100%);
+            border-color: white;
+        }
+        .toggle-label {
+            width: 48px;
+            height: 24px;
+            background-color: #dcd9d9; /* surface-dim */
+            border-radius: 9999px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .toggle-label:after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.2s ease-in-out;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-lg min-h-screen flex flex-col md:flex-row antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- Shared Component: SideNavBar (Desktop Only) -->
+<aside class="hidden lg:flex flex-col w-72 h-screen py-section-padding space-y-stack-gap bg-surface-container dark:bg-inverse-surface text-primary dark:text-primary-fixed-dim font-body-lg font-display-lg text-display-lg font-black text-on-surface dark:text-inverse-on-surface docked h-screen left-0 rounded-r-xl shadow-sm dark:shadow-none flex-shrink-0 z-10 sticky top-0">
+<!-- Header -->
+<div class="px-6 mb-8">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-3d-accent">
+<span class="material-symbols-outlined text-on-primary" data-icon="hexagon" data-weight="fill" style="font-variation-settings: 'FILL' 1;">hexagon</span>
+</div>
+<div>
+<h1 class="font-display-lg text-[24px] font-extrabold leading-none tracking-tight">Vibe Hub</h1>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">AI for Designers</span>
+</div>
+</div>
+</div>
+<!-- Navigation Tabs -->
+<nav class="flex-1 flex flex-col gap-2 w-full">
+<a class="flex items-center gap-4 text-on-surface-variant dark:text-outline-variant px-6 py-3 mx-2 hover:bg-primary-container hover:text-on-primary-container rounded-full transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="grid_view">grid_view</span>
+<span class="font-cta-pill text-cta-pill">Modules</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant dark:text-outline-variant px-6 py-3 mx-2 hover:bg-primary-container hover:text-on-primary-container rounded-full transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="psychology">psychology</span>
+<span class="font-cta-pill text-cta-pill">IA</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant dark:text-outline-variant px-6 py-3 mx-2 hover:bg-primary-container hover:text-on-primary-container rounded-full transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="architecture">architecture</span>
+<span class="font-cta-pill text-cta-pill">Outils</span>
+</a>
+<!-- Active State -> Paramerters contextually maps closer to settings/prefs, but Notification tab is separate in footer -->
+<!-- The prompt doesn't explicitly mention the main tabs, but we are on Notifications page, so let's highlight Notifications in footer later, keep this inactive -->
+<a class="flex items-center gap-4 text-on-surface-variant dark:text-outline-variant px-6 py-3 mx-2 hover:bg-primary-container hover:text-on-primary-container rounded-full transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-cta-pill text-cta-pill">Paramètres</span>
+</a>
+</nav>
+<!-- CTA -->
+<div class="px-4 mt-auto mb-6">
+<button class="w-full bg-on-background text-on-primary font-cta-pill text-cta-pill py-4 rounded-full flex items-center justify-center gap-2 hover:bg-surface-tint transition-colors shadow-3d-accent active:shadow-pressed">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+                Nouveau Projet
+            </button>
+</div>
+<!-- Footer Tabs -->
+<div class="flex flex-col gap-2">
+<!-- Active Tab (Notifications) -->
+<a class="flex items-center gap-4 bg-primary text-on-primary rounded-full px-6 py-3 mx-2 scale-95 duration-150 shadow-inner" href="#">
+<span class="material-symbols-outlined" data-icon="notifications" data-weight="fill" style="font-variation-settings: 'FILL' 1;">notifications</span>
+<span class="font-cta-pill text-cta-pill">Notifications</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant dark:text-outline-variant px-6 py-3 mx-2 hover:bg-primary-container hover:text-on-primary-container rounded-full transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+<span class="font-cta-pill text-cta-pill">Aide</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 w-full bg-background min-h-screen overflow-y-auto">
+<!-- Mobile TopAppBar (Visible only on mobile/tablet) -->
+<header class="md:hidden flex justify-between items-center w-full px-container-margin py-4 max-w-full bg-surface dark:bg-inverse-surface sticky top-0 z-20 border-b-0 shadow-sm">
+<h1 class="font-display-lg text-[24px] font-extrabold text-primary dark:text-primary-fixed-dim tracking-tight">Vibe Hub</h1>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary" data-icon="notifications" data-weight="fill" style="font-variation-settings: 'FILL' 1;">notifications</span>
+<img alt="User profile" class="w-10 h-10 rounded-full object-cover border-2 border-primary-container" data-alt="A small circular avatar placeholder showing a modern vector illustration of an energetic designer character on a bright yellow background. The style is bold, flat graphic design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuADg7AXvSP1TF4dj5-HAbku1qCcYwa6iscMvMZZFG6PyzVGwMXQa34-_IdxSmePzIrLz8n0l9MwPVdFGAb8JCSZuDKaq63RstCrVArbqinQYT7efp0tF9pYHUSdb7NffTppSPSBhVpsg-Pm4ZPjPt-mCRNgCiKdjgeXlcAFhfvgIVxNbVFEVnQ-z2da0AHrbSs7kzgh69K_v3fcDZrsm16rG_hf3JRJ00cBFJVa05BayaAOYI0hSNpltg">
+</div>
+</header>
+<!-- Two Column Layout Container -->
+<div class="max-w-7xl mx-auto px-container-margin py-section-padding lg:py-12">
+<div class="flex flex-col lg:flex-row gap-12">
+<!-- Left Column: Notification Center (60%) -->
+<section class="w-full lg:w-[60%] flex flex-col gap-8">
+<!-- Header -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+<div>
+<h2 class="font-display-lg text-display-lg font-extrabold text-on-surface">Centre de notifications</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2">Vous avez 4 nouvelles alertes à consulter.</p>
+</div>
+<button class="bg-surface-variant text-on-surface-variant hover:bg-outline-variant hover:text-on-surface font-cta-pill text-cta-pill px-6 py-3 rounded-full transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="done_all">done_all</span>
+                            Marquer tout comme lu
+                        </button>
+</div>
+<!-- Notification List (Bento Style Cards) -->
+<div class="flex flex-col gap-4">
+<!-- Card 1 (Orange Badge) -->
+<div class="bg-surface-container-lowest p-6 rounded-[24px] border border-surface-variant shadow-sm hover:shadow-3d-accent transition-all duration-300 relative overflow-hidden group">
+<!-- Subtle Background Accent -->
+<div class="absolute -right-10 -top-10 w-32 h-32 bg-secondary-fixed rounded-full blur-3xl opacity-50 group-hover:opacity-80 transition-opacity"></div>
+<div class="flex items-start gap-5 relative z-10">
+<!-- Badge/Icon -->
+<div class="w-14 h-14 rounded-2xl bg-secondary text-on-secondary flex items-center justify-center flex-shrink-0 shadow-md transform -rotate-3 group-hover:rotate-0 transition-transform">
+<span class="material-symbols-outlined text-[28px]" data-icon="menu_book">menu_book</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<span class="font-label-caps text-label-caps text-secondary font-bold uppercase tracking-widest bg-secondary-fixed px-3 py-1 rounded-full">Nouveau Cours</span>
+<span class="font-body-md text-body-md text-on-surface-variant text-[14px]">Il y a 2h</span>
+</div>
+<h3 class="font-headline-lg text-[20px] font-bold text-on-surface mt-2 mb-2 leading-tight">Nouvelle leçon disponible: Prompt Engineering pour Designers</h3>
+<button class="font-cta-pill text-cta-pill text-primary hover:text-surface-tint flex items-center gap-1 mt-3">
+                                        Voir la leçon <span class="material-symbols-outlined text-[18px]" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 2 (Green/Tertiary Badge) -->
+<div class="bg-surface-container-lowest p-6 rounded-[24px] border border-surface-variant shadow-sm hover:shadow-3d-accent transition-all duration-300 relative overflow-hidden group">
+<div class="absolute -right-10 -top-10 w-32 h-32 bg-tertiary-fixed rounded-full blur-3xl opacity-50 group-hover:opacity-80 transition-opacity"></div>
+<div class="flex items-start gap-5 relative z-10">
+<div class="w-14 h-14 rounded-2xl bg-tertiary text-on-tertiary flex items-center justify-center flex-shrink-0 shadow-md transform rotate-3 group-hover:rotate-0 transition-transform">
+<span class="material-symbols-outlined text-[28px]" data-icon="workspace_premium">workspace_premium</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<span class="font-label-caps text-label-caps text-tertiary font-bold uppercase tracking-widest bg-tertiary-fixed px-3 py-1 rounded-full">Succès</span>
+<span class="font-body-md text-body-md text-on-surface-variant text-[14px]">Il y a 1h</span>
+</div>
+<h3 class="font-headline-lg text-[20px] font-bold text-on-surface mt-2 mb-2 leading-tight">Tu as complété Module 2 : Fondamentaux de l'IA ! 🎉</h3>
+<button class="font-cta-pill text-cta-pill text-primary hover:text-surface-tint flex items-center gap-1 mt-3">
+                                        Voir ton progrès <span class="material-symbols-outlined text-[18px]" data-icon="trending_up">trending_up</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 3 (Violet/Primary Badge) -->
+<div class="bg-surface-container-lowest p-6 rounded-[24px] border border-surface-variant shadow-sm hover:shadow-3d-accent transition-all duration-300 relative overflow-hidden group">
+<div class="absolute -right-10 -top-10 w-32 h-32 bg-primary-fixed rounded-full blur-3xl opacity-50 group-hover:opacity-80 transition-opacity"></div>
+<div class="flex items-start gap-5 relative z-10">
+<div class="w-14 h-14 rounded-2xl bg-primary-container text-on-primary-container flex items-center justify-center flex-shrink-0 shadow-md">
+<span class="material-symbols-outlined text-[28px]" data-icon="forum">forum</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<span class="font-label-caps text-label-caps text-primary font-bold uppercase tracking-widest bg-primary-fixed px-3 py-1 rounded-full">Feedback</span>
+<span class="font-body-md text-body-md text-on-surface-variant text-[14px]">Il y a 45m</span>
+</div>
+<h3 class="font-headline-lg text-[20px] font-bold text-on-surface mt-2 mb-2 leading-tight">Sophie a commenté sur ton prompt: <span class="italic font-normal text-on-surface-variant">"Excellente structure..."</span></h3>
+<button class="font-cta-pill text-cta-pill text-primary hover:text-surface-tint flex items-center gap-1 mt-3">
+                                        Voir le commentaire <span class="material-symbols-outlined text-[18px]" data-icon="reply">reply</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 4 (Blue/Tertiary Container Badge) -->
+<div class="bg-surface-container-lowest p-6 rounded-[24px] border border-surface-variant shadow-sm hover:shadow-3d-accent transition-all duration-300 relative overflow-hidden group opacity-80"> <!-- Slightly faded to show read state / older -->
+<div class="flex items-start gap-5 relative z-10">
+<div class="w-14 h-14 rounded-2xl bg-tertiary-container text-on-tertiary-container flex items-center justify-center flex-shrink-0 shadow-inner bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9InJnYmEoMCwwLDAsMC4wNSkiLz48L3N2Zz4=')] bg-center bg-no-repeat"> <!-- fallback pattern for depth -->
+<span class="material-symbols-outlined text-[28px]" data-icon="build_circle">build_circle</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<span class="font-label-caps text-label-caps text-on-tertiary-container font-bold uppercase tracking-widest bg-tertiary-fixed-dim px-3 py-1 rounded-full">Outil Bêta</span>
+<span class="font-body-md text-body-md text-on-surface-variant text-[14px]">Il y a 3h</span>
+</div>
+<h3 class="font-headline-lg text-[20px] font-bold text-on-surface mt-2 mb-2 leading-tight">Nouveau tool en accès bêta: Code Auditor</h3>
+<button class="font-cta-pill text-cta-pill text-primary hover:text-surface-tint flex items-center gap-1 mt-3">
+                                        Consulter <span class="material-symbols-outlined text-[18px]" data-icon="open_in_new">open_in_new</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Column: Preferences (40%) -->
+<aside class="w-full lg:w-[40%] flex flex-col gap-6">
+<!-- Prefs Header -->
+<div class="bg-on-background text-on-primary p-8 rounded-bento relative overflow-hidden shadow-2xl">
+<!-- Decorative Abstract Shape -->
+<div class="absolute -right-16 -top-16 w-48 h-48 bg-primary rounded-full blur-[80px] opacity-40"></div>
+<h2 class="font-display-lg text-[32px] font-extrabold relative z-10 mb-2">Préférences</h2>
+<p class="font-body-md text-[16px] text-surface-container-high relative z-10 mb-6">Personnalisez votre flux d'informations pour rester concentré.</p>
+<!-- Master Toggles -->
+<div class="space-y-6 relative z-10 bg-inverse-surface p-6 rounded-2xl border border-surface-variant/20">
+<div class="flex items-center justify-between">
+<div>
+<p class="font-cta-pill text-cta-pill text-on-primary">Notifications dans l'app</p>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 opacity-0" id="toggle_app" name="toggle_app" type="checkbox" placeholder="on" value="">
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-dim cursor-pointer" for="toggle_app"></label>
+</div>
+</div>
+<div class="w-full h-[1px] bg-outline-variant/30"></div>
+<div class="flex items-center justify-between">
+<div>
+<p class="font-cta-pill text-cta-pill text-on-primary">Notifications par email</p>
+<p class="font-body-md text-[12px] text-surface-container-highest mt-1">Un résumé quotidien</p>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 opacity-0" id="toggle_email" name="toggle_email" type="checkbox" placeholder="on" value="">
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-dim cursor-pointer" for="toggle_email"></label>
+</div>
+</div>
+</div>
+</div>
+<!-- Granular Settings Cards -->
+<div class="bg-surface-container-lowest rounded-bento border border-surface-variant shadow-sm p-2 flex flex-col gap-2">
+<!-- Categorized Toggles (Lessons) -->
+<div class="p-4 rounded-[20px] hover:bg-surface-container-low transition-colors flex items-center justify-between cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant group-hover:bg-primary-fixed group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="school">school</span>
+</div>
+<div>
+<p class="font-cta-pill text-cta-pill text-on-surface">Nouvelles Leçons</p>
+</div>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 opacity-0" id="t_lessons" type="checkbox" placeholder="on" value="">
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-dim cursor-pointer" for="t_lessons"></label>
+</div>
+</div>
+<!-- Categorized Toggles (Feedback) -->
+<div class="p-4 rounded-[20px] hover:bg-surface-container-low transition-colors flex items-center justify-between cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant group-hover:bg-secondary-fixed group-hover:text-secondary transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="thumbs_up_down">thumbs_up_down</span>
+</div>
+<div>
+<p class="font-cta-pill text-cta-pill text-on-surface">Feedback &amp; Commentaires</p>
+</div>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 opacity-0" id="t_feedback" type="checkbox" placeholder="on" value="">
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-dim cursor-pointer" for="t_feedback"></label>
+</div>
+</div>
+<!-- Categorized Toggles (Tool Updates) -->
+<div class="p-4 rounded-[20px] hover:bg-surface-container-low transition-colors flex items-center justify-between cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant group-hover:bg-tertiary-fixed group-hover:text-tertiary transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="construction">construction</span>
+</div>
+<div>
+<p class="font-cta-pill text-cta-pill text-on-surface">Mises à jour Outils</p>
+</div>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 opacity-0" id="t_tools" type="checkbox" placeholder="on" value="">
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-dim cursor-pointer" for="t_tools"></label>
+</div>
+</div>
+<!-- Categorized Toggles (Milestones) -->
+<div class="p-4 rounded-[20px] hover:bg-surface-container-low transition-colors flex items-center justify-between cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant group-hover:bg-inverse-primary group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="emoji_events">emoji_events</span>
+</div>
+<div>
+<p class="font-cta-pill text-cta-pill text-on-surface">Jalons &amp; Progrès</p>
+</div>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 opacity-0" id="t_milestones" type="checkbox" placeholder="on" value="">
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-dim cursor-pointer" for="t_milestones"></label>
+</div>
+</div>
+</div>
+<!-- Time Modules -->
+<div class="flex flex-col gap-4">
+<!-- Heures Silencieuses (DND) -->
+<div class="bg-surface-container-lowest border border-surface-variant p-6 rounded-[24px] shadow-sm flex flex-col gap-4">
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-outline" data-icon="do_not_disturb_on">do_not_disturb_on</span>
+<h3 class="font-headline-lg text-[20px] font-bold text-on-surface">Heures silencieuses</h3>
+</div>
+<div class="flex items-center justify-between bg-surface-container-low p-4 rounded-xl border border-outline-variant focus-within:border-primary transition-colors">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">De</span>
+<input class="bg-transparent border-none p-0 m-0 font-body-md text-body-md font-bold text-on-surface focus:ring-0 cursor-pointer" type="time" value="22:00">
+</div>
+<div class="flex items-center justify-between bg-surface-container-low p-4 rounded-xl border border-outline-variant focus-within:border-primary transition-colors">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">À</span>
+<input class="bg-transparent border-none p-0 m-0 font-body-md text-body-md font-bold text-on-surface focus:ring-0 cursor-pointer" type="time" value="08:00">
+</div>
+</div>
+<!-- Rappels d'apprentissage -->
+<div class="bg-primary-container text-on-primary-container p-6 rounded-[24px] shadow-sm flex flex-col gap-4 relative overflow-hidden">
+<!-- subtle bg pattern -->
+<div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 16px 16px;"></div>
+<div class="flex items-center gap-3 relative z-10">
+<span class="material-symbols-outlined" data-icon="alarm">alarm</span>
+<h3 class="font-headline-lg text-[20px] font-bold">Rappels d'apprentissage</h3>
+</div>
+<p class="font-body-md text-[14px] opacity-90 relative z-10">Définissez une fréquence pour vous rappeler de continuer vos modules.</p>
+<select class="w-full bg-on-primary text-primary font-body-md text-body-md font-bold p-4 rounded-xl border-none shadow-sm focus:ring-2 focus:ring-white relative z-10 cursor-pointer appearance-none">
+<option value="daily">Quotidien (18:00)</option>
+<option selected="" value="weekly">Hebdomadaire (Vendredi)</option>
+<option value="never">Jamais</option>
+</select>
+</div>
+</div>
+</aside>
+</div>
+</div>
+<!-- Bottom padding for mobile nav clearance -->
+<div class="h-32 lg:hidden"></div>
+</main>
+<!-- Shared Component: BottomNavBar (Mobile Only) -->
+<nav class="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] z-50 flex justify-around items-center p-2 bg-on-background dark:bg-on-surface shadow-2xl rounded-full docked full-width bottom-4 mx-4">
+<a class="flex flex-col items-center justify-center text-surface-container-highest w-14 h-14 hover:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined" data-icon="grid_view">grid_view</span>
+<span class="font-label-caps text-[10px] mt-1 hidden sm:block">Modules</span>
+</a>
+<a class="flex flex-col items-center justify-center text-surface-container-highest w-14 h-14 hover:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined" data-icon="psychology">psychology</span>
+<span class="font-label-caps text-[10px] mt-1 hidden sm:block">IA</span>
+</a>
+<a class="flex flex-col items-center justify-center text-surface-container-highest w-14 h-14 hover:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined" data-icon="architecture">architecture</span>
+<span class="font-label-caps text-[10px] mt-1 hidden sm:block">Outils</span>
+</a>
+<!-- Mapping Profil contextually as active on mobile since there is no Notification tab, or keeping them all inactive. Better to map to none active perfectly, or map Profile -> user context -> Notifications. Let's make none active to prevent hallucination as instructed. -->
+<a class="flex flex-col items-center justify-center text-surface-container-highest w-14 h-14 hover:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-caps text-[10px] mt-1 hidden sm:block">Profil</span>
+</a>
+</nav>
+
+
+</body></html>

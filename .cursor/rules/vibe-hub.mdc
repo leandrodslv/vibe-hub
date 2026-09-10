@@ -1,0 +1,44 @@
+---
+description: Règles projet Vibe Hub (architecture, sécurité, tests, style)
+globs:
+  - "src/**/*.{js,jsx}"
+  - "e2e/**/*.js"
+  - "scripts/**/*.js"
+alwaysApply: true
+---
+
+# Vibe Hub — règles Cursor
+
+SPA React 18 + Vite + Tailwind 3, JavaScript (pas TypeScript). EdTech IA pour designers UI/UX
+francophones. Back : Supabase + Gemini. Détail complet : `docs/ai/`.
+
+## Architecture (bloquant — lint + semgrep)
+
+- `@supabase/supabase-js` / `@google/generative-ai` : importés **uniquement** dans `src/services/`.
+  Un composant appelle une fonction de service.
+- Aucun secret en `import.meta.env.VITE_*` (inliné dans le bundle). Env → `src/config/env.js`.
+- Pas d'`eval` / `new Function` / `dangerouslySetInnerHTML` non sanitisé.
+- Routes jamais en dur → `src/lib/routes.js`. Liens nouvel onglet → constante `NOUVEL_ONGLET`.
+- `JSON.parse` de donnée non fiable → `safeJsonParse` (`src/lib/validation.js`).
+- Persistance : Supabase (durable/partagé) OU `localStorage` préfixé `ai_*` / `progress_*`. Rien d'autre.
+- Services : `throw` en cas d'erreur ; seule exception `addToWaitlist` → `{success|duplicate|error}`.
+
+## Style
+
+- Function components + `useState` local. Pas de store global, pas de React Router.
+- Français dans l'UI et les commentaires.
+- Prettier : quotes simples, semis, width 100.
+- Tailwind avec les tokens du design system (`DESIGN_SYSTEM.md`), pas de valeurs arbitraires.
+
+## Qualité
+
+- Nouveau fichier de logique → `// @ts-check` en tête + JSDoc.
+- Nouveau helper/service/hook → test Vitest (`vi.mock` + `vi.hoisted` pour les SDK).
+- Bug corrigé → test de régression `it('régression …')`.
+- Couverture ≥ 80 % (bloquant CI). Cible : `src/lib`, `src/services`, `src/hooks`, `src/config`.
+- Erreurs → `logger.error` (`src/lib/logger.js`), pas `console.log`.
+- Appel de service dans un composant → `try/catch` + état d'erreur (voir `ModulesTab.jsx`).
+
+## Commits
+
+Conventional Commits. Le titre de PR devient le commit `main` et la ligne de CHANGELOG.

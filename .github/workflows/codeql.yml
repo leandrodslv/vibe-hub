@@ -1,0 +1,36 @@
+name: CodeQL
+
+# Analyse sémantique GitHub (SAST) — complémentaire de Semgrep : couvre le flux
+# de données inter-procédural (taint tracking) que les règles Semgrep ne voient pas.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '17 3 * * 1' # lundi 03:17 UTC — attrape les nouvelles requêtes CodeQL
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyse CodeQL
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    strategy:
+      matrix:
+        language: [javascript-typescript]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-and-quality
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: '/language:${{ matrix.language }}'

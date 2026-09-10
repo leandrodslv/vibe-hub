@@ -1,8 +1,17 @@
 name: CI
 
-# CI parallélisé : lint et typecheck servent de garde rapide aux jobs lents.
-# Le job final "CI" est le seul à mettre en required status check — il reste stable
-# quand on ajoute ou renomme des jobs en amont.
+# Pipeline « fail-fast » : les garde-fous rapides (format, lint, types, analyse
+# statique, secrets, audit) tournent en parallèle. Les étapes lentes (tests, e2e,
+# build) ne démarrent qu'une fois les garde-fous verts — inutile de lancer
+# Playwright si le lint est cassé.
+#
+# Ordre logique demandé (AUDIT_AI_FIRST.md § PHASE 6) :
+#   1. install · 2. format · 3. lint · 4. typecheck · 5. analyse statique
+#   6. semgrep · 7. tests unitaires · 8. tests intégration · 9. e2e
+#   10. audit sécurité · 11. couverture · 12. perf · 13. build · 14. packaging
+#
+# Le job final « CI » est le SEUL à mettre en required status check : il reste
+# stable quand on ajoute/renomme des jobs en amont.
 
 on:
   pull_request:
@@ -16,67 +25,193 @@ concurrency:
 permissions:
   contents: read
 
-jobs:
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - run: npm ci --prefer-offline --no-audit
-      - run: npm run lint
+env:
+  NODE_VERSION: '20'
 
-  build:
-    name: Build
+jobs:
+  # ─── 2-5. Format · Lint · Types · Analyse statique ────────────────────────
+  quality:
+    name: Qualité (format · lint · types)
     runs-on: ubuntu-latest
-    needs: [lint]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
       - run: npm ci --prefer-offline --no-audit
-      - name: Cache build intermédiaire
+      - name: Format (prettier --check)
+        run: npm run format:check
+      - name: Lint (eslint, 0 warning toléré)
+        run: npm run lint
+      - name: Type check (tsc --noEmit)
+        run: npm run typecheck
+
+  # ─── 6. Semgrep ──────────────────────────────────────────────────────────
+  semgrep:
+    name: Semgrep (SAST)
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Règles projet — bloquant
+        run: semgrep scan --config .semgrep.yml --error --metrics=off
+      - name: Packs communautaires (sécurité) — bloquant sur ERROR uniquement
+        run: |
+          semgrep scan --config p/security-audit --config p/react --config p/secrets \
+            --severity ERROR --error --metrics=off
+
+  # ─── 10a. Détection de secrets ───────────────────────────────────────────
+  secrets:
+    name: Secrets (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITLEAKS_CONFIG: .gitleaks.toml
+
+  # ─── 10b. Audit des dépendances ──────────────────────────────────────────
+  audit:
+    name: Audit dépendances (npm audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci --prefer-offline --no-audit
+      - name: npm audit (échoue sur high/critical en prod)
+        run: npm run security:audit
+
+  # ─── 7 + 11. Tests unitaires + couverture ───────────────────────────────
+  test:
+    name: Tests unitaires + couverture (seuil 80 %)
+    runs-on: ubuntu-latest
+    needs: [quality]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci --prefer-offline --no-audit
+      - name: Vitest + coverage v8 (le seuil échoue le job)
+        run: npm run test:cov
+      - name: Publier le rapport de couverture HTML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 7
+      - name: Résumé de couverture dans le job
+        if: always()
+        run: |
+          if [ -f coverage/coverage-summary.json ]; then
+            node -e "const c=require('./coverage/coverage-summary.json').total;console.log('| Métrique | % |\n|---|---|\n| Lignes | '+c.lines.pct+' |\n| Branches | '+c.branches.pct+' |\n| Fonctions | '+c.functions.pct+' |\n| Statements | '+c.statements.pct+' |')" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  # ─── 8. Tests d'intégration (Postgres réel — Testcontainers) ─────────────
+  # Applique supabase/migrations/* dans un vrai Postgres jetable et vérifie les
+  # politiques RLS + la RPC get_waitlist_counts. Le runner ubuntu-latest fournit
+  # Docker ; sans Docker la suite se met en skip (elle ne casse pas le job).
+  integration:
+    name: Tests intégration (RLS · RPC)
+    runs-on: ubuntu-latest
+    needs: [quality]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci --prefer-offline --no-audit
+      - name: Vitest (config intégration)
+        run: npm run test:integration
+
+  # ─── 9. Tests End-to-End (Playwright) ────────────────────────────────────
+  e2e:
+    name: E2E (Playwright)
+    runs-on: ubuntu-latest
+    needs: [quality]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci --prefer-offline --no-audit
+      - name: Installer les navigateurs Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Lancer les tests E2E (build + preview gérés par playwright.config)
+        run: npm run e2e
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  # ─── 12-13-14. Perf (budget bundle) + Build + Packaging ──────────────────
+  build:
+    name: Build + budget bundle
+    runs-on: ubuntu-latest
+    needs: [quality]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci --prefer-offline --no-audit
+      - name: Cache build intermédiaire Vite
         uses: actions/cache@v4
         with:
           path: node_modules/.vite
           key: vite-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
           restore-keys: vite-${{ runner.os }}-
       - run: npm run build
+      - name: Budget bundle (size-limit)
+        run: npm run size
       - uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist/
-          retention-days: 1
+          retention-days: 3
 
-  # Décommenter dès qu'un script "test" existe dans package.json
-  # test:
-  #   name: Tests
-  #   runs-on: ubuntu-latest
-  #   needs: [lint]
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-node@v4
-  #       with:
-  #         node-version: '20'
-  #         cache: 'npm'
-  #     - run: npm ci --prefer-offline --no-audit
-  #     - run: npm test
+  # ─── Lighthouse CI (perf mesurée — informatif, ne bloque pas le merge) ───
+  lighthouse:
+    name: Lighthouse CI
+    runs-on: ubuntu-latest
+    needs: [build]
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci --prefer-offline --no-audit
+      - run: npm run build
+      - name: Lighthouse
+        run: npx --yes @lhci/cli@0.14.x autorun || true
 
+  # ─── Gate final (le seul required status check) ──────────────────────────
   ci-ok:
     name: CI
     runs-on: ubuntu-latest
-    needs: [lint, build]
     if: always()
+    needs: [quality, semgrep, secrets, audit, test, integration, e2e, build]
     steps:
-      - name: Vérifier qu'aucun job n'a échoué
+      - name: Vérifier qu'aucun job critique n'a échoué
         run: |
           if ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}; then
-            echo "❌ Au moins un job a échoué."
+            echo "❌ Au moins un job critique a échoué."
             exit 1
           fi
-          echo "✅ Tous les jobs sont verts."
+          echo "✅ Tous les jobs critiques sont verts."

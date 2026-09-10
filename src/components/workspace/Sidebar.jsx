@@ -64,14 +64,26 @@ export default function Sidebar({ activeTab, onTabChange }) {
           ))}
         </nav>
 
-        {/* Décoratif : pas de système de notifications/profil en v1 (pas d'auth), même
-            traitement que les icônes non fonctionnelles du Navbar landing. */}
-        <div className="mt-auto flex flex-col gap-1" aria-hidden="true">
-          <span className="flex items-center gap-3 p-3 rounded-lg text-on-surface-variant">
-            <Bell className="w-5 h-5" />
-            <span className="font-cta-pill text-cta-pill">Notifications</span>
-          </span>
-          <span className="flex items-center gap-3 p-3 rounded-lg text-on-surface-variant">
+        <div className="mt-auto flex flex-col gap-1">
+          <button
+            type="button"
+            onClick={() => onTabChange('notifications')}
+            aria-current={activeTab === 'notifications' ? 'page' : undefined}
+            className={`flex items-center gap-3 p-3 rounded-lg font-cta-pill text-cta-pill transition-all duration-300 ${FOCUS_RING} ${
+              activeTab === 'notifications'
+                ? 'bg-primary text-on-primary'
+                : 'text-on-surface-variant hover:text-primary hover:scale-105'
+            }`}
+          >
+            <Bell className="w-5 h-5" aria-hidden="true" />
+            Notifications
+          </button>
+          {/* Décoratif : pas d'écran de profil en v1 (pas d'auth), même traitement que les
+              icônes non fonctionnelles du Navbar landing. */}
+          <span
+            className="flex items-center gap-3 p-3 rounded-lg text-on-surface-variant"
+            aria-hidden="true"
+          >
             <Settings className="w-5 h-5" />
             <span className="font-cta-pill text-cta-pill">Profil</span>
           </span>
@@ -89,9 +101,18 @@ export default function Sidebar({ activeTab, onTabChange }) {
             vibe hub
           </span>
         </a>
-        <div className="flex gap-4" aria-hidden="true">
-          <Bell className="w-5 h-5 text-on-surface-variant" />
-          <Settings className="w-5 h-5 text-on-surface-variant" />
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => onTabChange('notifications')}
+            aria-label="Notifications"
+            aria-current={activeTab === 'notifications' ? 'page' : undefined}
+            className={`rounded-lg ${FOCUS_RING} ${activeTab === 'notifications' ? 'text-primary' : 'text-on-surface-variant'}`}
+          >
+            <Bell className="w-5 h-5" aria-hidden="true" />
+          </button>
+          {/* Décoratif : pas d'écran de profil en v1 (pas d'auth). */}
+          <Settings className="w-5 h-5 text-on-surface-variant" aria-hidden="true" />
         </div>
       </header>
 
@@ -106,7 +127,9 @@ export default function Sidebar({ activeTab, onTabChange }) {
             onClick={() => onTabChange(tab.id)}
             aria-current={activeTab === tab.id ? 'page' : undefined}
             className={`flex flex-col items-center justify-center rounded-full p-3 w-16 h-16 transition-all duration-300 active:scale-95 ${FOCUS_RING} ${
-              activeTab === tab.id ? 'bg-primary text-on-primary' : 'text-surface-variant hover:bg-primary-container/20'
+              activeTab === tab.id
+                ? 'bg-primary text-on-primary'
+                : 'text-surface-variant hover:bg-primary-container/20'
             }`}
           >
             <TabIcon tab={tab} active={activeTab === tab.id} />

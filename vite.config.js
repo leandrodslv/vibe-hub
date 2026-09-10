@@ -1,6 +1,73 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+// Build + test config partagent le même fichier : une seule source de vérité pour
+// les alias, l'environnement et la résolution des modules.
 export default defineConfig({
   plugins: [react()],
+
+  build: {
+    // Repart d'un dossier propre à chaque build : sinon les anciens chunks
+    // (hash différent) s'accumulent et faussent les mesures de budget bundle.
+    emptyOutDir: true,
+    // Sourcemaps de prod : indispensables pour symboliser les stack traces remontées
+    // par l'ErrorBoundary / web-vitals (cf. src/lib/observability). Coût disque
+    // négligeable pour un SPA de cette taille, elles ne sont pas servies au client
+    // si l'hébergeur ne les référence pas.
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        // Sépare les grosses dépendances tierces du code applicatif : un changement
+        // de composant n'invalide plus le cache navigateur du vendor bundle.
+        manualChunks: {
+          react: ['react', 'react-dom'],
+          markdown: ['react-markdown', 'remark-gfm'],
+          supabase: ['@supabase/supabase-js'],
+        },
+      },
+    },
+  },
+
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.js'],
+    css: false,
+    restoreMocks: true,
+    clearMocks: true,
+    include: ['src/**/*.{test,spec}.{js,jsx}'],
+    // Les tests d'intégration (Postgres réel) ont leur propre config +
+    // globalSetup : `npm run test:integration`. Voir vitest.integration.config.js.
+    exclude: ['e2e/**', 'node_modules/**', 'dist/**', 'src/test/integration/**'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'text-summary', 'html', 'lcov', 'json-summary'],
+      reportsDirectory: './coverage',
+      // La barre à 80 % s'applique au périmètre déjà couvert (logique métier pure,
+      // adaptateurs de services, hooks, helpers). On élargit `include` à mesure que
+      // les composants sont testés — le seuil ne descend jamais (stratégie ratchet,
+      // cf. docs/ai/testing-rules.md).
+      include: [
+        'src/lib/**/*.{js,jsx}',
+        'src/services/**/*.{js,jsx}',
+        'src/hooks/**/*.{js,jsx}',
+        'src/config/**/*.{js,jsx}',
+      ],
+      exclude: [
+        'src/**/*.{test,spec}.{js,jsx}',
+        'src/test/**',
+        'src/**/index.{js,jsx}',
+        // Câblage navigateur pur (web-vitals + listeners globaux) : couvert par les
+        // tests e2e / Lighthouse, pas par les tests unitaires. À réintégrer quand un
+        // endpoint de collecte existe et mérite des tests d'intégration.
+        'src/lib/observability.js',
+      ],
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 80,
+        statements: 80,
+      },
+    },
+  },
 });

@@ -1,0 +1,50 @@
+version: 2
+updates:
+  # Dépendances npm — groupées pour limiter le bruit de PR.
+  - package-ecosystem: npm
+    directory: '/'
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Paris
+    open-pull-requests-limit: 10
+    versioning-strategy: increase
+    labels:
+      - dependencies
+    commit-message:
+      prefix: build
+      prefix-development: chore
+      include: scope
+    groups:
+      react:
+        patterns:
+          - 'react'
+          - 'react-dom'
+          - '@types/react*'
+      dev-tooling:
+        dependency-type: development
+        patterns:
+          - 'eslint*'
+          - 'prettier*'
+          - 'vite*'
+          - 'vitest*'
+          - '@vitest/*'
+          - '@testing-library/*'
+          - '@playwright/*'
+      security-patches:
+        applies-to: security-updates
+        patterns:
+          - '*'
+
+  # Actions GitHub — mêmes règles.
+  - package-ecosystem: github-actions
+    directory: '/'
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+      - ci
+    commit-message:
+      prefix: ci

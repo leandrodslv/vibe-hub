@@ -7,7 +7,11 @@ import { appHref, MENTION_NOUVEL_ONGLET, NOUVEL_ONGLET } from '../../lib/routes'
 // deux fois les mêmes nœuds.
 export default function Programme() {
   return (
-    <section id="programme" aria-labelledby="programme-titre" className="py-section-padding px-container-margin max-w-7xl mx-auto">
+    <section
+      id="programme"
+      aria-labelledby="programme-titre"
+      className="py-section-padding px-container-margin max-w-7xl mx-auto"
+    >
       <h2
         id="programme-titre"
         className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-center mb-16 max-w-2xl mx-auto text-on-surface reveal opacity-0 translate-y-12 transition-all duration-1000 ease-out"
@@ -26,7 +30,8 @@ export default function Programme() {
               Votre co-pilote créatif toujours disponible.
             </h3>
             <p className="font-body-md text-body-md text-on-tertiary-fixed-variant mb-6">
-              Décrivez une idée de design en langage naturel et recevez un prompt structuré, prêt à générer.
+              Décrivez une idée de design en langage naturel et recevez un prompt structuré, prêt à
+              générer.
             </p>
             <a
               href={appHref('ia')}
@@ -83,13 +88,18 @@ export default function Programme() {
           className="md:col-span-12 bg-surface-container rounded-3xl p-8 flex flex-col md:flex-row items-center gap-12 overflow-hidden scroll-mt-24"
         >
           <div className="flex-1">
-            <div lang="en" className="inline-block bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full font-label-caps text-label-caps mb-4">
+            <div
+              lang="en"
+              className="inline-block bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full font-label-caps text-label-caps mb-4"
+            >
               UI Builder
             </div>
-            <h3 className="font-display-lg text-[36px] text-on-surface mb-4">Assemblez plus vite, sans compromis.</h3>
+            <h3 className="font-display-lg text-[36px] text-on-surface mb-4">
+              Assemblez plus vite, sans compromis.
+            </h3>
             <p className="font-body-md text-body-md text-on-surface-variant mb-6 max-w-lg">
-              Envoyez un prompt structuré et récupérez du code React/Tailwind fonctionnel, rendu dans un aperçu
-              sécurisé.
+              Envoyez un prompt structuré et récupérez du code React/Tailwind fonctionnel, rendu
+              dans un aperçu sécurisé.
             </p>
           </div>
           <div className="flex-1 w-full relative">

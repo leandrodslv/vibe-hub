@@ -27,7 +27,10 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div id="top" className="min-h-screen bg-surface text-on-surface font-body-md selection:bg-primary selection:text-on-primary">
+    <div
+      id="top"
+      className="min-h-screen bg-surface text-on-surface font-body-md selection:bg-primary selection:text-on-primary"
+    >
       {/* Lien d'évitement (RGAA 12.7) — masqué visuellement, révélé à la prise de focus clavier. */}
       <a
         href="#contenu"

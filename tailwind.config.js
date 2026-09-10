@@ -80,6 +80,7 @@ export default {
         lg: '1rem',
         xl: '1.5rem',
         full: '9999px',
+        bento: '2rem',
       },
       spacing: {
         base: '8px',
@@ -90,7 +91,5 @@ export default {
       },
     },
   },
-  plugins: [
-    require('@tailwindcss/typography'),
-  ],
+  plugins: [require('@tailwindcss/typography')],
 };

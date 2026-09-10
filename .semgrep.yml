@@ -1,0 +1,96 @@
+# Règles Semgrep spécifiques à Vibe Hub.
+# En CI on lance AUSSI `--config auto` (règles communautaires à jour).
+# Local : `npm run security:semgrep`
+#
+# Chaque règle répond à : « quelle erreur générée par une IA veut-on attraper tôt ? »
+# Patterns volontairement simples (regex quand le parseur JSX de semgrep coince).
+
+rules:
+  # ── XSS / injection ────────────────────────────────────────────────────────
+  - id: no-dangerously-set-inner-html
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: >
+      dangerouslySetInnerHTML injecte du HTML brut dans le DOM (XSS). Rendre le
+      texte via JSX ou react-markdown. Si indispensable : DOMPurify.sanitize()
+      + justification + `// nosemgrep: no-dangerously-set-inner-html`.
+    pattern-regex: 'dangerouslySetInnerHTML'
+    paths:
+      include: ['src/']
+
+  - id: no-eval-family
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: >
+      eval / new Function exécutent du code arbitraire (Architecture Spine AD-5).
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: new Function(...)
+
+  - id: iframe-without-sandbox
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: >
+      <iframe> sans attribut `sandbox` (AD-5). Contenu non maîtrisé — a fortiori
+      généré — doit être rendu dans un iframe sandbox. Embeds de confiance
+      (YouTube/Stream sur liste blanche) : exempter avec
+      `// nosemgrep: iframe-without-sandbox` + justification.
+    patterns:
+      - pattern: <iframe ... />
+      - pattern-not: <iframe ... sandbox="..." ... />
+
+  # ── Fuite de fenêtre (reverse tabnabbing) ─────────────────────────────────
+  - id: target-blank-without-noopener
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: >
+      target="_blank" sans "noopener" à proximité : la page ouverte peut manipuler
+      window.opener. Utiliser la constante NOUVEL_ONGLET de src/lib/routes.js.
+    patterns:
+      - pattern-regex: 'target=(\"|\x27|\{[\x27"])_blank'
+      - pattern-not-regex: 'noopener'
+    paths:
+      include: ['src/']
+
+  # ── Architecture : couche d'adaptateurs (AD-2) ───────────────────────────
+  - id: external-sdk-import-outside-services
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: >
+      AD-2 : seuls les fichiers src/services/* importent un SDK externe.
+    pattern-either:
+      - pattern-regex: 'from [''"]@supabase/supabase-js[''"]'
+      - pattern-regex: 'from [''"]@google/generative-ai[''"]'
+    paths:
+      include: ['src/components/', 'src/pages/']
+
+  # ── Secrets ──────────────────────────────────────────────────────────────
+  - id: hardcoded-google-api-key
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: Clé API Google en dur. Passer par une variable d'environnement (jamais VITE_ pour un vrai secret).
+    pattern-regex: '(AIza[0-9A-Za-z_\-]{35}|AQ\.[A-Za-z0-9_\-]{40,})'
+    paths:
+      exclude: ['*.example', 'docs/', '_bmad-output/', '*.test.js', '*.test.jsx']
+
+  - id: secret-behind-vite-prefix
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: >
+      Variable import.meta.env.VITE_* nommée comme un secret : exposée dans le bundle (AD-1).
+    pattern-regex: 'import\.meta\.env\.VITE_[A-Z_]*(SECRET|TOKEN|PASSWORD|PRIVATE)[A-Z_]*'
+
+  # ── Fiabilité ────────────────────────────────────────────────────────────
+  - id: json-parse-untrusted
+    languages: [javascript, typescript]
+    severity: INFO
+    message: >
+      JSON.parse peut lever (localStorage édité, réponse tronquée). Préférer
+      safeJsonParse(src/lib/validation.js) ou envelopper dans try/catch.
+    patterns:
+      - pattern: JSON.parse(...)
+      - pattern-not-inside: |
+          try { ... } catch ($E) { ... }
+    paths:
+      include: ['src/']
+      exclude: ['*.test.js', '*.test.jsx']

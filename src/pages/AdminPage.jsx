@@ -1,9 +1,30 @@
 import { useState, useEffect, useRef } from 'react';
 import {
-  Plus, Pencil, Trash2, LogOut, BookOpen, X, Save,
-  Eye, EyeOff, AlertTriangle, GripVertical, Mail, Lock, Video
+  Plus,
+  Pencil,
+  Trash2,
+  LogOut,
+  BookOpen,
+  X,
+  Save,
+  Eye,
+  EyeOff,
+  AlertTriangle,
+  GripVertical,
+  Mail,
+  Lock,
+  Video,
 } from 'lucide-react';
-import { supabase, getAllCourses, createCourse, updateCourse, deleteCourse } from '../services/supabase';
+import {
+  getAllCourses,
+  createCourse,
+  updateCourse,
+  deleteCourse,
+  signIn,
+  signOut,
+  getSession,
+  onAuthChange,
+} from '../services/supabase';
 
 const MODULES = ['MODULE 1', 'MODULE 2', 'MODULE 3'];
 
@@ -14,13 +35,14 @@ export default function AdminPage() {
   const [session, setSession] = useState(undefined); // undefined = loading
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, s) => setSession(s));
-    return () => listener.subscription.unsubscribe();
+    getSession()
+      .then(setSession)
+      .catch(() => setSession(null));
+    return onAuthChange(setSession);
   }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await signOut();
   };
 
   // Chargement initial
@@ -47,13 +69,15 @@ function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const emailRef = useRef(null);
 
-  useEffect(() => { emailRef.current?.focus(); }, []);
+  useEffect(() => {
+    emailRef.current?.focus();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    const { error: authError } = await signIn(email, password);
     if (authError) {
       setError('Email ou mot de passe incorrect.');
       setLoading(false);
@@ -66,7 +90,9 @@ function LoginScreen() {
       <div className="bg-white border border-[#EAEAEA] rounded-2xl shadow-sm w-full max-w-sm p-8">
         <div className="mb-7 text-center">
           <span className="text-xl font-extrabold tracking-tight text-black">vibe hub</span>
-          <p className="text-[#999] text-[12px] mt-1 font-medium uppercase tracking-widest">Admin</p>
+          <p className="text-[#999] text-[12px] mt-1 font-medium uppercase tracking-widest">
+            Admin
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
@@ -79,7 +105,10 @@ function LoginScreen() {
                 ref={emailRef}
                 type="email"
                 value={email}
-                onChange={e => { setEmail(e.target.value); setError(''); }}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError('');
+                }}
                 placeholder="admin@vibehub.com"
                 className={`w-full bg-white border rounded-xl pl-10 pr-4 py-2.5 text-[13px] outline-none transition-all placeholder:text-[#CCCCCC] text-black ${
                   error ? 'border-red-400' : 'border-[#EAEAEA] focus:border-black'
@@ -90,13 +119,18 @@ function LoginScreen() {
 
           {/* Mot de passe */}
           <div>
-            <label className="block text-[12px] font-semibold text-black mb-1.5">Mot de passe</label>
+            <label className="block text-[12px] font-semibold text-black mb-1.5">
+              Mot de passe
+            </label>
             <div className="relative">
               <Lock className="w-4 h-4 text-[#999] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
-                onChange={e => { setPassword(e.target.value); setError(''); }}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError('');
+                }}
                 placeholder="••••••••••"
                 className={`w-full bg-white border rounded-xl pl-10 pr-10 py-2.5 text-[13px] outline-none transition-all placeholder:text-[#CCCCCC] text-black ${
                   error ? 'border-red-400' : 'border-[#EAEAEA] focus:border-black'
@@ -104,7 +138,7 @@ function LoginScreen() {
               />
               <button
                 type="button"
-                onClick={() => setShowPassword(p => !p)}
+                onClick={() => setShowPassword((p) => !p)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[#999] hover:text-black transition-colors cursor-pointer"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -112,19 +146,18 @@ function LoginScreen() {
             </div>
           </div>
 
-          {error && (
-            <p className="text-[12px] text-red-500 font-medium">{error}</p>
-          )}
+          {error && <p className="text-[12px] text-red-500 font-medium">{error}</p>}
 
           <button
             type="submit"
             disabled={loading || !email || !password}
             className="w-full flex items-center justify-center gap-2 bg-black text-white text-sm font-bold py-2.5 rounded-xl hover:bg-[#333] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-lg shadow-black/10"
           >
-            {loading
-              ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              : 'Se connecter'
-            }
+            {loading ? (
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              'Se connecter'
+            )}
           </button>
         </form>
       </div>
@@ -148,39 +181,44 @@ function Dashboard({ onLogout }) {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const handleSave = async (formData) => {
     if (modal.mode === 'add') {
       const maxOrder = courses.reduce((m, c) => Math.max(m, c.order_index), 0);
       const newCourse = await createCourse({ ...formData, order_index: maxOrder + 1 });
-      setCourses(prev => [...prev, newCourse]);
+      setCourses((prev) => [...prev, newCourse]);
     } else {
       const updated = await updateCourse(modal.course.id, formData);
-      setCourses(prev => prev.map(c => c.id === updated.id ? updated : c));
+      setCourses((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
     }
     setModal(null);
   };
 
   const handleDelete = async () => {
     await deleteCourse(deleteTarget.id);
-    setCourses(prev => prev.filter(c => c.id !== deleteTarget.id));
+    setCourses((prev) => prev.filter((c) => c.id !== deleteTarget.id));
     setDeleteTarget(null);
   };
 
   const togglePublished = async (course) => {
     const updated = await updateCourse(course.id, { published: !course.published });
-    setCourses(prev => prev.map(c => c.id === updated.id ? updated : c));
+    setCourses((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
   };
 
-  const published = courses.filter(c => c.published).length;
+  const published = courses.filter((c) => c.published).length;
 
   return (
     <div className="min-h-screen bg-[#F9F9F9]">
       {/* ── Header ── */}
       <div className="h-14 bg-white border-b border-[#EAEAEA] flex items-center justify-between px-8 sticky top-0 z-20">
         <div className="flex items-center gap-3">
-          <a href="/" className="text-xl font-extrabold tracking-tight text-black hover:opacity-70 transition-opacity">
+          <a
+            href="/"
+            className="text-xl font-extrabold tracking-tight text-black hover:opacity-70 transition-opacity"
+          >
             vibe hub
           </a>
           <div className="w-px h-4 bg-[#EAEAEA]" />
@@ -206,7 +244,9 @@ function Dashboard({ onLogout }) {
           ].map(({ label, value }) => (
             <div key={label} className="bg-white border border-[#EAEAEA] rounded-2xl p-5 shadow-sm">
               <div className="text-2xl font-bold text-black mb-0.5">{value}</div>
-              <div className="text-[12px] font-semibold text-[#999] uppercase tracking-wide">{label}</div>
+              <div className="text-[12px] font-semibold text-[#999] uppercase tracking-wide">
+                {label}
+              </div>
             </div>
           ))}
         </div>
@@ -231,7 +271,7 @@ function Dashboard({ onLogout }) {
           <EmptyState onAdd={() => setModal({ mode: 'add' })} />
         ) : (
           <div className="space-y-2.5">
-            {courses.map(course => (
+            {courses.map((course) => (
               <CourseRow
                 key={course.id}
                 course={course}
@@ -344,12 +384,14 @@ function CourseModal({ mode, course, onSave, onClose }) {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  const set = (field, value) => setForm(f => ({ ...f, [field]: value }));
+  const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -363,7 +405,9 @@ function CourseModal({ mode, course, onSave, onClose }) {
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ backgroundColor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
@@ -387,10 +431,14 @@ function CourseModal({ mode, course, onSave, onClose }) {
             <label className="block text-[12px] font-semibold text-black mb-1.5">Module</label>
             <select
               value={form.module_name}
-              onChange={e => set('module_name', e.target.value)}
+              onChange={(e) => set('module_name', e.target.value)}
               className="w-full bg-white border border-[#EAEAEA] rounded-xl px-4 py-2.5 text-[13px] outline-none focus:border-black transition-all text-black cursor-pointer"
             >
-              {MODULES.map(m => <option key={m} value={m}>{m}</option>)}
+              {MODULES.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -400,7 +448,7 @@ function CourseModal({ mode, course, onSave, onClose }) {
             <input
               type="text"
               value={form.title}
-              onChange={e => set('title', e.target.value)}
+              onChange={(e) => set('title', e.target.value)}
               placeholder="Ex : Introduction à l'IA pour l'UI"
               className="w-full bg-white border border-[#EAEAEA] rounded-xl px-4 py-2.5 text-[13px] outline-none focus:border-black transition-all placeholder:text-[#CCCCCC] text-black"
               required
@@ -412,7 +460,7 @@ function CourseModal({ mode, course, onSave, onClose }) {
             <label className="block text-[12px] font-semibold text-black mb-1.5">Description</label>
             <textarea
               value={form.description}
-              onChange={e => set('description', e.target.value)}
+              onChange={(e) => set('description', e.target.value)}
               placeholder="Décrivez le contenu de ce cours..."
               rows={3}
               className="w-full bg-white border border-[#EAEAEA] rounded-xl px-4 py-2.5 text-[13px] outline-none focus:border-black transition-all placeholder:text-[#CCCCCC] text-black resize-none"
@@ -426,7 +474,7 @@ function CourseModal({ mode, course, onSave, onClose }) {
               <input
                 type="text"
                 value={form.duration}
-                onChange={e => set('duration', e.target.value)}
+                onChange={(e) => set('duration', e.target.value)}
                 placeholder="Ex : 12:45"
                 className="w-full bg-white border border-[#EAEAEA] rounded-xl px-4 py-2.5 text-[13px] outline-none focus:border-black transition-all placeholder:text-[#CCCCCC] text-black"
               />
@@ -450,11 +498,13 @@ function CourseModal({ mode, course, onSave, onClose }) {
 
           {/* Image URL */}
           <div>
-            <label className="block text-[12px] font-semibold text-black mb-1.5">URL de l'image</label>
+            <label className="block text-[12px] font-semibold text-black mb-1.5">
+              URL de l'image
+            </label>
             <input
               type="url"
               value={form.image_url}
-              onChange={e => set('image_url', e.target.value)}
+              onChange={(e) => set('image_url', e.target.value)}
               placeholder="https://..."
               className="w-full bg-white border border-[#EAEAEA] rounded-xl px-4 py-2.5 text-[13px] outline-none focus:border-black transition-all placeholder:text-[#CCCCCC] text-black"
             />
@@ -464,7 +514,9 @@ function CourseModal({ mode, course, onSave, onClose }) {
                   src={form.image_url}
                   alt="Preview"
                   className="w-full h-full object-cover"
-                  onError={e => { e.currentTarget.style.display = 'none'; }}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
               </div>
             )}
@@ -479,11 +531,13 @@ function CourseModal({ mode, course, onSave, onClose }) {
             <input
               type="url"
               value={form.video_url}
-              onChange={e => set('video_url', e.target.value)}
+              onChange={(e) => set('video_url', e.target.value)}
               placeholder="Collez ici le lien de partage de votre vidéo Teams..."
               className="w-full bg-white border border-[#EAEAEA] rounded-xl px-4 py-2.5 text-[13px] outline-none focus:border-black transition-all placeholder:text-[#CCCCCC] text-black"
             />
-            <p className="text-[11px] text-[#999] mt-1.5">Formats supportés : lien SharePoint, Microsoft Stream, YouTube, ou lien direct (.mp4)</p>
+            <p className="text-[11px] text-[#999] mt-1.5">
+              Formats supportés : lien SharePoint, Microsoft Stream, YouTube, ou lien direct (.mp4)
+            </p>
           </div>
 
           {/* Actions */}
@@ -519,7 +573,9 @@ function CourseModal({ mode, course, onSave, onClose }) {
 ════════════════════════════════════════ */
 function DeleteModal({ course, onConfirm, onCancel }) {
   useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onCancel(); };
+    const onKey = (e) => {
+      if (e.key === 'Escape') onCancel();
+    };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onCancel]);
@@ -528,7 +584,9 @@ function DeleteModal({ course, onConfirm, onCancel }) {
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ backgroundColor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}
-      onClick={e => { if (e.target === e.currentTarget) onCancel(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onCancel();
+      }}
     >
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-7">
         <div className="flex items-center gap-3 mb-4">

@@ -10,11 +10,11 @@ donc la ligne du CHANGELOG. Il doit être un en-tête conventional commit :
 
 ## Changements
 
-- 
+-
 
 ## Tests
 
-- [ ] 
+- [ ]
 
 ## Notes de review
 

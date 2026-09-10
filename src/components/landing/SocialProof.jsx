@@ -18,7 +18,10 @@ export default function SocialProof() {
         </h2>
         <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
           {capabilities.map((label) => (
-            <span key={label} className="font-display-lg text-[32px] font-extrabold text-on-surface">
+            <span
+              key={label}
+              className="font-display-lg text-[32px] font-extrabold text-on-surface"
+            >
               {label}
             </span>
           ))}
