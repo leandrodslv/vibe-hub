@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "prebuild": "node --eval \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "prebuild": "node --eval \"require('node:fs').rmSync('dist',{recursive:true,force:true,maxRetries:10,retryDelay:100})\"",
     "build": "vite build",
     "preview": "vite preview",
     "format": "prettier --write .",
@@ -21,6 +21,7 @@
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
     "test:integration": "vitest run --config vitest.integration.config.js",
+    "test:simulation": "vitest run --config vitest.simulation.config.js",
     "test:regression:new": "node scripts/new-regression-test.mjs",
     "test:ui": "vitest --ui",
     "e2e": "playwright test",
@@ -34,7 +35,7 @@
     "perf:stress": "k6 run scripts/perf/stress.js",
     "perf:spike": "k6 run scripts/perf/spike.js",
     "lighthouse": "lhci autorun",
-    "validate": "npm run format:check && npm run lint && npm run typecheck && npm run test:cov && npm run test:integration && npm run build && npm run size",
+    "validate": "npm run format:check && npm run lint && npm run typecheck && npm run test:cov && npm run test:integration && npm run test:simulation && npm run build && npm run size",
     "prepare": "husky || true"
   },
   "dependencies": {
@@ -71,6 +72,7 @@
     "eslint-plugin-react": "^7.34.3",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.7",
+    "fast-check": "^3.23.2",
     "husky": "^9.1.6",
     "jsdom": "^25.0.1",
     "lint-staged": "^15.2.10",

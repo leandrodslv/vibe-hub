@@ -132,17 +132,38 @@ Objectif : « 1 bug corrigé = 1 test qui empêche sa réapparition » + isoler 
 - **DoD atteint** : la réponse externe (Gemini / Supabase) est simulée de façon
   déterministe, cas de panne inclus ; un `fix:` sans test est signalé en CI.
 
-### V4 — Simulation / injection de fautes à chaque commit _(~4 j)_ ← cœur « vidéo »
+### V4 — Simulation / injection de fautes à chaque commit ← cœur « vidéo » — ✅ livré
 
-Vibe Hub n'est pas distribué, mais les mêmes principes s'appliquent aux **frontières fragiles** : le proxy Gemini, le réseau, les quotas, l'auth.
+Vibe Hub n'est pas distribué, mais les mêmes principes s'appliquent aux **frontières fragiles** : Gemini, le réseau, les quotas.
 
-- [ ] **Property-based** (`fast-check`) sur la logique pure : `src/lib/routes.js`, validation, parsing markdown, `useTypewriter`.
-- [ ] **Fault injection proxy** : mode test du `gemini-proxy` qui injecte aléatoirement latence, 429, 500, réponse partielle, timeout — le front doit rester utilisable (ErrorBoundary, ret/back-off, message).
-- [ ] **Chaos réseau E2E** (Playwright) : `route.abort()`, throttling, offline sur les parcours critiques (voir la liste FR du PRD).
-- [ ] **Simulation de quotas** : scénario « 100 requêtes Gemini en rafale » → vérifie dégradation gracieuse + pas de fuite de clé.
-- [ ] Job CI `simulation` : `N` runs randomisés avec seed loggé ; en cas d'échec, **écrit `reports/simulation-<sha>.md`** (seed, scénario, trace) — c'est l'entrée de la V5.
-- **Trigger** : chaque commit sur PR (matrice de seeds), + run nocturne étendu (seed count élevé).
-- **DoD** : un échec de simulation est reproductible via son seed et produit un rapport exploitable par un agent.
+- [x] **Property-based** (`fast-check`) sur la logique pure : `src/lib/routes.property.test.js`
+      (round-trip `appHref`↔`currentRoute`, onglets toujours valides) + `validation.property.test.js`
+      (`sanitizeText` borné/sans char de contrôle, `safeJsonParse` ne lève jamais, `isSafeHttpUrl`
+      jamais vrai pour un schéma dangereux…). Dans la suite unitaire normale.
+- [x] **Injection de fautes** : latence ajoutée aux handlers MSW (`setGeminiLatency`,
+      `setSupabaseLatency`) ; harnais seedé `src/test/simulation/harness.js` (PRNG mulberry32,
+      `pickFaults`, `applyFaults`, `writeReport`).
+- [x] **Suite de simulation** `src/test/simulation/resilience.sim.test.js`
+      (`vitest.simulation.config.js`, `npm run test:simulation`) : pour chaque graine, tire une
+      combinaison de pannes (scénario Gemini × scénario Supabase × latence) et vérifie 4
+      invariants — `generateAIResponse` renvoie toujours une string non vide, **jamais la clé
+      API**, `getCourses` résout en tableau OU lève une `Error`, `addToWaitlist` résout toujours
+      en `{success|duplicate|error}`.
+- [x] **Bug trouvé & corrigé** : seed 7 → `getCourses` rejetait avec l'objet nu de
+      supabase-js. `rethrow()` enveloppe désormais en `Error` (`src/services/supabase.js`) +
+      test de régression `src/test/regression/supabase-rethrow-wraps-non-error.test.js`.
+- [x] **Rapport** : un échec écrit `reports/simulation-seed-<n>.md` (date, commande de repro
+      `SIM_SEEDS=<n> npm run test:simulation`, pannes en JSON, stack, étapes pour l'agent). C'est
+      l'entrée de la V5.
+- [x] **Chaos réseau E2E** `e2e/chaos.spec.js` : `route.abort()` / 500 sur `courses`, 503 sur
+      Gemini → message d'erreur lisible, **jamais** `role="alert"` (ErrorBoundary), nav intacte.
+- [x] **CI** : job `simulation` dans `ci.yml` (12 graines, upload des rapports en cas d'échec)
+  - `.github/workflows/simulation-nightly.yml` (200 graines, cron 02:17 UTC ; un échec ouvre
+    une issue `ai-fix` par rapport — stub V5).
+- **Reste** : `useTypewriter` en property-based ; « 100 requêtes en rafale » (throughput) →
+  couvert indirectement par les invariants, à durcir si besoin.
+- **DoD atteint** : un échec de simulation est reproductible par sa graine et produit un
+  rapport Markdown exploitable par un agent.
 
 ### V5 — Boucle agent → issue → agent _(~3 j)_ ← cœur « vidéo »
 

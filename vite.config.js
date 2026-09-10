@@ -38,7 +38,13 @@ export default defineConfig({
     include: ['src/**/*.{test,spec}.{js,jsx}'],
     // Les tests d'intégration (Postgres réel) ont leur propre config +
     // globalSetup : `npm run test:integration`. Voir vitest.integration.config.js.
-    exclude: ['e2e/**', 'node_modules/**', 'dist/**', 'src/test/integration/**'],
+    exclude: [
+      'e2e/**',
+      'node_modules/**',
+      'dist/**',
+      'src/test/integration/**',
+      'src/test/simulation/**',
+    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'text-summary', 'html', 'lcov', 'json-summary'],

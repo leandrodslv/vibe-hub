@@ -13,10 +13,23 @@ import {
 // n'importe `@supabase/supabase-js` ni n'appelle `supabase.auth.*` directement.
 export const supabase = createClient(env.supabaseUrl, env.supabaseAnonKey);
 
-/** Loggue et relance : le contexte part dans l'observabilité, l'appelant garde la main. */
+/**
+ * Loggue et relance : le contexte part dans l'observabilité, l'appelant garde la
+ * main. Les erreurs PostgREST sont des objets nus (`{ message, code, ... }`) —
+ * on les enveloppe dans une vraie `Error` pour garantir une stack et un type
+ * uniforme aux appelants et à l'ErrorBoundary (invariant vérifié par la
+ * simulation V4).
+ */
 function rethrow(op, error) {
   logger.error('supabase:error', { op, ...serializeError(error) });
-  throw error;
+  if (error instanceof Error) throw error;
+
+  /** @type {Error & { code?: string }} */
+  const wrapped = new Error(error?.message || `Échec Supabase (${op})`);
+  wrapped.name = 'SupabaseError';
+  wrapped.cause = error;
+  if (error?.code) wrapped.code = error.code;
+  throw wrapped;
 }
 
 /* ─── Auth (AD-2 : wrappers, jamais supabase.auth.* dans un composant) ─── */

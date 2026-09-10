@@ -19,6 +19,7 @@ test-results/
 perf-results/
 .playwright-cli/
 .playwright/
+reports/
 
 # Editor files
 .vscode/*

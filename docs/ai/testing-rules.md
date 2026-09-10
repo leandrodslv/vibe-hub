@@ -2,13 +2,15 @@
 
 ## Pyramide
 
-| Niveau               | Outil                              | Emplacement                      | Rôle                                                         |
-| -------------------- | ---------------------------------- | -------------------------------- | ------------------------------------------------------------ |
-| Unitaire             | Vitest + Testing Library           | `src/**/*.test.{js,jsx}`         | logique pure, adaptateurs (mockés), hooks, composants isolés |
-| Contrat de service   | Vitest (SDK mockés)                | `src/services/*.test.js`         | un adaptateur + son contrat d'erreur + ses schémas Zod       |
-| Intégration (réelle) | Vitest + Testcontainers (Postgres) | `src/test/integration/*.test.js` | migrations + RLS + RPC contre un **vrai** Postgres jetable   |
-| E2E                  | Playwright                         | `e2e/*.spec.js`                  | parcours utilisateur critiques sur le bundle de prod         |
-| Charge / stress      | k6                                 | `scripts/perf/*.js`              | tenue en montée de trafic, point de rupture                  |
+| Niveau               | Outil                              | Emplacement                         | Rôle                                                                |
+| -------------------- | ---------------------------------- | ----------------------------------- | ------------------------------------------------------------------- |
+| Unitaire             | Vitest + Testing Library           | `src/**/*.test.{js,jsx}`            | logique pure, adaptateurs (mockés), hooks, composants isolés        |
+| Contrat de service   | Vitest (SDK mockés)                | `src/services/*.test.js`            | un adaptateur + son contrat d'erreur + ses schémas Zod              |
+| Intégration (réelle) | Vitest + Testcontainers (Postgres) | `src/test/integration/*.test.js`    | migrations + RLS + RPC contre un **vrai** Postgres jetable          |
+| Property-based       | Vitest + fast-check                | `src/**/*.property.test.js`         | invariants de la logique pure, secouée par des entrées aléatoires   |
+| Simulation (seedée)  | Vitest + MSW + PRNG                | `src/test/simulation/*.sim.test.js` | invariants de résilience sous combinaisons de pannes tirées au sort |
+| E2E                  | Playwright                         | `e2e/*.spec.js`                     | parcours utilisateur + chaos réseau, sur le bundle de prod          |
+| Charge / stress      | k6                                 | `scripts/perf/*.js`                 | tenue en montée de trafic, point de rupture                         |
 
 ## Couverture
 
@@ -90,10 +92,34 @@ npm run test:regression:new -- "<slug-du-bug>" [numero-issue]
 - **Étend** : quand une migration ajoute une table/policy/fonction, ajouter le test
   d'intégration correspondant dans le même commit.
 
+## Property-based & simulation (V4)
+
+> Le « il secoue avec de l'aléatoire, plein de cas » de la vidéo, appliqué au code.
+
+- **Property-based** (`src/**/*.property.test.js`, dans `npm test`) : au lieu d'exemples
+  choisis à la main, `fast-check` génère des centaines d'entrées et rétrécit le
+  contre-exemple minimal. À écrire pour toute fonction pure au contrat clair (bornes,
+  round-trip, « ne lève jamais », implications).
+- **Simulation seedée** (`npm run test:simulation`, hors `npm test`) :
+  `src/test/simulation/harness.js` tire une combinaison de pannes (scénarios MSW Gemini ×
+  Supabase × latence) à partir d'une **graine**, et `resilience.sim.test.js` vérifie des
+  **invariants de résilience** :
+  1. `generateAIResponse` renvoie toujours une string non vide ;
+  2. aucune réponse ne contient un secret (clé API) ;
+  3. `getCourses` résout en tableau **ou** lève une `Error` (jamais un rejet nu) ;
+  4. `addToWaitlist` résout toujours en `{success|duplicate|error}`.
+- **Reproduire un échec** : `SIM_SEEDS=<n> npm run test:simulation`. Le rapport
+  `reports/simulation-seed-<n>.md` donne les pannes exactes + les étapes. Corriger, puis
+  `npm run test:regression:new -- "simulation-seed-<n>"`.
+- **Ajouter un invariant** : nouveau check dans `resilience.sim.test.js` via le helper
+  `fail(phase, invariant, error)` (il écrit le rapport avant de lever).
+
 ## E2E (Playwright)
 
 - Cible : le **bundle de production** (`playwright.config.js` build + `vite preview`), ou une
   preview Vercel via `E2E_BASE_URL`.
+- **Chaos réseau** (`e2e/chaos.spec.js`) : `page.route()` coupe / casse `courses` et Gemini
+  → l'app doit afficher une erreur lisible, jamais l'ErrorBoundary (`role="alert"`).
 - Projets : `chromium` (desktop) + `mobile` (Pixel 7).
 - Parcours couverts : chargement landing + lien d'évitement + CTA sécurisé, 404, routage
   d'onglets + URL, dégradation gracieuse de l'IA sans clé, écran de login admin.
@@ -125,10 +151,11 @@ npm run test:regression:new -- "<slug-du-bug>" [numero-issue]
 
 ## Ce que la CI exécute (dans l'ordre)
 
-format → lint → typecheck → semgrep → **tests unitaires (MSW inclus)** → **intégration
-(Testcontainers)** → **e2e** → audit sécurité → **couverture (seuil)** → Lighthouse
-(informatif) → build → budget bundle.
+format → lint → typecheck → semgrep → **tests unitaires (MSW + property-based)** →
+**intégration (Testcontainers)** → **simulation (12 graines)** → **e2e (+ chaos réseau)** →
+audit sécurité → **couverture (seuil)** → Lighthouse (informatif) → build → budget bundle.
 Un échec sur une étape critique casse le job `CI` (seul required check).
 
 Workflows séparés : **`fix-needs-test`** (PR `fix:` sans test → rouge), **`PR Title`**
-(Conventional Commits), **`Load / Stress test`** (manuel).
+(Conventional Commits), **`simulation-nightly`** (200 graines, ouvre une issue `ai-fix` par
+échec), **`Load / Stress test`** (manuel).

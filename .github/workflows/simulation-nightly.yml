@@ -1,0 +1,65 @@
+name: Simulation nightly
+
+# Run étendu de la simulation de résilience (V4) : beaucoup plus de graines que
+# la CI de PR. Un échec ouvre / met à jour une issue `ai-fix` (V5) avec le
+# rapport reports/simulation-seed-<n>.md en pièce jointe.
+
+on:
+  schedule:
+    - cron: '17 2 * * *' # tous les jours à 02:17 UTC
+  workflow_dispatch:
+    inputs:
+      seeds:
+        description: 'Liste de graines (SIM_SEEDS), ex. 1,2,3,...'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  simulate:
+    name: Simulation étendue
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci --prefer-offline --no-audit
+
+      - name: Simulation (200 graines par défaut)
+        id: sim
+        run: |
+          SEEDS="${{ github.event.inputs.seeds }}"
+          if [ -z "$SEEDS" ]; then SEEDS=$(seq -s, 1 200); fi
+          SIM_SEEDS="$SEEDS" npm run test:simulation
+
+      - name: Rapports de simulation
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulation-reports
+          path: reports/
+          retention-days: 30
+
+      - name: Ouvrir une issue ai-fix par rapport
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s nullglob
+          for report in reports/simulation-seed-*.md; do
+            seed=$(basename "$report" .md | sed 's/simulation-seed-//')
+            title="simulation: invariant de résilience violé (seed $seed)"
+            # Dédup : ne pas rouvrir si une issue ouverte porte déjà ce titre.
+            if gh issue list --state open --search "$title in:title" --json title \
+                 --jq '.[].title' | grep -qxF "$title"; then
+              echo "Issue déjà ouverte pour seed $seed"
+              continue
+            fi
+            gh issue create --title "$title" --label "ai-fix" \
+              --body-file "$report" || true
+          done

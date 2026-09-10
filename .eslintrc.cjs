@@ -120,9 +120,10 @@ module.exports = {
       },
     },
     {
-      // Tests unitaires : environnement Vitest + jsdom.
+      // Tests (unitaires, intégration, simulation) : Vitest tourne sous Node,
+      // avec jsdom pour la suite unitaire → browser + node.
       files: ['src/**/*.{test,spec}.{js,jsx}', 'src/test/**/*.{js,jsx}'],
-      env: { browser: true },
+      env: { browser: true, node: true },
       globals: {
         vi: 'readonly',
         vitest: 'readonly',

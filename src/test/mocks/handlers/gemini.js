@@ -11,7 +11,7 @@
  * `resetScenarios()` (cf. src/test/mocks/server.js).
  */
 
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse, delay } from 'msw';
 import { geminiScenarios } from '../scenarios/gemini.js';
 
 /** URL de l'API : `.../v1beta/models/<model>:generateContent`. */
@@ -19,6 +19,7 @@ const GEMINI_URL = /generativelanguage\.googleapis\.com\/.+:generateContent/;
 
 /** @type {import('../scenarios/gemini.js').GeminiScenarioName} */
 let active = 'nominal';
+let latencyMs = 0;
 
 /** @param {import('../scenarios/gemini.js').GeminiScenarioName} name */
 export function setGeminiScenario(name) {
@@ -26,8 +27,17 @@ export function setGeminiScenario(name) {
   active = name;
 }
 
+/**
+ * Injecte une latence artificielle avant la réponse (simulation de réseau lent).
+ * @param {number} ms
+ */
+export function setGeminiLatency(ms) {
+  latencyMs = Math.max(0, ms | 0);
+}
+
 export function resetGeminiScenario() {
   active = 'nominal';
+  latencyMs = 0;
 }
 
 /**
@@ -41,6 +51,8 @@ export const geminiHandlers = [
     geminiRequests.push(
       /** @type {(typeof geminiRequests)[number]} */ (await request.clone().json())
     );
+
+    if (latencyMs > 0) await delay(latencyMs);
 
     const scenario = geminiScenarios[active];
 
