@@ -260,17 +260,28 @@ synthèse par Gemini si secret, sinon par Claude Code en local.
 - **DoD atteint** : `npm run weekly-sync` (ou le cron) produit un doc d'1 page qui pointe
   les PR qui traînent, les issues chaudes, les échecs CI — pas le bruit.
 
-### V8 — Agents exploratoires à la demande _(~2 j + usage)_
+### V8 — Spikes exploratoires + audit de perf — ✅ livré
 
-« Teste juste pour voir, implémente A→Z, et donne-moi un audit de perf. »
+« Teste juste pour voir, implémente A→Z, et donne-moi un audit de perf. » L'agent implémente
+en local (Claude Code) ; l'outillage fige une référence de perf et mesure le coût.
 
-- [ ] `.github/workflows/explore.yml` (`workflow_dispatch`, entrée = objectif) : crée une branche `explore/<slug>`, lance Claude Code, ouvre une **PR étiquetée `spike` (jamais mergée telle quelle)** avec :
-  - le diff complet ;
-  - un **rapport de perf comparatif** : bundle (size-limit diff), Lighthouse avant/après, k6 si pertinent, temps de build ;
-  - une reco « on garde / on jette / à retravailler ».
-- Cas d'usage prêts à l'emploi : _remplacer une lib_ (ex. `react-markdown` → alternative), _upgrade majeur React/Vite_, _migration incrémentale TS d'un module_, _déplacer `ai.js` entièrement derrière l'edge function (dette AD‑1)_.
-- **Trigger** : manuel.
-- **DoD** : décider d'une migration prend 1 run + 15 min de relecture, pas 2 semaines de dev.
+- [x] `scripts/perf-diff.mjs` (`npm run perf:diff`) : build + mesure — poids gzip par groupe
+      (size-limit), total JS livré, nb de chunks, nb de dépendances de prod, temps de build.
+      `--save` fige la référence, sans arg compare → `reports/perf-diff.md` (tableau Δ + %).
+- [x] `scripts/explore.mjs` (`npm run explore -- "<objectif>"`) : refuse un arbre non propre,
+      crée `explore/<slug>` depuis la branche courante, fige la référence de perf, écrit
+      `EXPLORE_CONTEXT.md` (mission A→Z + « lance `perf:diff` + colle le rapport + reco on
+      garde/à retravailler/on jette » + « PR draft label `spike`, jamais mergée telle quelle »).
+- [x] `.github/workflows/explore-perf.yml` : sur une PR label `spike`, build base vs tête,
+      `perf-diff` → commentaire PR (mis à jour) + artefact. La mesure est automatisée, pas
+      l'implémentation.
+- **Cas d'usage** : remplacer une lib (ex. `react-markdown`), upgrade majeur React/Vite,
+  migration TS d'un module, **déplacer `ai.js` derrière l'edge function (AD-1)** → naturel
+  candidat pour V9.
+- **Reste** : Lighthouse avant/après dans `perf-diff` (aujourd'hui bundle + build seulement) ;
+  option agent-en-CI via le token OAuth (comme `agent-fix`).
+- **DoD atteint** : `npm run explore -- "…"` + Claude Code + `npm run perf:diff` → décision
+  documentée (coût chiffré + reco) en un run.
 
 ### V9 — Décommission du legacy & dette technique _(continu)_
 
