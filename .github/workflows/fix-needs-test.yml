@@ -1,0 +1,37 @@
+name: Fix needs test
+
+# « Chaque bug corrigé produit un test » (docs/ai/testing-rules.md).
+# Sur une PR dont le titre commence par `fix`, vérifie que le diff touche au
+# moins un fichier de test. Ne s'exécute QUE sur les PR `fix:` — les autres PR
+# ne sont pas concernées.
+#
+# À ajouter à la protection de branche (contexte : "Fix needs test") pour rendre
+# le garde-fou bloquant.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    name: Fix needs test
+    if: startsWith(github.event.pull_request.title, 'fix')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Le diff doit contenir un test
+        run: |
+          BASE='${{ github.event.pull_request.base.sha }}'
+          CHANGED=$(git diff --name-only "$BASE"...HEAD)
+          echo "$CHANGED"
+          if echo "$CHANGED" | grep -qE '\.(test|spec)\.(js|jsx)$'; then
+            echo "✅ La PR 'fix:' modifie au moins un fichier de test."
+          else
+            echo "::error::PR 'fix:' sans test. Ajoute un test de régression : npm run test:regression:new -- <slug>"
+            exit 1
+          fi

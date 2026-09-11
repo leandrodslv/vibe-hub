@@ -1,0 +1,66 @@
+name: Weekly sync
+
+# « Tâche inhumaine » V7 : chaque lundi matin, agrège l'état du repo (branches,
+# PR, issues, CI, deps, couverture) et — si `GEMINI_API_KEY` est configurée —
+# produit une synthèse « 1 page » qui ne pointe QUE les vrais sujets de réunion.
+# Publiée dans une issue épinglée `weekly-sync`.
+#
+# Sans `GEMINI_API_KEY` : l'issue contient les données brutes + la consigne, à
+# passer à Claude Code en local (`npm run weekly-sync`).
+
+on:
+  schedule:
+    - cron: '0 6 * * 1' # lundi 06:00 UTC (~7-8h Paris)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  actions: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci --prefer-offline --no-audit
+
+      - name: Agréger + synthétiser
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: npm run weekly-sync
+
+      - name: Publier dans l'issue épinglée
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          DATE=$(date -u +%Y-%m-%d)
+          FILE="reports/weekly-sync-$DATE.md"
+          [ -f "$FILE" ] || FILE="reports/weekly-sync-data.md"
+          TITLE="📋 Synchro hebdo"
+
+          NUM=$(gh issue list --state open --label weekly-sync --json number --jq '.[0].number // empty')
+          if [ -n "$NUM" ]; then
+            gh issue edit "$NUM" --title "$TITLE — $DATE" --body-file "$FILE"
+            gh issue comment "$NUM" --body "Mise à jour du $DATE."
+          else
+            gh label create weekly-sync --color "0E8A16" --description "Revue de synchro hebdo automatique" 2>/dev/null || true
+            NUM=$(gh issue create --title "$TITLE — $DATE" --label weekly-sync --body-file "$FILE" \
+              --json number --jq .number 2>/dev/null || gh issue create --title "$TITLE — $DATE" --label weekly-sync --body-file "$FILE" | grep -oE '[0-9]+$')
+          fi
+          echo "Issue #$NUM"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: weekly-sync
+          path: reports/weekly-sync-*.md
+          retention-days: 30

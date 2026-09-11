@@ -29,7 +29,10 @@ export default function FAQ() {
   return (
     <section id="faq" aria-labelledby="faq-titre" className="py-section-padding bg-surface">
       <div className="max-w-3xl mx-auto px-container-margin reveal opacity-0 translate-y-12 transition-all duration-1000 ease-out">
-        <h2 id="faq-titre" className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-center mb-12 text-on-surface">
+        <h2
+          id="faq-titre"
+          className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-center mb-12 text-on-surface"
+        >
           Questions fréquentes
         </h2>
 
@@ -62,7 +65,9 @@ export default function FAQ() {
                     isOpen ? 'max-h-40 pb-6 opacity-100' : 'max-h-0 opacity-0'
                   }`}
                 >
-                  <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed">{faq.answer}</p>
+                  <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                    {faq.answer}
+                  </p>
                 </div>
               </div>
             );

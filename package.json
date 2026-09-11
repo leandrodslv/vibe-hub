@@ -3,11 +3,49 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "vite",
+    "prebuild": "node --eval \"require('node:fs').rmSync('dist',{recursive:true,force:true,maxRetries:10,retryDelay:100})\"",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0"
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint . --ext js,jsx --fix",
+    "typecheck": "tsc --noEmit",
+    "types:db": "supabase gen types typescript --local > src/lib/database.types.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:cov": "vitest run --coverage",
+    "test:integration": "vitest run --config vitest.integration.config.js",
+    "test:simulation": "vitest run --config vitest.simulation.config.js",
+    "test:regression:new": "node scripts/new-regression-test.mjs",
+    "test:ui": "vitest --ui",
+    "ai-fix": "node scripts/ai-fix.mjs",
+    "weekly-sync": "node scripts/weekly-sync.mjs",
+    "explore": "node scripts/explore.mjs",
+    "perf:diff": "node scripts/perf-diff.mjs",
+    "tech-debt": "node scripts/tech-debt-inventory.mjs",
+    "e2e": "playwright test",
+    "e2e:report": "playwright show-report",
+    "security:audit": "npm audit --omit=dev --audit-level=high",
+    "security:secrets": "gitleaks detect --no-banner --redact --config .gitleaks.toml",
+    "security:semgrep": "semgrep scan --config .semgrep.yml --error",
+    "security:headers": "node scripts/check-security-headers.mjs",
+    "security:bundle": "node scripts/check-bundle-secrets.mjs",
+    "pentest:review": "node scripts/security-review.mjs",
+    "pentest:llm": "node scripts/llm-security-review.mjs",
+    "size": "size-limit",
+    "perf:smoke": "k6 run scripts/perf/smoke.js",
+    "perf:load": "k6 run scripts/perf/load.js",
+    "perf:stress": "k6 run scripts/perf/stress.js",
+    "perf:spike": "k6 run scripts/perf/spike.js",
+    "lighthouse": "lhci autorun",
+    "validate": "npm run format:check && npm run lint && npm run typecheck && npm run test:cov && npm run test:integration && npm run test:simulation && npm run security:headers && npm run build && npm run security:bundle && npm run size",
+    "prepare": "husky || true"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -16,21 +54,80 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-markdown": "^10.1.0",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "web-vitals": "^4.2.4",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@playwright/cli": "^0.1.18",
+    "@lhci/cli": "^0.14.0",
+    "@playwright/test": "^1.48.0",
+    "@size-limit/file": "^11.1.6",
     "@tailwindcss/typography": "^0.5.19",
+    "@testcontainers/postgresql": "^10.28.0",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.5.0",
+    "@testing-library/react": "^16.0.1",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/pg": "^8.23.1",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.1",
+    "@vitest/coverage-v8": "^2.1.2",
+    "@vitest/ui": "^2.1.2",
     "autoprefixer": "^10.4.19",
     "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-jsx-a11y": "^6.10.0",
     "eslint-plugin-react": "^7.34.3",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.7",
+    "fast-check": "^3.23.2",
+    "husky": "^9.1.6",
+    "jsdom": "^25.0.1",
+    "lint-staged": "^15.2.10",
+    "msw": "^2.15.0",
+    "pg": "^8.23.0",
     "postcss": "^8.4.40",
+    "prettier": "^3.3.3",
+    "size-limit": "^11.1.6",
     "tailwindcss": "^3.4.7",
-    "vite": "^5.4.0"
+    "typescript": "^5.6.2",
+    "vite": "^5.4.20",
+    "vitest": "^2.1.2"
+  },
+  "size-limit": [
+    {
+      "name": "JS chargé au démarrage (gzip)",
+      "path": [
+        "dist/assets/index-*.js",
+        "dist/assets/react-*.js"
+      ],
+      "gzip": true,
+      "limit": "120 kB"
+    },
+    {
+      "name": "JS différable (markdown + supabase, gzip)",
+      "path": [
+        "dist/assets/markdown-*.js",
+        "dist/assets/supabase-*.js"
+      ],
+      "gzip": true,
+      "limit": "110 kB"
+    },
+    {
+      "name": "CSS (gzip)",
+      "path": "dist/assets/*.css",
+      "gzip": true,
+      "limit": "15 kB"
+    }
+  ],
+  "lint-staged": {
+    "*.{js,jsx}": [
+      "eslint --fix --max-warnings 0",
+      "prettier --write"
+    ],
+    "*.{json,css,md,yml,yaml}": [
+      "prettier --write"
+    ]
   }
 }

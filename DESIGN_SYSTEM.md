@@ -9,46 +9,48 @@
 
 ### Police
 
-| Rôle | Famille | Import |
-|------|---------|--------|
+| Rôle    | Famille   | Import                                     |
+| ------- | --------- | ------------------------------------------ |
 | Globale | **Inter** | Google Fonts — weights 400 500 600 700 800 |
 
 ```css
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-body { font-family: 'Inter', sans-serif; }
+body {
+  font-family: 'Inter', sans-serif;
+}
 ```
 
 ### Échelle de taille
 
-| Usage | Classe Tailwind | Valeur |
-|-------|----------------|--------|
+| Usage             | Classe Tailwind           | Valeur     |
+| ----------------- | ------------------------- | ---------- |
 | Hero H1 (landing) | `text-6xl md:text-[88px]` | 60 → 88 px |
-| H1 section | `text-[32px]` | 32 px |
-| H1 workspace | `text-[22px]` | 22 px |
-| H2 card | `text-xl` / `text-lg` | 20 / 18 px |
-| H3 card | `text-[15px]` | 15 px |
-| Body | `text-[15px]` | 15 px |
-| Body small | `text-[13px]` | 13 px |
-| Label / meta | `text-[11px]` | 11 px |
-| Tag / badge | `text-[10px]` | 10 px |
+| H1 section        | `text-[32px]`             | 32 px      |
+| H1 workspace      | `text-[22px]`             | 22 px      |
+| H2 card           | `text-xl` / `text-lg`     | 20 / 18 px |
+| H3 card           | `text-[15px]`             | 15 px      |
+| Body              | `text-[15px]`             | 15 px      |
+| Body small        | `text-[13px]`             | 13 px      |
+| Label / meta      | `text-[11px]`             | 11 px      |
+| Tag / badge       | `text-[10px]`             | 10 px      |
 
 ### Poids
 
-| Usage | Classe |
-|-------|--------|
-| Titres principaux | `font-extrabold` (800) |
-| Titres secondaires | `font-bold` (700) |
-| Éléments interactifs | `font-semibold` (600) |
-| Corps de texte | `font-medium` (500) |
-| Texte courant | `font-normal` (400) |
+| Usage                | Classe                 |
+| -------------------- | ---------------------- |
+| Titres principaux    | `font-extrabold` (800) |
+| Titres secondaires   | `font-bold` (700)      |
+| Éléments interactifs | `font-semibold` (600)  |
+| Corps de texte       | `font-medium` (500)    |
+| Texte courant        | `font-normal` (400)    |
 
 ### Tracking spécial
 
-| Usage | Classe |
-|-------|--------|
-| Hero H1 | `tracking-tighter` |
+| Usage            | Classe                                |
+| ---------------- | ------------------------------------- |
+| Hero H1          | `tracking-tighter`                    |
 | Labels uppercase | `tracking-widest` ou `tracking-wider` |
-| Texte courant | aucun |
+| Texte courant    | aucun                                 |
 
 ---
 
@@ -58,19 +60,19 @@ body { font-family: 'Inter', sans-serif; }
 
 ### Palette principale
 
-| Token | Hex | Usage |
-|-------|-----|-------|
-| **Noir** | `#000000` / `black` | Texte principal, CTA, actifs |
-| **Gris foncé** | `#333333` | Hover des CTA noirs |
-| **Gris texte** | `#666666` | Texte secondaire, liens nav |
-| **Gris muted** | `#999999` | Placeholder, labels discrets |
-| **Blanc** | `#FFFFFF` / `white` | Cartes, inputs, fonds |
-| **Fond landing** | `#F9F9F9` | Background page landing |
-| **Fond workspace** | `#FAFAFA` | Background panneaux |
-| **Fond input** | `#F4F4F4` | Inputs, badges, muted bg |
-| **Bordure principale** | `#EAEAEA` | Toutes les bordures standard |
-| **Bordure hover** | `#CCCCCC` | Bordure au survol |
-| **Bordure dashed** | `#D4D4D4` | Zones dashed / vides |
+| Token                  | Hex                 | Usage                        |
+| ---------------------- | ------------------- | ---------------------------- |
+| **Noir**               | `#000000` / `black` | Texte principal, CTA, actifs |
+| **Gris foncé**         | `#333333`           | Hover des CTA noirs          |
+| **Gris texte**         | `#666666`           | Texte secondaire, liens nav  |
+| **Gris muted**         | `#999999`           | Placeholder, labels discrets |
+| **Blanc**              | `#FFFFFF` / `white` | Cartes, inputs, fonds        |
+| **Fond landing**       | `#F9F9F9`           | Background page landing      |
+| **Fond workspace**     | `#FAFAFA`           | Background panneaux          |
+| **Fond input**         | `#F4F4F4`           | Inputs, badges, muted bg     |
+| **Bordure principale** | `#EAEAEA`           | Toutes les bordures standard |
+| **Bordure hover**      | `#CCCCCC`           | Bordure au survol            |
+| **Bordure dashed**     | `#D4D4D4`           | Zones dashed / vides         |
 
 ### Sélection texte (global)
 
@@ -80,13 +82,13 @@ selection:bg-black selection:text-white
 
 ### Gradients icônes (outils uniquement)
 
-| Outil | Classes Tailwind |
-|-------|-----------------|
-| UI Builder | `from-blue-500 to-indigo-600` |
-| Code Auditor | `from-emerald-500 to-teal-600` |
-| Content Writer | `from-orange-500 to-rose-500` |
-| Color Studio | `from-violet-500 to-purple-600` |
-| Vision Lens | `from-sky-500 to-blue-600` |
+| Outil          | Classes Tailwind                |
+| -------------- | ------------------------------- |
+| UI Builder     | `from-blue-500 to-indigo-600`   |
+| Code Auditor   | `from-emerald-500 to-teal-600`  |
+| Content Writer | `from-orange-500 to-rose-500`   |
+| Color Studio   | `from-violet-500 to-purple-600` |
+| Vision Lens    | `from-sky-500 to-blue-600`      |
 
 ---
 
@@ -94,57 +96,57 @@ selection:bg-black selection:text-white
 
 ### Containers
 
-| Contexte | Classes |
-|----------|---------|
-| Landing (large) | `max-w-7xl mx-auto px-6` |
-| Landing (contenu) | `max-w-5xl mx-auto` |
-| Texte lisible | `max-w-2xl mx-auto` |
+| Contexte          | Classes                  |
+| ----------------- | ------------------------ |
+| Landing (large)   | `max-w-7xl mx-auto px-6` |
+| Landing (contenu) | `max-w-5xl mx-auto`      |
+| Texte lisible     | `max-w-2xl mx-auto`      |
 
 ### Grille workspace
 
-| Breakpoint | Colonnes |
-|-----------|----------|
-| Mobile | `grid-cols-1` |
-| Tablette `md` | `grid-cols-2` |
-| Desktop `lg` | `grid-cols-3` |
-| Large `xl` | `grid-cols-4` (modules) |
+| Breakpoint    | Colonnes                |
+| ------------- | ----------------------- |
+| Mobile        | `grid-cols-1`           |
+| Tablette `md` | `grid-cols-2`           |
+| Desktop `lg`  | `grid-cols-3`           |
+| Large `xl`    | `grid-cols-4` (modules) |
 
 ### Hauteurs fixes
 
-| Élément | Valeur |
-|---------|--------|
-| Navbar landing | `h-20` |
-| TopBar workspace | `h-14` |
+| Élément             | Valeur     |
+| ------------------- | ---------- |
+| Navbar landing      | `h-20`     |
+| TopBar workspace    | `h-14`     |
 | Barre outil interne | `h-[52px]` |
-| Prompt input bar | `h-16` |
+| Prompt input bar    | `h-16`     |
 
 ---
 
 ## 4. Border Radius
 
-| Usage | Classe | Valeur |
-|-------|--------|--------|
-| Boutons, inputs | `rounded-lg` | 8 px |
-| Inputs, petites cartes | `rounded-xl` | 12 px |
-| Cartes, panneaux | `rounded-2xl` | 16 px |
-| Grandes icônes | `rounded-3xl` | 24 px |
-| Pills / badges | `rounded-full` | 9999 px |
-| Icône outil (header) | `rounded-lg` | 8 px |
-| Icône outil (card) | `rounded-xl` | 12 px |
+| Usage                  | Classe         | Valeur  |
+| ---------------------- | -------------- | ------- |
+| Boutons, inputs        | `rounded-lg`   | 8 px    |
+| Inputs, petites cartes | `rounded-xl`   | 12 px   |
+| Cartes, panneaux       | `rounded-2xl`  | 16 px   |
+| Grandes icônes         | `rounded-3xl`  | 24 px   |
+| Pills / badges         | `rounded-full` | 9999 px |
+| Icône outil (header)   | `rounded-lg`   | 8 px    |
+| Icône outil (card)     | `rounded-xl`   | 12 px   |
 
 ---
 
 ## 5. Ombres
 
-| Usage | Classes Tailwind |
-|-------|-----------------|
-| Carte hero/mockup | `shadow-[0_40px_100px_-20px_rgba(0,0,0,0.08)]` |
-| Carte au survol | `hover:shadow-xl hover:shadow-black/5` |
-| Prompt bar active | `shadow-[0_12px_40px_-12px_rgba(0,0,0,0.15)]` |
-| Prompt bar repos | `shadow-[0_8px_30px_-10px_rgba(0,0,0,0.08)]` |
-| Icône outil (card) | `shadow-lg shadow-{color}-500/20` |
-| Bouton CTA | `shadow-lg shadow-black/10` |
-| Petite carte | `shadow-sm` |
+| Usage              | Classes Tailwind                               |
+| ------------------ | ---------------------------------------------- |
+| Carte hero/mockup  | `shadow-[0_40px_100px_-20px_rgba(0,0,0,0.08)]` |
+| Carte au survol    | `hover:shadow-xl hover:shadow-black/5`         |
+| Prompt bar active  | `shadow-[0_12px_40px_-12px_rgba(0,0,0,0.15)]`  |
+| Prompt bar repos   | `shadow-[0_8px_30px_-10px_rgba(0,0,0,0.08)]`   |
+| Icône outil (card) | `shadow-lg shadow-{color}-500/20`              |
+| Bouton CTA         | `shadow-lg shadow-black/10`                    |
+| Petite carte       | `shadow-sm`                                    |
 
 ---
 
@@ -177,9 +179,7 @@ selection:bg-black selection:text-white
 ### Input texte
 
 ```jsx
-<input
-  className="w-full bg-white border border-[#EAEAEA] rounded-xl px-4 py-2.5 text-[13px] outline-none focus:border-black transition-all placeholder:text-[#999] text-black"
-/>
+<input className="w-full bg-white border border-[#EAEAEA] rounded-xl px-4 py-2.5 text-[13px] outline-none focus:border-black transition-all placeholder:text-[#999] text-black" />
 ```
 
 ### Input avec icône gauche
@@ -194,9 +194,7 @@ selection:bg-black selection:text-white
 ### Carte standard
 
 ```jsx
-<div className="bg-white border border-[#EAEAEA] rounded-2xl p-6 shadow-sm">
-  {/* contenu */}
-</div>
+<div className="bg-white border border-[#EAEAEA] rounded-2xl p-6 shadow-sm">{/* contenu */}</div>
 ```
 
 ### Carte interactive (hover)
@@ -218,16 +216,20 @@ selection:bg-black selection:text-white
 ### Badge pill (status)
 
 ```jsx
-{/* Live */}
+{
+  /* Live */
+}
 <div className="flex items-center gap-1.5 bg-[#F4F4F4] border border-[#EAEAEA] px-2 py-0.5 rounded-full">
   <span className="w-1.5 h-1.5 rounded-full bg-black animate-pulse" />
   <span className="text-[10px] font-bold text-black">Live</span>
-</div>
+</div>;
 
-{/* Bientôt / Beta */}
+{
+  /* Bientôt / Beta */
+}
 <span className="text-[10px] font-bold text-[#999] uppercase tracking-wider bg-[#F4F4F4] px-2.5 py-1 rounded-full">
   Bientôt
-</span>
+</span>;
 ```
 
 ### Onglets workspace (pill)
@@ -278,37 +280,37 @@ selection:bg-black selection:text-white
 
 ### Transitions standard
 
-| Usage | Classe |
-|-------|--------|
-| Couleur | `transition-colors duration-200` |
-| Tout (hover cards) | `transition-all duration-300` |
-| Transform (icône) | `transition-transform duration-300` |
+| Usage              | Classe                              |
+| ------------------ | ----------------------------------- |
+| Couleur            | `transition-colors duration-200`    |
+| Tout (hover cards) | `transition-all duration-300`       |
+| Transform (icône)  | `transition-transform duration-300` |
 
 ### Micro-interactions hover
 
-| Effet | Classe |
-|-------|--------|
-| Élévation carte | `hover:-translate-y-0.5` ou `hover:-translate-y-1` |
-| Scale icône | `group-hover:scale-105` |
-| Scale bouton CTA | `hover:scale-[1.02]` |
-| Press bouton | `active:scale-95` |
+| Effet            | Classe                                             |
+| ---------------- | -------------------------------------------------- |
+| Élévation carte  | `hover:-translate-y-0.5` ou `hover:-translate-y-1` |
+| Scale icône      | `group-hover:scale-105`                            |
+| Scale bouton CTA | `hover:scale-[1.02]`                               |
+| Press bouton     | `active:scale-95`                                  |
 
 ### Animations globales
 
-| Nom | Description | Durée |
-|-----|-------------|-------|
-| `animate-mouse` | Floating mouse cursor (hero) | 6s ease-in-out infinite |
-| `animate-spin` | Spinner de chargement | — |
-| `animate-pulse` | Dot pulsant (badge Live) | — |
-| `animate-in fade-in` | Apparition de vue | `duration-500` |
+| Nom                  | Description                  | Durée                   |
+| -------------------- | ---------------------------- | ----------------------- |
+| `animate-mouse`      | Floating mouse cursor (hero) | 6s ease-in-out infinite |
+| `animate-spin`       | Spinner de chargement        | —                       |
+| `animate-pulse`      | Dot pulsant (badge Live)     | —                       |
+| `animate-in fade-in` | Apparition de vue            | `duration-500`          |
 
 ### Scroll reveal (landing)
 
 ```js
 // Classes initiales sur les éléments
-className="reveal opacity-0 translate-y-12 transition-all duration-700"
+className = 'reveal opacity-0 translate-y-12 transition-all duration-700';
 // Ajoutées par IntersectionObserver quand visible
-classList.add('opacity-100', 'translate-y-0')
+classList.add('opacity-100', 'translate-y-0');
 ```
 
 ---
@@ -319,12 +321,12 @@ classList.add('opacity-100', 'translate-y-0')
 
 ### Tailles standard
 
-| Contexte | Classe |
-|----------|--------|
-| Icône inline texte | `w-4 h-4` |
-| Icône bouton/nav | `w-4 h-4` ou `w-5 h-5` |
-| Icône card header | `w-5 h-5` |
-| Icône grande (outil) | `w-9 h-9` |
+| Contexte                 | Classe                 |
+| ------------------------ | ---------------------- |
+| Icône inline texte       | `w-4 h-4`              |
+| Icône bouton/nav         | `w-4 h-4` ou `w-5 h-5` |
+| Icône card header        | `w-5 h-5`              |
+| Icône grande (outil)     | `w-9 h-9`              |
 | Icône hero / coming soon | `w-6 h-6` ou `w-8 h-8` |
 
 ### Règle absolue
@@ -347,14 +349,14 @@ classList.add('opacity-100', 'translate-y-0')
 
 ## 10. Accessibilité
 
-| Règle | Application |
-|-------|-------------|
-| `cursor-pointer` | Sur **tous** les éléments cliquables |
-| `aria-label` | Sur les boutons icône sans texte |
-| Contraste texte | Minimum 4.5:1 — `#666` sur blanc = ✓ |
-| Focus | `outline-none focus:border-black` sur les inputs |
-| `disabled` | `disabled:opacity-50 disabled:cursor-not-allowed` |
-| Motion | Pas d'animation décorative infinie (sauf `.animate-mouse` hero) |
+| Règle            | Application                                                     |
+| ---------------- | --------------------------------------------------------------- |
+| `cursor-pointer` | Sur **tous** les éléments cliquables                            |
+| `aria-label`     | Sur les boutons icône sans texte                                |
+| Contraste texte  | Minimum 4.5:1 — `#666` sur blanc = ✓                            |
+| Focus            | `outline-none focus:border-black` sur les inputs                |
+| `disabled`       | `disabled:opacity-50 disabled:cursor-not-allowed`               |
+| Motion           | Pas d'animation décorative infinie (sauf `.animate-mouse` hero) |
 
 ---
 
@@ -397,12 +399,12 @@ src/
 
 ## 12. Do / Don't
 
-| ✅ Do | ❌ Don't |
-|-------|---------|
-| Utiliser les tokens hexadécimaux définis | Inventer de nouvelles couleurs |
-| Icônes Lucide SVG | Émojis comme icônes |
-| `cursor-pointer` sur tout ce qui est cliquable | Laisser le curseur par défaut |
-| Gradients uniquement sur les icônes d'outils | Gradients sur les fonds de page |
-| Transitions `duration-200` à `duration-300` | Transitions > 500ms |
-| `rounded-2xl` pour les cartes | Mélanger les radius aléatoirement |
-| Texte secondaire en `#666` minimum | `#999` pour du texte de corps |
+| ✅ Do                                          | ❌ Don't                          |
+| ---------------------------------------------- | --------------------------------- |
+| Utiliser les tokens hexadécimaux définis       | Inventer de nouvelles couleurs    |
+| Icônes Lucide SVG                              | Émojis comme icônes               |
+| `cursor-pointer` sur tout ce qui est cliquable | Laisser le curseur par défaut     |
+| Gradients uniquement sur les icônes d'outils   | Gradients sur les fonds de page   |
+| Transitions `duration-200` à `duration-300`    | Transitions > 500ms               |
+| `rounded-2xl` pour les cartes                  | Mélanger les radius aléatoirement |
+| Texte secondaire en `#666` minimum             | `#999` pour du texte de corps     |

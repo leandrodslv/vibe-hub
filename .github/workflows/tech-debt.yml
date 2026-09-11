@@ -1,0 +1,44 @@
+name: Tech debt inventory
+
+# V9 : inventaire mensuel de la dette (marqueurs + invariants d'archi + cibles).
+# Publié dans une issue épinglable `tech-debt`. Buter un item = test de
+# caractérisation d'abord, puis réécriture pilotée (`npm run ai-fix` / local).
+
+on:
+  schedule:
+    - cron: '0 7 1 * *' # le 1er du mois, 07:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node scripts/tech-debt-inventory.mjs
+
+      - name: Publier dans l'issue épinglée
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          DATE=$(date -u +%Y-%m-%d)
+          NUM=$(gh issue list --state open --label tech-debt --json number --jq '.[0].number // empty')
+          if [ -n "$NUM" ]; then
+            gh issue edit "$NUM" --title "🧹 Dette technique — $DATE" --body-file reports/tech-debt.md
+          else
+            gh label create tech-debt --color "BFD4F2" --description "Inventaire de dette technique" 2>/dev/null || true
+            gh issue create --title "🧹 Dette technique — $DATE" --label tech-debt --body-file reports/tech-debt.md
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tech-debt
+          path: reports/tech-debt.md
+          retention-days: 90

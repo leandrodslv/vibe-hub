@@ -1,0 +1,68 @@
+name: Agent fix (ai-fix)
+
+# ⚠️ DÉSACTIVÉ PAR DÉFAUT. Automatise la 2ᵉ moitié de la boucle V5 : un agent
+# Claude Code prend une issue `ai-fix` et ouvre une PR draft avec un correctif.
+#
+# Pré-requis pour l'activer (plan Claude Pro/Max, sans clé API) :
+#   1. En local : `claude setup-token`  → génère un token OAuth longue durée.
+#   2. Repo → Settings → Secrets and variables → Actions :
+#        - secret  CLAUDE_CODE_OAUTH_TOKEN = <le token>
+#        - variable AI_AUTOMATION_ENABLED  = true
+#   3. (recommandé) protéger `main` : review humaine obligatoire, la PR reste en draft.
+#
+# Tant que la variable n'est pas à "true", ce workflow ne fait rien.
+# Alternative : ne rien activer et traiter les issues en local avec `npm run ai-fix`.
+
+on:
+  issues:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: 'Numéro de l’issue ai-fix'
+        required: true
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  fix:
+    if: >
+      vars.AI_AUTOMATION_ENABLED == 'true' &&
+      (github.event_name == 'workflow_dispatch' || github.event.label.name == 'ai-fix')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci --prefer-offline --no-audit
+
+      - name: Contexte de l'issue
+        id: ctx
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number || github.event.inputs.issue }}
+        run: |
+          echo "issue=$ISSUE" >> "$GITHUB_OUTPUT"
+          gh issue view "$ISSUE" --json title,body \
+            --jq '"# Issue #'"$ISSUE"'\n\n## \(.title)\n\n\(.body)"' > AI_FIX_CONTEXT.md
+
+      - name: Claude Code — proposer un correctif
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Lis AI_FIX_CONTEXT.md. Reproduis le problème, corrige la cause racine
+            en respectant docs/ai/architecture.md et docs/ai/coding-rules.md,
+            ajoute un test de régression (npm run test:regression:new -- "issue-${{ steps.ctx.outputs.issue }}"),
+            et assure-toi que `npm run validate` passe.
+            Ne modifie pas supabase/migrations/, src/config/ ni .github/ sans le
+            signaler. Ouvre une PR DRAFT liée à l'issue #${{ steps.ctx.outputs.issue }}
+            (jamais de merge automatique).
+          branch: ai-fix/${{ steps.ctx.outputs.issue }}

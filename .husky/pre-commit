@@ -1,0 +1,2 @@
+# Feedback le plus tôt possible : formate + lint uniquement les fichiers stagés.
+npx lint-staged

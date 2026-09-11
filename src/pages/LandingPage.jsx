@@ -6,7 +6,9 @@ import Programme from '../components/landing/Programme';
 import FAQ from '../components/landing/FAQ';
 import Footer from '../components/landing/Footer';
 
-export default function LandingPage({ onEnterApp, onEnterTab }) {
+// La landing ne pilote plus le logiciel : ses CTA sont de simples liens vers `/app`, qui
+// s'ouvre dans un nouvel onglet. Aucune prop de navigation à faire descendre.
+export default function LandingPage() {
   // Scroll reveal
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -25,7 +27,10 @@ export default function LandingPage({ onEnterApp, onEnterTab }) {
   }, []);
 
   return (
-    <div id="top" className="min-h-screen bg-surface text-on-surface font-body-md selection:bg-primary selection:text-on-primary">
+    <div
+      id="top"
+      className="min-h-screen bg-surface text-on-surface font-body-md selection:bg-primary selection:text-on-primary"
+    >
       {/* Lien d'évitement (RGAA 12.7) — masqué visuellement, révélé à la prise de focus clavier. */}
       <a
         href="#contenu"
@@ -34,16 +39,16 @@ export default function LandingPage({ onEnterApp, onEnterTab }) {
         Aller au contenu principal
       </a>
 
-      <Navbar onEnterApp={onEnterApp} />
+      <Navbar />
 
       <main id="contenu">
-        <Hero onEnterApp={onEnterApp} />
+        <Hero />
         <SocialProof />
-        <Programme onEnterApp={onEnterApp} />
+        <Programme />
         <FAQ />
       </main>
 
-      <Footer onEnterApp={onEnterApp} onEnterTab={onEnterTab} />
+      <Footer />
     </div>
   );
 }

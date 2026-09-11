@@ -1,0 +1,4 @@
+# Empêche de pousser du code qui cassera la CI : types + tests unitaires.
+# (le build complet + e2e restent côté CI pour ne pas ralentir le push)
+npm run typecheck
+npm run test

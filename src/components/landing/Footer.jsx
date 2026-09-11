@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { appHref, MENTION_NOUVEL_ONGLET, NOUVEL_ONGLET } from '../../lib/routes';
 import {
   ArrowRight,
   PlayCircle,
@@ -143,7 +144,10 @@ function ConfettiIconField({ items, containerRef }) {
         const prevTransform = node.el.style.transform;
         node.el.style.transform = 'none'; // measure the untranslated rest position
         const iconRect = node.el.getBoundingClientRect();
-        node.base = { x: iconRect.left + iconRect.width / 2, y: iconRect.top + iconRect.height / 2 };
+        node.base = {
+          x: iconRect.left + iconRect.width / 2,
+          y: iconRect.top + iconRect.height / 2,
+        };
         node.radius = iconRect.width / 2;
         if (node.x === undefined) {
           node.x = node.base.x;
@@ -248,8 +252,8 @@ function ConfettiIconField({ items, containerRef }) {
 // Plan du site (RGAA 12.2 / 12.3) — second moyen de navigation, en complément du menu principal.
 // Il doit permettre de comprendre la structure et d'atteindre l'ensemble des rubriques ET des
 // fonctionnalités : d'où les entrées vers les trois espaces applicatifs, pas seulement vers les
-// sections de la page. Les ancres sont des <a>, les espaces applicatifs des <button> — ce sont des
-// changements de vue pilotés par l'état React, pas des URLs.
+// sections de la page. Tout est en <a> depuis que le logiciel a sa propre URL — les entrées
+// marquées d'un `tab` pointent vers `/app` et s'ouvrent dans un nouvel onglet.
 const PLAN_DU_SITE = [
   {
     titre: 'Le site',
@@ -264,9 +268,9 @@ const PLAN_DU_SITE = [
   {
     titre: 'L’application',
     entrees: [
-      { label: 'Assistant IA', tab: 'ia' },
-      { label: 'Modules de formation', tab: 'modules' },
-      { label: 'Bibliothèque d’outils', tab: 'outils' },
+      { label: 'Assistant IA', href: appHref('ia'), nouvelOnglet: true },
+      { label: 'Modules de formation', href: appHref('modules'), nouvelOnglet: true },
+      { label: 'Bibliothèque d’outils', href: appHref('outils'), nouvelOnglet: true },
     ],
   },
   {
@@ -282,7 +286,7 @@ const PLAN_DU_SITE = [
 const LIEN_FOOTER =
   'inline-flex items-center min-h-[44px] px-2 -mx-2 rounded text-on-primary/85 hover:text-on-primary hover:underline underline-offset-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-primary focus-visible:ring-offset-2 focus-visible:ring-offset-primary';
 
-export default function Footer({ onEnterApp, onEnterTab }) {
+export default function Footer() {
   const vitrineRef = useRef(null);
   const solRef = useRef(null);
 
@@ -308,17 +312,20 @@ export default function Footer({ onEnterApp, onEnterTab }) {
             Tous les outils IA de votre équipe, au même endroit.
           </h2>
           <p className="font-body-lg text-body-lg text-on-primary/85 mb-10">
-            Modules, Assistant IA, UI Builder - accessibles dès aujourd&apos;hui, sans compte à créer.
+            Modules, Assistant IA, UI Builder - accessibles dès aujourd&apos;hui, sans compte à
+            créer.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button
-              onClick={onEnterApp}
+            <a
+              href={appHref()}
+              {...NOUVEL_ONGLET}
               className="bg-on-surface text-surface font-cta-pill text-cta-pill px-8 py-4 rounded-full hover:scale-105 transition-transform chunky-shadow chunky-shadow-pressed flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-primary focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
             >
               Découvrir Vibe Hub
-              <ArrowRight className="w-4 h-4" />
-            </button>
+              <span className="sr-only">{MENTION_NOUVEL_ONGLET}</span>
+              <ArrowRight className="w-4 h-4" aria-hidden="true" />
+            </a>
             <a
               href="#programme"
               className="bg-on-primary/10 border border-on-primary/70 text-on-primary font-cta-pill text-cta-pill px-8 py-4 rounded-full hover:bg-on-primary/20 transition-colors flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-primary focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
@@ -334,7 +341,10 @@ export default function Footer({ onEnterApp, onEnterTab }) {
         aria-labelledby="plan-du-site-titre"
         className="relative max-w-7xl mx-auto mt-24 pt-10 border-t border-on-primary/30"
       >
-        <h2 id="plan-du-site-titre" className="font-label-caps text-label-caps uppercase tracking-wider text-on-primary mb-6">
+        <h2
+          id="plan-du-site-titre"
+          className="font-label-caps text-label-caps uppercase tracking-wider text-on-primary mb-6"
+        >
           Plan du site
         </h2>
 
@@ -343,17 +353,12 @@ export default function Footer({ onEnterApp, onEnterTab }) {
             <div key={titre}>
               <h3 className="font-cta-pill text-cta-pill text-on-primary mb-2">{titre}</h3>
               <ul className="flex flex-col">
-                {entrees.map(({ label, href, tab }) => (
+                {entrees.map(({ label, href, nouvelOnglet }) => (
                   <li key={label}>
-                    {href ? (
-                      <a href={href} className={LIEN_FOOTER}>
-                        {label}
-                      </a>
-                    ) : (
-                      <button type="button" onClick={() => onEnterTab?.(tab)} className={`${LIEN_FOOTER} text-left`}>
-                        {label}
-                      </button>
-                    )}
+                    <a href={href} className={LIEN_FOOTER} {...(nouvelOnglet ? NOUVEL_ONGLET : {})}>
+                      {label}
+                      {nouvelOnglet && <span className="sr-only">{MENTION_NOUVEL_ONGLET}</span>}
+                    </a>
                   </li>
                 ))}
               </ul>

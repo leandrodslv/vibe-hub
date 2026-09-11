@@ -1,0 +1,44 @@
+# Vibe Hub — règles Windsurf / Codeium
+
+SPA React 18 + Vite + Tailwind CSS 3 (JavaScript, pas TypeScript). Plateforme d'apprentissage
+IA pour designers UI/UX francophones. Back-end Supabase (Postgres + Auth) + Gemini. Vercel.
+Documentation de référence : docs/ai/ (project-context, architecture, coding-rules,
+testing-rules, security-rules, deployment-rules, business-rules, glossary).
+
+ARCHITECTURE (bloquant, vérifié par ESLint + Semgrep)
+- Importer @supabase/supabase-js ou @google/generative-ai UNIQUEMENT dans src/services/.
+  Les composants/pages appellent une fonction de service.
+- Jamais de secret derrière import.meta.env.VITE_* (inliné dans le bundle => public).
+  Accès aux variables d'env via src/config/env.js.
+- Interdits : eval, new Function, dangerouslySetInnerHTML sans DOMPurify.
+- Chemins de route (/app, /admin) jamais en dur : src/lib/routes.js.
+- Liens target="_blank" : toujours rel="noopener noreferrer" (constante NOUVEL_ONGLET).
+- JSON.parse de donnee non fiable (localStorage, reseau) : safeJsonParse (src/lib/validation.js).
+- Persistance : Supabase (durable) ou localStorage prefixe ai_* / progress_* (ephemere). Rien d'autre.
+- Fonctions de service : throw en cas d'erreur. Seule exception : addToWaitlist -> {success|duplicate|error}.
+- Cours tries par order_index uniquement (jamais created_at).
+
+STYLE
+- Function components React + useState local. Pas de classe (sauf ErrorBoundary), pas de
+  Redux/Zustand/Context-store, pas de React Router.
+- Francais dans les chaines UI et les commentaires.
+- Prettier : single quotes, semicolons, printWidth 100.
+- Tailwind avec les design tokens du projet (DESIGN_SYSTEM.md) - pas de couleurs arbitraires.
+
+QUALITE
+- Tout nouveau fichier de logique commence par // @ts-check + JSDoc.
+- Tout nouveau helper/service/hook a un test Vitest (SDK mockes via vi.mock + vi.hoisted).
+- Tout bug corrige a un test de regression.
+- Couverture >= 80 % (bloquant CI).
+- Erreurs loggees via logger.error (src/lib/logger.js), pas console.log.
+- Appel de service dans un composant : try/catch + etat d'erreur affiche (cf. ModulesTab.jsx).
+
+COMMITS
+- Conventional Commits (feat, fix, perf, refactor, test, docs, build, ci, chore).
+- Le titre de PR devient le message de commit sur main et la ligne de CHANGELOG.
+
+NE PAS FAIRE
+- Introduire TypeScript en masse / React Router / un state manager sans mettre a jour
+  l'Architecture Spine (_bmad-output/planning-artifacts/architecture/.../ARCHITECTURE-SPINE.md).
+- Re-alimenter src/data/courses.js (legacy).
+- Lancer un test de charge k6 contre la prod.

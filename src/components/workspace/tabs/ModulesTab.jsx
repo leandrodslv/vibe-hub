@@ -5,16 +5,31 @@ import CourseCard from '../modules/CourseCard';
 import CourseDetail from '../modules/CourseDetail';
 
 const ACCENTS = [
-  { icon: Bot, chipBg: 'bg-primary-container', chipText: 'text-on-primary-container', barBg: 'bg-primary' },
-  { icon: PenTool, chipBg: 'bg-tertiary-container', chipText: 'text-on-tertiary-container', barBg: 'bg-tertiary' },
-  { icon: Wand2, chipBg: 'bg-secondary-container', chipText: 'text-on-secondary-container', barBg: 'bg-secondary-container' },
+  {
+    icon: Bot,
+    chipBg: 'bg-primary-container',
+    chipText: 'text-on-primary-container',
+    barBg: 'bg-primary',
+  },
+  {
+    icon: PenTool,
+    chipBg: 'bg-tertiary-container',
+    chipText: 'text-on-tertiary-container',
+    barBg: 'bg-tertiary',
+  },
+  {
+    icon: Wand2,
+    chipBg: 'bg-secondary-container',
+    chipText: 'text-on-secondary-container',
+    barBg: 'bg-secondary-container',
+  },
 ];
 
 const STATUS_FILTERS = [
-  { id: 'all', label: 'TOUS' },
-  { id: 'new', label: 'À COMMENCER' },
-  { id: 'inprogress', label: 'EN COURS' },
-  { id: 'done', label: 'TERMINÉ' },
+  { id: 'all', label: 'Tous' },
+  { id: 'new', label: 'À commencer' },
+  { id: 'inprogress', label: 'En cours' },
+  { id: 'done', label: 'Terminé' },
 ];
 
 const FOCUS_RING =
@@ -38,14 +53,16 @@ export default function ModulesTab() {
     );
 
     Promise.race([getCourses(), timeout])
-      .then(data => {
+      .then((data) => {
         setCourses(data);
         // Initialise la progression à 0 pour chaque cours
         const initial = {};
-        data.forEach(c => { initial[c.id] = 0; });
+        data.forEach((c) => {
+          initial[c.id] = 0;
+        });
         setProgress(initial);
       })
-      .catch(err => {
+      .catch((err) => {
         // Loggé pour pouvoir diagnostiquer via la console (projet Supabase en pause,
         // clé/anon invalide, RLS, etc.) plutôt que de rester bloqué sur le spinner sans indice.
         console.error('getCourses() a échoué :', err);
@@ -55,14 +72,14 @@ export default function ModulesTab() {
   }, []);
 
   const handleMarkComplete = (courseId) => {
-    setProgress(prev => ({ ...prev, [courseId]: 100 }));
-    setActiveCourse(prev => prev?.id === courseId ? { ...prev, progress: 100 } : prev);
+    setProgress((prev) => ({ ...prev, [courseId]: 100 }));
+    setActiveCourse((prev) => (prev?.id === courseId ? { ...prev, progress: 100 } : prev));
   };
 
   const enriched = (course) => ({ ...course, progress: progress[course.id] ?? 0 });
 
   const visibleCourses = useMemo(() => {
-    return courses.map(enriched).filter(c => {
+    return courses.map(enriched).filter((c) => {
       return (
         statusFilter === 'all' ||
         (statusFilter === 'new' && c.progress === 0) ||
@@ -73,18 +90,20 @@ export default function ModulesTab() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courses, progress, statusFilter]);
 
-  const allCourses = useMemo(() => courses.map(enriched),
+  const allCourses = useMemo(
+    () => courses.map(enriched),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [courses, progress]);
+    [courses, progress]
+  );
 
   const catalogCategories = useMemo(() => {
-    const names = new Set(courses.map(c => c.module_name).filter(Boolean));
+    const names = new Set(courses.map((c) => c.module_name).filter(Boolean));
     return ['Tous', ...names];
   }, [courses]);
 
   const filteredCatalog = useMemo(() => {
     const q = deferredCatalogSearch.trim().toLowerCase();
-    return allCourses.filter(c => {
+    return allCourses.filter((c) => {
       const matchesSearch =
         !q ||
         c.title.toLowerCase().includes(q) ||
@@ -110,6 +129,15 @@ export default function ModulesTab() {
   const resetFilters = () => setStatusFilter('all');
 
   const hasActiveFilters = statusFilter !== 'all';
+
+  // La grille principale tient sur une seule page (3 colonnes x 2 rangees, sans scroll).
+  // On borne donc le nombre de cartes au nombre de cellules disponibles : la carte mise en
+  // avant en occupe 2, la tuile « Nouveau Cours » 1. Le reste du catalogue reste accessible
+  // via cette tuile, rien n'est perdu.
+  const gridCourses = useMemo(() => {
+    const isFeatured = !hasActiveFilters;
+    return visibleCourses.slice(0, isFeatured ? 4 : 5);
+  }, [visibleCourses, hasActiveFilters]);
 
   if (loading) {
     return (
@@ -178,7 +206,7 @@ export default function ModulesTab() {
                   type="text"
                   placeholder="Rechercher un cours..."
                   value={catalogSearch}
-                  onChange={e => setCatalogSearch(e.target.value)}
+                  onChange={(e) => setCatalogSearch(e.target.value)}
                   aria-label="Rechercher un cours dans le catalogue"
                   className={`w-full bg-surface-container-lowest border border-surface-variant rounded-xl pl-10 pr-9 py-2.5 text-[13px] outline-none focus:border-primary transition-all placeholder:text-on-surface-variant text-on-surface ${FOCUS_RING}`}
                 />
@@ -196,9 +224,16 @@ export default function ModulesTab() {
             </div>
 
             {/* Filtre par module */}
-            <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide border-b border-surface-variant" role="group" aria-label="Filtrer par module">
-              {catalogCategories.map(cat => {
-                const count = cat === 'Tous' ? courses.length : courses.filter(c => c.module_name === cat).length;
+            <div
+              className="flex items-center gap-1 overflow-x-auto scrollbar-hide border-b border-surface-variant"
+              role="group"
+              aria-label="Filtrer par module"
+            >
+              {catalogCategories.map((cat) => {
+                const count =
+                  cat === 'Tous'
+                    ? courses.length
+                    : courses.filter((c) => c.module_name === cat).length;
                 const isActive = catalogCategory === cat;
                 return (
                   <button
@@ -207,13 +242,17 @@ export default function ModulesTab() {
                     onClick={() => setCatalogCategory(cat)}
                     aria-pressed={isActive}
                     className={`flex items-center gap-1.5 px-3 py-2.5 text-[13px] font-semibold border-b-2 -mb-px transition-all duration-200 whitespace-nowrap ${FOCUS_RING} ${
-                      isActive ? 'border-primary text-on-surface' : 'border-transparent text-on-surface-variant hover:text-on-surface'
+                      isActive
+                        ? 'border-primary text-on-surface'
+                        : 'border-transparent text-on-surface-variant hover:text-on-surface'
                     }`}
                   >
                     {cat}
                     <span
                       className={`text-[10px] font-bold min-w-[16px] h-4 px-1 rounded flex items-center justify-center ${
-                        isActive ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface-variant'
+                        isActive
+                          ? 'bg-primary text-on-primary'
+                          : 'bg-surface-container text-on-surface-variant'
                       }`}
                     >
                       {count}
@@ -253,10 +292,12 @@ export default function ModulesTab() {
                 <CourseCard
                   key={course.id}
                   course={course}
-                  onClick={c => setActiveCourse(c)}
+                  onClick={(c) => setActiveCourse(c)}
                   variant="standard"
                   accent={ACCENTS[index % ACCENTS.length]}
-                  cardBg={index % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface-container-low'}
+                  cardBg={
+                    index % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface-container-low'
+                  }
                 />
               ))}
             </div>
@@ -269,41 +310,60 @@ export default function ModulesTab() {
   return (
     <div className="w-full h-full flex flex-col bg-surface animate-in fade-in duration-500">
       {/* En-tête fixe : ne défile pas avec la grille */}
-      <div className="flex-shrink-0 mb-section-padding">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
-          <div>
-            <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-2">
-              Cours
-            </h2>
-            <p className="font-body-md text-body-md text-on-surface-variant">
-              Explorez et complétez vos parcours de design et d&apos;IA.
-            </p>
-          </div>
+      <div className="flex-shrink-0 mb-4">
+        <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-3">
+          Cours
+        </h2>
 
-          {/* Filtre par statut */}
-          <div className="flex gap-3" role="group" aria-label="Filtrer par statut">
-            {STATUS_FILTERS.map(({ id, label }) => (
+        {/* Filtre par statut */}
+        <div
+          className="flex items-center gap-1 overflow-x-auto scrollbar-hide border-b border-surface-variant"
+          role="group"
+          aria-label="Filtrer par statut"
+        >
+          {STATUS_FILTERS.map(({ id, label }) => {
+            const count =
+              id === 'all'
+                ? allCourses.length
+                : allCourses.filter((c) =>
+                    id === 'new'
+                      ? c.progress === 0
+                      : id === 'inprogress'
+                        ? c.progress > 0 && c.progress < 100
+                        : c.progress === 100
+                  ).length;
+            const isActive = statusFilter === id;
+            return (
               <button
                 key={id}
                 type="button"
                 onClick={() => setStatusFilter(id)}
-                aria-pressed={statusFilter === id}
-                className={`px-5 py-2 rounded-full font-label-caps text-label-caps tracking-widest transition-all duration-300 whitespace-nowrap ${FOCUS_RING} ${
-                  statusFilter === id
-                    ? 'bg-on-surface text-surface-container-lowest hover:scale-105'
-                    : 'bg-surface-container text-on-surface hover:bg-surface-variant'
+                aria-pressed={isActive}
+                className={`flex items-center gap-1.5 px-3 py-2.5 text-[13px] font-semibold border-b-2 -mb-px transition-all duration-200 whitespace-nowrap ${FOCUS_RING} ${
+                  isActive
+                    ? 'border-primary text-on-surface'
+                    : 'border-transparent text-on-surface-variant hover:text-on-surface'
                 }`}
               >
                 {label}
+                <span
+                  className={`text-[10px] font-bold min-w-[16px] h-4 px-1 rounded flex items-center justify-center ${
+                    isActive
+                      ? 'bg-primary text-on-primary'
+                      : 'bg-surface-container text-on-surface-variant'
+                  }`}
+                >
+                  {count}
+                </span>
               </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
       </div>
 
       {/* Contenu (ne défile pas : min-h-0 force le flex item à respecter overflow-hidden
           au lieu de grandir avec son contenu, comme le ferait le min-height:auto par défaut) */}
-      <div className="flex-1 min-h-0 overflow-hidden pr-2">
+      <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide lg:overflow-hidden pr-2">
         {visibleCourses.length === 0 ? (
           <div className="bg-surface-container-low border border-surface-variant rounded-3xl p-12 flex flex-col items-center justify-center text-center">
             <div className="w-14 h-14 bg-surface-container rounded-2xl flex items-center justify-center mb-4">
@@ -326,27 +386,34 @@ export default function ModulesTab() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-stack-gap md:gap-grid-gutter">
-            {visibleCourses.map((course, index) => (
+          /* Sur grand écran la grille occupe exactement la hauteur restante (2 rangées
+             de taille égale) : les cartes se compriment au lieu de déborder, donc plus
+             aucun scroll. En dessous de `lg` on retombe sur un empilement scrollable. */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 lg:grid-rows-2 lg:h-full lg:min-h-0 gap-stack-gap md:gap-grid-gutter">
+            {gridCourses.map((course, index) => (
               <CourseCard
                 key={course.id}
                 course={course}
-                onClick={c => setActiveCourse(c)}
+                onClick={(c) => setActiveCourse(c)}
                 variant={index === 0 && !hasActiveFilters ? 'featured' : 'standard'}
                 accent={ACCENTS[index % ACCENTS.length]}
-                cardBg={index % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface-container-low'}
+                cardBg={
+                  index % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface-container-low'
+                }
               />
             ))}
 
             <button
               type="button"
               onClick={() => setCatalogOpen(true)}
-              className={`bg-surface-variant rounded-3xl p-6 flex flex-col items-center justify-center text-center border-2 border-dashed border-outline-variant hover:bg-surface-container transition-colors min-h-[240px] ${FOCUS_RING}`}
+              className={`bg-surface-variant rounded-3xl p-6 flex flex-col items-center justify-center text-center border-2 border-dashed border-outline-variant hover:bg-surface-container transition-colors min-h-[200px] lg:min-h-0 ${FOCUS_RING}`}
             >
-              <div className="w-16 h-16 bg-surface-container-lowest rounded-full flex items-center justify-center mb-4 chunky-shadow">
-                <Plus className="w-8 h-8 text-primary" aria-hidden="true" />
+              <div className="w-14 h-14 bg-surface-container-lowest rounded-full flex items-center justify-center mb-3 chunky-shadow">
+                <Plus className="w-7 h-7 text-primary" aria-hidden="true" />
               </div>
-              <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-2">Nouveau Cours</h3>
+              <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-1">
+                Nouveau Cours
+              </h3>
               <p className="font-body-md text-body-md text-on-surface-variant max-w-[200px]">
                 Découvrez le catalogue complet de formations.
               </p>

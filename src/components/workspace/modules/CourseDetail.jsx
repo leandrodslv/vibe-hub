@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { isAllowedVideoUrl, isSafeHttpUrl, matchesHost } from '../../../lib/validation';
 import {
   ChevronRight,
   PlayCircle,
@@ -103,12 +104,21 @@ export default function CourseDetail({ course, onBack, onMarkComplete }) {
       {/* Video Player */}
       {learningMode === 'video' && (
         <div className="w-full aspect-video bg-on-surface rounded-3xl overflow-hidden relative flex items-center justify-center shadow-xl border border-surface-variant">
-          {course.video_url ? (
-            /* ── VRAI LECTEUR VIDÉO ── */
+          {course.video_url &&
+          (isAllowedVideoUrl(course.video_url) || isSafeHttpUrl(course.video_url)) ? (
+            /* ── VRAI LECTEUR VIDÉO ──
+               `video_url` vient de l'admin (donnée non fiable). On ne construit un
+               `<iframe src>` que pour un hôte explicitement autorisé (AD-5) ; sinon
+               on retombe sur un <video> pour un lien http(s) direct, ou le placeholder. */
             (() => {
               const url = course.video_url;
-              const isYouTube = url.includes('youtube.com') || url.includes('youtu.be');
-              const isStream = url.includes('sharepoint.com') || url.includes('microsoftstream.com') || url.includes('stream.office.com');
+              const embeddable = isAllowedVideoUrl(url);
+              // Choix du lecteur d'après le hostname parsé (jamais un substring
+              // de l'URL entière — cf. `matchesHost`).
+              const isYouTube = embeddable && matchesHost(url, ['youtube.com', 'youtu.be']);
+              const isStream =
+                embeddable &&
+                matchesHost(url, ['sharepoint.com', 'microsoftstream.com', 'stream.office.com']);
 
               // YouTube embed
               if (isYouTube) {
@@ -116,9 +126,13 @@ export default function CourseDetail({ course, onBack, onMarkComplete }) {
                 if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1]?.split('?')[0];
                 else videoId = new URL(url).searchParams.get('v');
                 return (
+                  // nosemgrep: iframe-without-sandbox -- hôte sur liste blanche
+                  // (isAllowedVideoUrl) ; YouTube nécessite allow-same-origin +
+                  // allow-scripts pour son player. Contenu de confiance, pas du code généré.
                   <iframe
                     src={`https://www.youtube.com/embed/${videoId}?rel=0`}
                     title={course.title}
+                    sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                     className="absolute inset-0 w-full h-full"
@@ -126,11 +140,17 @@ export default function CourseDetail({ course, onBack, onMarkComplete }) {
                 );
               }
 
-              // SharePoint / Stream embed
+              // SharePoint / Stream embed.
+              // Hôte SharePoint/Stream sur liste blanche (isAllowedVideoUrl). Le player
+              // Stream casse sous sandbox sans allow-same-origin ; embed d'entreprise de
+              // confiance, jamais du code généré.
               if (isStream) {
-                const embedUrl = url.includes('embed') ? url : url.replace('/video/', '/video/embed/');
+                const embedUrl = url.includes('embed')
+                  ? url
+                  : url.replace('/video/', '/video/embed/');
+                // nosemgrep: iframe-without-sandbox
                 return (
-                  <iframe
+                  <iframe // nosemgrep: iframe-without-sandbox
                     src={embedUrl}
                     title={course.title}
                     allowFullScreen
@@ -178,7 +198,10 @@ export default function CourseDetail({ course, onBack, onMarkComplete }) {
               </div>
 
               <img
-                src={course.image_url || "https://images.unsplash.com/photo-1618761714954-0b8cd0026356?auto=format&fit=crop&q=80&w=1200"}
+                src={
+                  course.image_url ||
+                  'https://images.unsplash.com/photo-1618761714954-0b8cd0026356?auto=format&fit=crop&q=80&w=1200'
+                }
                 alt="Video cover"
                 className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
                   isPlaying ? 'opacity-100' : 'opacity-60'
@@ -229,26 +252,31 @@ export default function CourseDetail({ course, onBack, onMarkComplete }) {
             {readingStep === 1 && (
               <div className="animate-in fade-in slide-in-from-right-4 duration-500">
                 <p className="text-xl text-on-surface-variant font-medium mb-8">{course.desc}</p>
-                <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mt-6 mb-4">1. Comprendre le "Latent Space"</h3>
+                <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mt-6 mb-4">
+                  1. Comprendre le "Latent Space"
+                </h3>
                 <p className="mb-6">
-                  Avant de pouvoir écrire des prompts efficaces, il est crucial de comprendre comment l'IA "voit" le
-                  design. Imaginez un espace mathématique infini (le latent space) où chaque point représente une
-                  composante visuelle : une couleur, un arrondi, une typographie.
+                  Avant de pouvoir écrire des prompts efficaces, il est crucial de comprendre
+                  comment l'IA "voit" le design. Imaginez un espace mathématique infini (le latent
+                  space) où chaque point représente une composante visuelle : une couleur, un
+                  arrondi, une typographie.
                 </p>
                 <div className="bg-surface-container border-l-4 border-primary p-6 rounded-r-xl my-6">
                   <strong className="text-on-surface block mb-2">💡 À retenir</strong>
-                  L'IA ne copie pas, elle prédit statistiquement le pixel suivant en fonction de votre requête
-                  textuelle.
+                  L'IA ne copie pas, elle prédit statistiquement le pixel suivant en fonction de
+                  votre requête textuelle.
                 </div>
               </div>
             )}
 
             {readingStep === 2 && (
               <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-                <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-4">2. De la théorie à la pratique visuelle</h3>
+                <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-4">
+                  2. De la théorie à la pratique visuelle
+                </h3>
                 <p className="mb-6">
-                  La théorie est utile, mais le design est avant tout visuel. Observez comment un simple prompt se
-                  transforme en wireframe fonctionnel.
+                  La théorie est utile, mais le design est avant tout visuel. Observez comment un
+                  simple prompt se transforme en wireframe fonctionnel.
                 </p>
                 <div className="w-full aspect-video rounded-xl overflow-hidden mb-6 border border-surface-variant shadow-sm">
                   <img
@@ -257,16 +285,21 @@ export default function CourseDetail({ course, onBack, onMarkComplete }) {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mt-8 mb-4">Anatomie d'un prompt UI parfait</h3>
+                <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mt-8 mb-4">
+                  Anatomie d'un prompt UI parfait
+                </h3>
                 <ul className="list-disc pl-6 space-y-3 mb-8">
                   <li>
-                    <strong className="text-on-surface">Le Sujet :</strong> "Une page de connexion SaaS"
+                    <strong className="text-on-surface">Le Sujet :</strong> "Une page de connexion
+                    SaaS"
                   </li>
                   <li>
-                    <strong className="text-on-surface">Le Style Visuel :</strong> "Minimaliste, style Apple, flat design"
+                    <strong className="text-on-surface">Le Style Visuel :</strong> "Minimaliste,
+                    style Apple, flat design"
                   </li>
                   <li>
-                    <strong className="text-on-surface">Le Format :</strong> "UI shot, high resolution"
+                    <strong className="text-on-surface">Le Format :</strong> "UI shot, high
+                    resolution"
                   </li>
                 </ul>
               </div>
@@ -277,10 +310,12 @@ export default function CourseDetail({ course, onBack, onMarkComplete }) {
                 <div className="w-20 h-20 bg-tertiary-fixed text-tertiary rounded-full flex items-center justify-center mb-6 shadow-sm">
                   <CheckCircle className="w-10 h-10" aria-hidden="true" />
                 </div>
-                <h2 className="font-display-lg text-[36px] text-on-surface mb-4">Module Terminé !</h2>
+                <h2 className="font-display-lg text-[36px] text-on-surface mb-4">
+                  Module Terminé !
+                </h2>
                 <p className="font-body-lg text-body-lg text-on-surface-variant max-w-md mx-auto mb-10">
-                  Félicitations, vous avez validé la partie théorique de ce module. Vous avez acquis de nouvelles
-                  compétences aujourd'hui !
+                  Félicitations, vous avez validé la partie théorique de ce module. Vous avez acquis
+                  de nouvelles compétences aujourd'hui !
                 </p>
                 <button
                   onClick={() => {
@@ -302,7 +337,9 @@ export default function CourseDetail({ course, onBack, onMarkComplete }) {
                 onClick={() => setReadingStep(Math.max(1, readingStep - 1))}
                 disabled={readingStep === 1}
                 className={`px-6 py-2.5 rounded-lg font-semibold text-[14px] transition-colors ${FOCUS_RING} ${
-                  readingStep === 1 ? 'opacity-0 cursor-default' : 'bg-surface-container text-on-surface hover:bg-surface-variant'
+                  readingStep === 1
+                    ? 'opacity-0 cursor-default'
+                    : 'bg-surface-container text-on-surface hover:bg-surface-variant'
                 }`}
               >
                 Précédent
@@ -316,7 +353,10 @@ export default function CourseDetail({ course, onBack, onMarkComplete }) {
               >
                 {readingStep === 2 ? 'Terminer le module' : 'Étape suivante'}
                 {readingStep !== 2 && (
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
+                  <ArrowRight
+                    className="w-4 h-4 group-hover:translate-x-1 transition-transform"
+                    aria-hidden="true"
+                  />
                 )}
               </button>
             </div>
@@ -331,16 +371,22 @@ export default function CourseDetail({ course, onBack, onMarkComplete }) {
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-6">
               <div>
                 <h2 className="font-display-lg text-[32px] text-on-surface mb-3">{course.title}</h2>
-                <p className="font-body-lg text-body-lg text-on-surface-variant leading-relaxed max-w-2xl">{course.desc}</p>
+                <p className="font-body-lg text-body-lg text-on-surface-variant leading-relaxed max-w-2xl">
+                  {course.desc}
+                </p>
               </div>
               <div className="flex-shrink-0 text-right">
                 <span className="block text-2xl font-bold text-on-surface mb-1">{course.time}</span>
-                <span className="font-label-caps text-label-caps text-on-surface-variant">Durée totale</span>
+                <span className="font-label-caps text-label-caps text-on-surface-variant">
+                  Durée totale
+                </span>
               </div>
             </div>
           )}
 
-          <div className={`flex flex-wrap gap-4 ${learningMode === 'video' ? 'border-t border-surface-variant pt-6 mt-2' : ''}`}>
+          <div
+            className={`flex flex-wrap gap-4 ${learningMode === 'video' ? 'border-t border-surface-variant pt-6 mt-2' : ''}`}
+          >
             {learningMode === 'video' && (
               <>
                 <button
@@ -351,7 +397,11 @@ export default function CourseDetail({ course, onBack, onMarkComplete }) {
                       : 'bg-primary text-on-primary hover:opacity-90'
                   }`}
                 >
-                  {isPlaying ? <PauseCircle className="w-4 h-4" aria-hidden="true" /> : <PlayCircle className="w-4 h-4" aria-hidden="true" />}
+                  {isPlaying ? (
+                    <PauseCircle className="w-4 h-4" aria-hidden="true" />
+                  ) : (
+                    <PlayCircle className="w-4 h-4" aria-hidden="true" />
+                  )}
                   {isPlaying ? 'Mettre en pause' : 'Continuer la lecture'}
                 </button>
                 {course.progress < 100 && (
@@ -368,10 +418,13 @@ export default function CourseDetail({ course, onBack, onMarkComplete }) {
               onClick={() => setShowResources(!showResources)}
               aria-expanded={showResources}
               className={`px-6 py-3 rounded-xl font-semibold text-sm transition-colors flex items-center gap-2 ${FOCUS_RING} ${
-                showResources ? 'bg-surface-variant text-on-surface' : 'bg-surface-container text-on-surface hover:bg-surface-variant'
+                showResources
+                  ? 'bg-surface-variant text-on-surface'
+                  : 'bg-surface-container text-on-surface hover:bg-surface-variant'
               }`}
             >
-              <BookOpen className="w-4 h-4" aria-hidden="true" /> {showResources ? 'Masquer les ressources' : 'Ressources du cours'}
+              <BookOpen className="w-4 h-4" aria-hidden="true" />{' '}
+              {showResources ? 'Masquer les ressources' : 'Ressources du cours'}
             </button>
           </div>
 
@@ -380,24 +433,41 @@ export default function CourseDetail({ course, onBack, onMarkComplete }) {
               <h4 className="font-bold text-[15px] mb-4 text-on-surface">Fichiers à télécharger</h4>
               <div className="flex flex-col gap-3">
                 {[
-                  { icon: Figma, color: 'text-pink-500', name: 'Figma UI Kit - Modèles IA', meta: 'Fichier .fig • 2.4 MB' },
-                  { icon: FileText, color: 'text-blue-500', name: 'Cheat Sheet - Prompts avancés', meta: 'Document PDF • 1.1 MB' },
+                  {
+                    icon: Figma,
+                    color: 'text-pink-500',
+                    name: 'Figma UI Kit - Modèles IA',
+                    meta: 'Fichier .fig • 2.4 MB',
+                  },
+                  {
+                    icon: FileText,
+                    color: 'text-blue-500',
+                    name: 'Cheat Sheet - Prompts avancés',
+                    meta: 'Document PDF • 1.1 MB',
+                  },
                 ].map(({ icon: Icon, color, name, meta }) => (
                   <div
                     key={name}
                     className="flex items-center justify-between p-4 bg-surface-container border border-surface-variant rounded-xl hover:bg-surface-container-low hover:border-outline-variant transition-all cursor-pointer group"
                   >
                     <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 bg-surface-container-lowest rounded-lg border border-surface-variant flex items-center justify-center ${color} shadow-sm group-hover:scale-105 transition-transform`}>
+                      <div
+                        className={`w-10 h-10 bg-surface-container-lowest rounded-lg border border-surface-variant flex items-center justify-center ${color} shadow-sm group-hover:scale-105 transition-transform`}
+                      >
                         <Icon className="w-5 h-5" aria-hidden="true" />
                       </div>
                       <div>
                         <div className="font-semibold text-[14px] text-on-surface">{name}</div>
-                        <div className="text-[12px] text-on-surface-variant font-medium mt-0.5">{meta}</div>
+                        <div className="text-[12px] text-on-surface-variant font-medium mt-0.5">
+                          {meta}
+                        </div>
                       </div>
                     </div>
                     <div className="w-8 h-8 rounded-full bg-surface-container-lowest border border-surface-variant flex items-center justify-center group-hover:bg-primary group-hover:border-primary group-hover:text-on-primary transition-all">
-                      <Download className="w-4 h-4 text-on-surface-variant group-hover:text-on-primary transition-colors" aria-hidden="true" />
+                      <Download
+                        className="w-4 h-4 text-on-surface-variant group-hover:text-on-primary transition-colors"
+                        aria-hidden="true"
+                      />
                     </div>
                   </div>
                 ))}

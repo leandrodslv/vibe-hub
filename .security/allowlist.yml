@@ -1,0 +1,17 @@
+# Findings de sécurité justifiés — V6.
+#
+# Chaque entrée neutralise UN finding de `npm run security:bundle`. Toujours
+# accompagner d'une justification et d'une date de revue.
+#
+# Format :
+#   - pattern: <id du motif>      # ex. jwt, google-api-key, sourcemap, generic-secret-assign
+#     match: "<sous-chaîne exacte présente dans le finding>"
+#     reason: "<pourquoi c'est faux positif ou accepté>"
+#     reviewed: 2026-09-10
+
+entries: []
+# Exemple :
+# - pattern: sourcemap
+#   match: "dist/assets/react-"
+#   reason: "sourcemaps vendor conservées volontairement pour symboliser Sentry ; non listées par l'app"
+#   reviewed: 2026-09-10

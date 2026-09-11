@@ -1,0 +1,161 @@
+# Règles de test — Vibe Hub
+
+## Pyramide
+
+| Niveau               | Outil                              | Emplacement                         | Rôle                                                                |
+| -------------------- | ---------------------------------- | ----------------------------------- | ------------------------------------------------------------------- |
+| Unitaire             | Vitest + Testing Library           | `src/**/*.test.{js,jsx}`            | logique pure, adaptateurs (mockés), hooks, composants isolés        |
+| Contrat de service   | Vitest (SDK mockés)                | `src/services/*.test.js`            | un adaptateur + son contrat d'erreur + ses schémas Zod              |
+| Intégration (réelle) | Vitest + Testcontainers (Postgres) | `src/test/integration/*.test.js`    | migrations + RLS + RPC contre un **vrai** Postgres jetable          |
+| Property-based       | Vitest + fast-check                | `src/**/*.property.test.js`         | invariants de la logique pure, secouée par des entrées aléatoires   |
+| Simulation (seedée)  | Vitest + MSW + PRNG                | `src/test/simulation/*.sim.test.js` | invariants de résilience sous combinaisons de pannes tirées au sort |
+| E2E                  | Playwright                         | `e2e/*.spec.js`                     | parcours utilisateur + chaos réseau, sur le bundle de prod          |
+| Charge / stress      | k6                                 | `scripts/perf/*.js`                 | tenue en montée de trafic, point de rupture                         |
+
+## Couverture
+
+- Seuil **80 %** (lignes / branches / fonctions / statements), **bloquant en CI**
+  (`npm run test:cov`).
+- Périmètre mesuré aujourd'hui (`vite.config.js` → `test.coverage.include`) :
+  `src/lib/**`, `src/services/**`, `src/hooks/**`, `src/config/**`.
+- **Stratégie ratchet** : on élargit `include` (composants, pages) au fil de l'écriture des
+  tests ; **le seuil ne descend jamais**. Quand un dossier est couvert, on l'ajoute.
+- Rapports : `text` + `html` (`coverage/index.html`) + `lcov` (CI) + `json-summary`
+  (résumé dans le job GitHub).
+
+## Écrire un test unitaire
+
+- `describe` / `it` en français, un comportement par `it`.
+- Deux façons de mocker l'externe :
+  1. **`vi.mock` + `vi.hoisted`** — quand on teste une fonction en isolant ses imports
+     (voir `src/services/supabase.test.js`, query-builder chaînable).
+  2. **MSW** (`src/test/mocks/`) — quand le code fait un vrai `fetch` et qu'on veut
+     tester le chemin réseau réel (mapping d'erreur, parsing). Voir `ai.test.js` et
+     `supabase.msw.test.js`. Préférer MSW dès qu'un `fetch` est en jeu : ça survit aux
+     refactors d'implémentation.
+- Pas d'accès réseau réel, pas de vraie clé, pas de vrai Supabase.
+- Hooks : `renderHook` + `vi.useFakeTimers()` (voir `useTypewriter.test.js`).
+- `src/test/setup.js` stubbe `matchMedia`, `scrollIntoView`, `navigator.clipboard`, démarre
+  MSW (`onUnhandledRequest: 'bypass'`) et nettoie le DOM + `localStorage` + les scénarios
+  après chaque test.
+
+## Mocks réseau déterministes (MSW)
+
+> `src/test/mocks/` — l'équivalent du « simuler une bourse » de la vidéo : on ne teste
+> jamais contre le vrai Gemini / la vraie base, mais contre des réponses **figées**,
+> cas de panne compris.
+
+- **Scénarios** : `src/test/mocks/scenarios/` (`gemini.js`, `courses.js`) — jeux nommés.
+- **Activer un scénario** dans un test :
+  ```js
+  import { setGeminiScenario, setSupabaseScenario } from '../test/mocks';
+  setGeminiScenario('quotaExceeded'); // 429
+  setSupabaseScenario({ courses: 'malformedRow' }); // ligne au mauvais format
+  ```
+  Remis à `nominal` automatiquement après chaque test.
+- **Ajouter un cas de panne** : nouvelle entrée dans le fichier `scenarios/` concerné,
+  puis un `it(...)` qui l'active. Cas déjà couverts : quota, surcharge, 500, JSON tronqué,
+  complétion vide, blocage sécurité, injection de prompt dans la réponse.
+
+## Tests de régression (obligatoire)
+
+> **Chaque bug corrigé produit un test qui échoue avant le fix et passe après.**
+
+```bash
+npm run test:regression:new -- "<slug-du-bug>" [numero-issue]
+```
+
+1. Le script crée `src/test/regression/<slug>.test.js` (gabarit rouge-puis-vert).
+2. Écris l'assertion qui reproduit le bug ; vérifie qu'elle **échoue** sur le code actuel.
+3. Corrige. Le test passe.
+4. Commit `fix:` incluant le test — la CI **`fix-needs-test`** échoue si une PR au titre
+   `fix…` ne touche aucun `*.test.*`.
+
+## Tests d'intégration réels (Testcontainers)
+
+> `npm run test:integration` — config `vitest.integration.config.js`, **hors** `npm test`.
+
+- **But** : ne pas se contenter de mocker Supabase. On démarre `postgres:16-alpine`
+  dans un conteneur, on applique `supabase/migrations/*.sql`, on rejoue les rôles
+  Supabase (`anon`, `authenticated`, `service_role`) et on vérifie ce que Postgres —
+  pas le React — garantit : les **policies RLS** et la **RPC `get_waitlist_counts`**.
+- **Harnais** : `src/test/integration/helpers/db.js`
+  - `startContainer()` (dans `globalSetup.js`, un seul conteneur partagé) ;
+  - `connect(uri)` → `sql()` (admin, pour semer), `reset()` (truncate entre tests),
+    `asRole('anon' | 'authenticated', fn)` (= ce que fait PostgREST derrière un JWT).
+- **Sans Docker** : `globalSetup` expose `uri = null` → `describe.skipIf(!uri)` → la
+  suite est ignorée, `npm run test:integration` reste vert. La CI, elle, a Docker.
+- **Couvert aujourd'hui** : `anon` ne lit que les cours publiés / ne peut pas écrire ;
+  `authenticated` a le CRUD complet ; `waitlist` n'expose aucun email (AD-3), même à
+  `authenticated` ; `get_waitlist_counts` renvoie des agrégats, refuse `anon`, et
+  fonctionne en `security definer` malgré RLS (AD-4).
+- **Étend** : quand une migration ajoute une table/policy/fonction, ajouter le test
+  d'intégration correspondant dans le même commit.
+
+## Property-based & simulation (V4)
+
+> Le « il secoue avec de l'aléatoire, plein de cas » de la vidéo, appliqué au code.
+
+- **Property-based** (`src/**/*.property.test.js`, dans `npm test`) : au lieu d'exemples
+  choisis à la main, `fast-check` génère des centaines d'entrées et rétrécit le
+  contre-exemple minimal. À écrire pour toute fonction pure au contrat clair (bornes,
+  round-trip, « ne lève jamais », implications).
+- **Simulation seedée** (`npm run test:simulation`, hors `npm test`) :
+  `src/test/simulation/harness.js` tire une combinaison de pannes (scénarios MSW Gemini ×
+  Supabase × latence) à partir d'une **graine**, et `resilience.sim.test.js` vérifie des
+  **invariants de résilience** :
+  1. `generateAIResponse` renvoie toujours une string non vide ;
+  2. aucune réponse ne contient un secret (clé API) ;
+  3. `getCourses` résout en tableau **ou** lève une `Error` (jamais un rejet nu) ;
+  4. `addToWaitlist` résout toujours en `{success|duplicate|error}`.
+- **Reproduire un échec** : `SIM_SEEDS=<n> npm run test:simulation`. Le rapport
+  `reports/simulation-seed-<n>.md` donne les pannes exactes + les étapes. Corriger, puis
+  `npm run test:regression:new -- "simulation-seed-<n>"`.
+- **Ajouter un invariant** : nouveau check dans `resilience.sim.test.js` via le helper
+  `fail(phase, invariant, error)` (il écrit le rapport avant de lever).
+
+## E2E (Playwright)
+
+- Cible : le **bundle de production** (`playwright.config.js` build + `vite preview`), ou une
+  preview Vercel via `E2E_BASE_URL`.
+- **Chaos réseau** (`e2e/chaos.spec.js`) : `page.route()` coupe / casse `courses` et Gemini
+  → l'app doit afficher une erreur lisible, jamais l'ErrorBoundary (`role="alert"`).
+- Projets : `chromium` (desktop) + `mobile` (Pixel 7).
+- Parcours couverts : chargement landing + lien d'évitement + CTA sécurisé, 404, routage
+  d'onglets + URL, dégradation gracieuse de l'IA sans clé, écran de login admin.
+- Sélecteurs par **rôle / label** (`getByRole`, `getByLabel`), jamais par classe CSS.
+- `npm run e2e` · rapport : `npm run e2e:report`.
+
+## Tests de charge & stress (k6) — voir `docs/perf/load-testing.md`
+
+| Script                   | `npm run`     | Profil                                                                                                                    |
+| ------------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/perf/smoke.js`  | `perf:smoke`  | 1 VU / 30 s — sanity, **à passer en CI post-déploiement**                                                                 |
+| `scripts/perf/load.js`   | `perf:load`   | montée 50→500 VUs soutenus — trafic normal / pic marketing                                                                |
+| `scripts/perf/spike.js`  | `perf:spike`  | 10→5000 VUs en 20 s — effet viral, test de récupération                                                                   |
+| `scripts/perf/stress.js` | `perf:stress` | **paliers 1 → 5 → 10 → 20 → 30 → 50 → 100 → 250 → 500 → 1000 → 2500 → 5000 → 10 000 VUs** — recherche du point de rupture |
+
+**Règles impératives** :
+
+- Toujours viser une **préproduction dédiée** (`-e BASE_URL=…`). **Jamais la prod, jamais le
+  Supabase de prod** — un stress à 10 000 VUs est un déni de service volontaire et de la bande
+  passante facturée.
+- Le chemin API (`courses`) n'est testé que si `-e SUPABASE_URL=… -e SUPABASE_ANON_KEY=…`
+  (staging) sont passés.
+- Au-delà de ~1000 VUs soutenus, un seul runner GitHub sature : utiliser k6 Cloud
+  (`K6_CLOUD_TOKEN`) ou plusieurs runners (`--execution-segment`).
+- Seuils de réussite : `http_req_failed < 1 %`, `p95 < 800 ms`, `p99 < 2 s`, `checks > 99 %`
+  (plus tolérants pour `stress`/`spike`, qui cherchent la limite).
+- Lancement CI : workflow **`Load / Stress test`** (`workflow_dispatch` manuel, avec garde-fou
+  anti-URL-de-prod).
+
+## Ce que la CI exécute (dans l'ordre)
+
+format → lint → typecheck → semgrep → **tests unitaires (MSW + property-based)** →
+**intégration (Testcontainers)** → **simulation (12 graines)** → **e2e (+ chaos réseau)** →
+audit sécurité → **couverture (seuil)** → Lighthouse (informatif) → build → budget bundle.
+Un échec sur une étape critique casse le job `CI` (seul required check).
+
+Workflows séparés : **`fix-needs-test`** (PR `fix:` sans test → rouge), **`PR Title`**
+(Conventional Commits), **`simulation-nightly`** (200 graines, ouvre une issue `ai-fix` par
+échec), **`Load / Stress test`** (manuel).

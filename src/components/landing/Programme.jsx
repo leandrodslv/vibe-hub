@@ -1,12 +1,17 @@
 import { LayoutGrid, CreditCard, PlaySquare, Wand2, ArrowRight } from 'lucide-react';
 import assistantIaImage from '../../assets/landing/assistant-ia.jpg';
+import { appHref, MENTION_NOUVEL_ONGLET, NOUVEL_ONGLET } from '../../lib/routes';
 
 // L'IntersectionObserver qui pilote les `.reveal` vit dans LandingPage : il observe déjà
 // `document.querySelectorAll('.reveal')` pour toute la page. Le dupliquer ici faisait observer
 // deux fois les mêmes nœuds.
-export default function Programme({ onEnterApp }) {
+export default function Programme() {
   return (
-    <section id="programme" aria-labelledby="programme-titre" className="py-section-padding px-container-margin max-w-7xl mx-auto">
+    <section
+      id="programme"
+      aria-labelledby="programme-titre"
+      className="py-section-padding px-container-margin max-w-7xl mx-auto"
+    >
       <h2
         id="programme-titre"
         className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-center mb-16 max-w-2xl mx-auto text-on-surface reveal opacity-0 translate-y-12 transition-all duration-1000 ease-out"
@@ -25,15 +30,18 @@ export default function Programme({ onEnterApp }) {
               Votre co-pilote créatif toujours disponible.
             </h3>
             <p className="font-body-md text-body-md text-on-tertiary-fixed-variant mb-6">
-              Décrivez une idée de design en langage naturel et recevez un prompt structuré, prêt à générer.
+              Décrivez une idée de design en langage naturel et recevez un prompt structuré, prêt à
+              générer.
             </p>
-            <button
-              onClick={onEnterApp}
+            <a
+              href={appHref('ia')}
+              {...NOUVEL_ONGLET}
               className="bg-on-tertiary-fixed text-tertiary-fixed font-cta-pill text-cta-pill px-6 py-3 min-h-[44px] rounded-full hover:scale-105 transition-transform flex items-center gap-2 w-fit focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
               Découvrir l&apos;IA
-              <ArrowRight className="w-4 h-4" />
-            </button>
+              <span className="sr-only">{MENTION_NOUVEL_ONGLET}</span>
+              <ArrowRight className="w-4 h-4" aria-hidden="true" />
+            </a>
           </div>
           {/* Approved brand illustration from the Stitch design system (mockups/landing.html) */}
           <div className="absolute right-0 bottom-0 w-2/3 h-2/3 translate-x-1/4 translate-y-1/4 group-hover:translate-x-[15%] transition-transform duration-700 rounded-tl-[100px] overflow-hidden">
@@ -80,13 +88,18 @@ export default function Programme({ onEnterApp }) {
           className="md:col-span-12 bg-surface-container rounded-3xl p-8 flex flex-col md:flex-row items-center gap-12 overflow-hidden scroll-mt-24"
         >
           <div className="flex-1">
-            <div lang="en" className="inline-block bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full font-label-caps text-label-caps mb-4">
+            <div
+              lang="en"
+              className="inline-block bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full font-label-caps text-label-caps mb-4"
+            >
               UI Builder
             </div>
-            <h3 className="font-display-lg text-[36px] text-on-surface mb-4">Assemblez plus vite, sans compromis.</h3>
+            <h3 className="font-display-lg text-[36px] text-on-surface mb-4">
+              Assemblez plus vite, sans compromis.
+            </h3>
             <p className="font-body-md text-body-md text-on-surface-variant mb-6 max-w-lg">
-              Envoyez un prompt structuré et récupérez du code React/Tailwind fonctionnel, rendu dans un aperçu
-              sécurisé.
+              Envoyez un prompt structuré et récupérez du code React/Tailwind fonctionnel, rendu
+              dans un aperçu sécurisé.
             </p>
           </div>
           <div className="flex-1 w-full relative">
