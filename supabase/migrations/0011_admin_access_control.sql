@@ -20,11 +20,18 @@
 --     ci-dessous, un utilisateur connecté non-admin (inscrit juste pour ses
 --     notifications) n'aurait plus eu aucun accès en lecture aux cours publiés.
 --
--- ✅ APPLIQUÉ en production le 2026-09-11 en 3 migrations live :
+-- ✅ APPLIQUÉ en production le 2026-09-11 en 4 migrations live :
 --    create_admins_and_restrict_admin_surface, fix_courses_rls_gap,
---    tighten_get_waitlist_counts_grant. Vérifié après coup via pg_policies —
---    seules restent "courses: admin full access" (ALL, is_admin()) et
---    "courses: anyone reads published" (SELECT, published = true or is_admin()).
+--    tighten_get_waitlist_counts_grant, fix_is_admin_anon_grant. Vérifié après
+--    coup via pg_policies — seules restent "courses: admin full access"
+--    (ALL, is_admin()) et "courses: anyone reads published" (SELECT,
+--    published = true or is_admin()).
+--
+-- ⚠️  INCIDENT (corrigé le jour même) : la 1ʳᵉ version de cette migration
+--     révoquait EXECUTE sur is_admin() pour `anon` — cassant getCourses()
+--     pour TOUT visiteur anonyme de /app (« permission denied for function
+--     is_admin »), détecté via un test Playwright manuel contre le build de
+--     prod. Le fichier ci-dessous reflète déjà le correctif (grant à anon).
 --
 -- `public.metrics` (0002_metrics.sql) n'existe pas en production — cette
 -- migration ne touche donc que `courses`/`waitlist`, le seul périmètre admin
@@ -51,8 +58,16 @@ as $$
   select exists (select 1 from public.admins where user_id = auth.uid());
 $$;
 
-revoke execute on function public.is_admin() from public, anon;
-grant execute on function public.is_admin() to authenticated;
+-- `is_admin()` DOIT rester exécutable par `anon` : la policy "courses: anyone
+-- reads published" ci-dessous s'applique aussi à `anon` et appelle is_admin()
+-- dans son USING. Une policy RLS s'exécute dans le contexte du rôle appelant
+-- (pas en security definer, même si la fonction elle-même l'est) : sans ce
+-- grant, CHAQUE lecture anonyme de `courses` échoue avec "permission denied
+-- for function is_admin" — y compris pour un cours publié (l'OR ne dispense
+-- pas du contrôle de privilège d'exécution). Sans risque : is_admin() renvoie
+-- toujours false pour anon (auth.uid() est null), aucune donnée exposée.
+revoke execute on function public.is_admin() from public;
+grant execute on function public.is_admin() to anon, authenticated;
 
 -- ─── courses : CRUD réservé aux admins, lecture ouverte aux cours publiés ───
 drop policy if exists "courses: authenticated full access" on public.courses;
