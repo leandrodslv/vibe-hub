@@ -1,0 +1,21 @@
+-- ════════════════════════════════════════════════════════════════════════════
+-- 0005 — Durcissement RLS/RPC de edf_handle_new_user() (dette pré-existante)
+--
+-- Même problème que 0004 (advisor sécurité Supabase), sur une fonction du
+-- module EDF déjà en place (`edf_profiles`), hors périmètre Epic 7/8/9 —
+-- corrigée ici par cohérence puisque le correctif est identique et sans
+-- risque : la fonction n'a vocation qu'à être déclenchée par le trigger
+-- `edf_on_auth_user_created` sur `auth.users`, jamais appelée directement.
+-- Révoquer EXECUTE ne casse pas le trigger.
+--
+-- ✅ APPLIQUÉ en production le 2026-09-11 (migration live :
+--    lock_down_edf_handle_new_user).
+--
+-- ⚠️  Reste ouvert (hors portée SQL, réglage du dashboard Supabase) :
+--    « Leaked Password Protection » est désactivé sur le projet — à activer
+--    manuellement dans Authentication → Policies → Password sur le dashboard
+--    Supabase (aucun outil MCP disponible pour ce réglage côté Auth config).
+--    Voir https://supabase.com/docs/guides/auth/password-security
+-- ════════════════════════════════════════════════════════════════════════════
+
+revoke execute on function public.edf_handle_new_user() from public, anon, authenticated;
