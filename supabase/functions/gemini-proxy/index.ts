@@ -17,7 +17,7 @@
 //   - quota par IP / par session.
 // ════════════════════════════════════════════════════════════════════════════
 
-import { GoogleGenAI } from 'npm:@google/genai@^0.21.0';
+import { GoogleGenAI } from 'npm:@google/genai@^2.15.0';
 
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
 const MODEL = 'gemini-2.5-flash-lite';
