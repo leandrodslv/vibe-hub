@@ -7,10 +7,10 @@
  * format inattendu lève (`parseOrThrow`), il ne dégrade pas en silence.
  *
  * Deux surfaces :
- *  - `geminiTextSchema`      : le texte brut renvoyé par le SDK (`response.text()`),
- *    usage transitoire de `src/services/ai.js` (dette AD-1).
  *  - `geminiProxyResponseSchema` : le JSON de l'Edge Function `gemini-proxy`,
- *    cible de la migration serveur.
+ *    parsé par `src/services/ai.js` (`{ text }` ou `{ error, status? }`).
+ *  - `geminiTextSchema` : le champ `text` de la réponse du proxy — chaîne non
+ *    vide (une chaîne vide = complétion silencieuse à rejeter).
  */
 
 import { z } from 'zod';

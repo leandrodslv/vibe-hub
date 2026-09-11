@@ -20,7 +20,9 @@
 - [ ] Variables d'env configurées côté Vercel (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) —
       **jamais** de secret en `VITE_*`.
 - [ ] Migrations Supabase appliquées (`supabase db push`) et **RLS auditée**.
-- [ ] `supabase/functions/gemini-proxy` déployée + `GEMINI_API_KEY` en secret Supabase (AD-1).
+- [ ] `supabase/functions/gemini-proxy` déployée (`supabase functions deploy gemini-proxy --no-verify-jwt`) + `GEMINI_API_KEY` et `ALLOWED_ORIGINS` en secrets Supabase (AD-1).
+- [ ] `VITE_GEMINI_PROXY_URL` configurée côté Vercel (Preview + Production). Sans elle,
+      l'assistant IA se dégrade proprement (message « proxy non configuré »).
 - [ ] Smoke test de charge post-déploiement : `npm run perf:smoke -- -e BASE_URL=<preview>`.
 - [ ] Lighthouse : perf ≥ 80, a11y ≥ 90 (cf. `.lighthouserc.json`).
 

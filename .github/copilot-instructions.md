@@ -17,7 +17,8 @@ Référence complète : `docs/ai/`. Résumé ci-dessous.
 
 ## Interdits (le lint/semgrep/CI échoueront)
 
-- Importer `@supabase/supabase-js` ou `@google/generative-ai` ailleurs que dans `src/services/`.
+- Importer `@supabase/supabase-js` ou un SDK Gemini (`@google/generative-ai` / `@google/genai`)
+  ailleurs que dans `src/services/`. `services/ai.js` lui-même ne fait qu'un `fetch()` vers `gemini-proxy` (AD-1).
 - `import.meta.env.VITE_*` pour un secret. Utilise `src/config/env.js`.
 - `eval`, `new Function`, `dangerouslySetInnerHTML` sans `DOMPurify`.
 - Écrire un chemin de route en dur (`/app`, `/admin`) → `src/lib/routes.js`.

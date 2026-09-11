@@ -82,7 +82,7 @@ Objectif : que l'erreur d'une IA casse **au parse**, pas en prod.
 - [x] `tsconfig.json` : `noUncheckedIndexedAccess: true` (`strict` était déjà à `true`).
 - [x] Script npm `types:db` (`supabase gen types typescript --local`). ⚠️ nécessite `supabase start` — à câbler en V2.
 - [x] Tests : `src/lib/schemas/schemas.test.js` (12) + cas ajoutés dans `supabase.test.js` / `ai.test.js`. Couverture globale 95 %.
-- **Reste** : `supabase/functions/gemini-proxy/index.ts` (Deno) — valider le body entrant + `geminiProxyResponseSchema` côté client → fait en **V9** (migration AD-1).
+- **Fait (post-V10, branche `fix/ad-1-gemini-proxy`)** : `services/ai.js` réécrit en `fetch()` vers `gemini-proxy` ; `geminiProxySuccessSchema` / `geminiProxyErrorSchema` parsent la réponse ; `VITE_GEMINI_API_KEY` supprimée, dépendance `@google/generative-ai` retirée. Reste opérationnel : déployer le proxy + révoquer l'ancienne clé.
 - **Trigger** : à chaque `npm run test` / `npm run typecheck` (déjà en pre-push + CI).
 - **DoD atteint** : renommer `courses.title` en base fait échouer `getCourses` (test `SchemaError`) ; une réponse Gemini vide renvoie un message d'erreur tracé.
 
@@ -301,13 +301,14 @@ dette AD ouverte, plus de `data/courses.js`, plus d'appel Gemini navigateur.
       navigateur, `@google/generative-ai` déprécié, `src/data/courses.js` legacy, déviation
       AD-4 vue↔fonction) → `reports/tech-debt.md`.
 - [x] `.github/workflows/tech-debt.yml` : cron le 1ᵉʳ du mois → issue épinglable `tech-debt`.
-- [x] **Inventaire actuel** (au moment de la livraison) : 5 marqueurs, **1/6 invariant AD en
-      dette (AD-1)**, 4 cibles — cf. `reports/tech-debt.md`.
-- **Cible n°1 : AD-1** — faire passer 100 % des appels Gemini par `gemini-proxy`, supprimer
-  `VITE_GEMINI_API_KEY`. Détectée par V6 (`security:bundle`) **et** V9. Méthode : test de
-  caractérisation de `generateAIResponse` (MSW, déjà là) → réécrire `ai.js` en `fetch()` vers
-  le proxy → migrer le proxy sur `@google/genai` → supprimer la clé → `security:bundle` verte
-  en CI même avec un `.env`. À faire via `npm run explore -- "brancher ai.js sur gemini-proxy"`.
+- [x] **Inventaire à la livraison** : 5 marqueurs, 1/6 invariant AD en dette (AD-1), 4 cibles.
+- [x] **Cible n°1 : AD-1 — traitée** (branche `fix/ad-1-gemini-proxy`, post-V10). `ai.js` est
+      désormais un `fetch()` vers `gemini-proxy` ; le proxy est bâti sur `@google/genai` ;
+      `VITE_GEMINI_API_KEY` et la dépendance `@google/generative-ai` sont supprimées ; les tests
+      MSW/simulation modélisent la réponse du proxy. La détection V9 bascule en garde
+      anti-régression. **Reste opérationnel** (hors code) : `supabase functions deploy gemini-proxy`,
+      secrets `GEMINI_API_KEY` + `ALLOWED_ORIGINS`, `VITE_GEMINI_PROXY_URL` sur Vercel, révoquer
+      l'ancienne clé.
 - **DoD** : le nombre d'invariants AD en dette décroît à chaque sprint ; `data/courses.js`
   supprimé. L'outillage rend le suivi automatique — la réduction reste du travail de sprint.
 

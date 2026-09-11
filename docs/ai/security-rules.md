@@ -4,22 +4,22 @@
 
 ## Menaces prioritaires (par ordre de gravité actuelle)
 
-### 1. 🔴 Clé Gemini exposée dans le bundle — AD-1
+### 1. 🟠 Clé Gemini — AD-1 (résolu côté code, déploiement à finaliser)
 
-`services/ai.js` appelle Gemini **depuis le navigateur** avec `VITE_GEMINI_API_KEY`. Vite
-**inline** cette valeur dans le JS livré → **n'importe quel visiteur du site déployé peut
-l'extraire** (devtools → onglet Sources) et consommer le quota / générer du coût.
+**Côté code : réglé.** `services/ai.js` ne fait plus qu'un `fetch()` vers l'Edge Function
+`gemini-proxy`, qui détient la clé côté serveur (`GEMINI_API_KEY`, jamais `VITE_`). Plus
+aucun SDK Gemini ni clé dans le bundle ; `security:bundle` (V6) le vérifie. Le seul
+paramètre client est `VITE_GEMINI_PROXY_URL`, publique par conception.
 
-**Historique** : une 1ʳᵉ clé a déjà fuité via `test-gemini.js` (commit `51f61c7`) et reste
-dans l'historique git. La clé actuelle est d'un autre format mais **structurellement publique**.
+**Reste à faire (déploiement)** :
 
-**Correctif** :
-
-1. **Révoquer** la clé actuelle sur Google AI Studio / console.cloud.google.com.
-2. Déployer `supabase/functions/gemini-proxy` (fournie) : `supabase secrets set GEMINI_API_KEY=…`
-   puis `supabase functions deploy gemini-proxy`.
-3. Réécrire `services/ai.js` en un `fetch()` vers le proxy. Supprimer `VITE_GEMINI_API_KEY`.
-4. En transition : clé à **quota strictement plafonné** + restriction par referrer HTTP.
+1. **Révoquer** l'ancienne clé `VITE_GEMINI_API_KEY` sur Google AI Studio /
+   console.cloud.google.com — elle a été inlinée dans tous les builds locaux passés
+   (et une 1ʳᵉ clé a fuité via `test-gemini.js`, commit `51f61c7`, toujours dans l'historique git).
+2. `supabase secrets set GEMINI_API_KEY=<nouvelle clé serveur>` + `ALLOWED_ORIGINS=<domaine prod>,http://localhost:5173`.
+3. `supabase functions deploy gemini-proxy --no-verify-jwt`.
+4. Configurer `VITE_GEMINI_PROXY_URL` côté Vercel (Preview + Production) et en local (`.env`).
+5. Différé (dans le proxy, cf. Spine) : rate limiting / plafond de coût, quota par IP.
 
 ### 2. 🟠 RLS Supabase non vérifiée — AD-3 / AD-4
 

@@ -20,9 +20,10 @@ npm run e2e            # Playwright (build + preview)
 
 ## Règles non négociables
 
-1. **AD-2** — un composant/page n'importe JAMAIS `@supabase/supabase-js` ni
-   `@google/generative-ai`. Passer par `src/services/`. (lint + semgrep le vérifient)
+1. **AD-2** — un composant/page n'importe JAMAIS `@supabase/supabase-js` ni un SDK Gemini.
+   Passer par `src/services/`. (lint + semgrep le vérifient)
 2. **AD-1** — aucun secret derrière `import.meta.env.VITE_*` (inliné, public). Env → `src/config/env.js`.
+   Gemini passe par l'Edge Function `gemini-proxy` (`services/ai.js` = `fetch()`), jamais côté client.
 3. Pas d'`eval` / `new Function` / `dangerouslySetInnerHTML` sans sanitizer (AD-5).
 4. Routes (`/app`, `/admin`) jamais en dur → `src/lib/routes.js`. Liens `_blank` → `NOUVEL_ONGLET`.
 5. `JSON.parse` de donnée non fiable → `safeJsonParse` (`src/lib/validation.js`).
@@ -40,7 +41,8 @@ devient le commit sur `main`.
 
 ## Pièges connus
 
-- La clé Gemini part actuellement dans le bundle (dette AD-1, `gemini-proxy` à déployer).
+- AD-1 réglé côté code (`ai.js` → `fetch()` vers `gemini-proxy`). Reste à déployer le proxy
+  (`supabase functions deploy gemini-proxy`) + câbler `VITE_GEMINI_PROXY_URL` + révoquer l'ancienne clé.
 - Les policies RLS réelles ne sont pas vérifiées (aucune migration jusqu'à `0001`).
 - `hero-collage.png` (2 Mo) et `illustration-404.png` (1,3 Mo) plombent le LCP.
 - 6 règles `jsx-a11y` sont en `off` (dette suivie dans `docs/diagnostic-rgaa.md`) — ne pas

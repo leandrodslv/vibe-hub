@@ -33,12 +33,15 @@ test.describe('Chaos réseau — dégradation gracieuse', () => {
     await expect(page.getByRole('alert')).toHaveCount(0);
   });
 
-  test('Gemini en panne → l’assistant répond une erreur lisible, sans crash', async ({ page }) => {
-    await page.route('**/generativelanguage.googleapis.com/**', (route) =>
+  test('proxy IA en panne → l’assistant répond une erreur lisible, sans crash', async ({
+    page,
+  }) => {
+    // AD-1 : `ai.js` appelle l'Edge Function `gemini-proxy`, plus Gemini en direct.
+    await page.route('**/gemini-proxy*', (route) =>
       route.fulfill({
-        status: 503,
+        status: 502,
         contentType: 'application/json',
-        body: '{"error":{"code":503}}',
+        body: '{"error":"Échec de génération.","status":503}',
       })
     );
 
@@ -47,10 +50,10 @@ test.describe('Chaos réseau — dégradation gracieuse', () => {
     await input.fill('Bonjour');
     await input.press('Enter');
 
-    // Soit le message "clé non configurée" (CI sans clé), soit un message d'erreur
-    // de communication — jamais un crash.
+    // Selon la config CI : proxy non configuré, surcharge, ou erreur générique —
+    // jamais un crash.
     const graceful = page.getByText(
-      /clé API Gemini n.est pas configurée|une erreur s.est produite|surchargé/i
+      /proxy IA n.est pas configuré|une erreur s.est produite|surchargé/i
     );
     await expect(graceful).toBeVisible({ timeout: 20_000 });
     await expect(page.getByRole('alert')).toHaveCount(0);

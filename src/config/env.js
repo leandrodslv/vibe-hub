@@ -18,13 +18,31 @@ import { supabaseUrlSchema } from '../lib/schemas/env.js';
 /** @typedef {'development' | 'production' | 'test'} Mode */
 
 /**
- * @param {string} name
+ * Allowlist explicite des variables `VITE_*` lues par l'app.
+ *
+ * ⚠️ AD-1 — accès **statique** volontaire : `import.meta.env.NOM` littéral (jamais
+ * `import.meta.env[nom]` dynamique). Vite ne remplace que les accès qu'il peut
+ * analyser statiquement ; un accès dynamique l'oblige à inliner TOUT l'objet
+ * `import.meta.env` — donc n'importe quelle variable `VITE_*` traînant dans un
+ * `.env` local (ex. une ancienne `VITE_GEMINI_API_KEY`) finirait dans le bundle.
+ * Ajouter une variable ici est le seul moyen de la rendre lisible par l'app.
+ */
+const RAW = {
+  VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
+  VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
+  VITE_GEMINI_PROXY_URL: import.meta.env.VITE_GEMINI_PROXY_URL,
+  VITE_METRICS_URL: import.meta.env.VITE_METRICS_URL,
+  VITE_SENTRY_DSN: import.meta.env.VITE_SENTRY_DSN,
+};
+
+/**
+ * @param {keyof typeof RAW} name
  * @param {{ required?: boolean, fallback?: string }} [opts]
  * @returns {string}
  */
 function read(name, opts = {}) {
   const { required = true, fallback = '' } = opts;
-  const raw = import.meta.env?.[name];
+  const raw = RAW[name];
   const value = typeof raw === 'string' ? raw.trim() : '';
 
   if (!value || value.startsWith('<') || value === 'your_api_key_here') {
@@ -70,9 +88,11 @@ export const env = Object.freeze({
   supabaseAnonKey: read('VITE_SUPABASE_ANON_KEY'),
 
   /**
-   * ⚠️ Clé exposée dans le bundle (AD-1). Usage transitoire jusqu'au proxy serveur.
+   * URL de l'Edge Function `gemini-proxy` (AD-1 : la clé Gemini réelle vit côté
+   * serveur, jamais dans le bundle). Vide → l'assistant IA se dégrade proprement
+   * (cf. `isAiConfigured`). Cette URL est publique par conception.
    */
-  geminiApiKey: read('VITE_GEMINI_API_KEY', { required: false }),
+  geminiProxyUrl: read('VITE_GEMINI_PROXY_URL', { required: false }),
 
   /** Endpoint de collecte des métriques / erreurs (V10). Vide → log seul. */
   metricsUrl: read('VITE_METRICS_URL', { required: false }),
@@ -86,7 +106,7 @@ export function isSupabaseConfigured() {
   return Boolean(env.supabaseUrl && env.supabaseAnonKey);
 }
 
-/** @returns {boolean} true si l'assistant IA peut répondre. */
+/** @returns {boolean} true si l'assistant IA peut répondre (proxy configuré). */
 export function isAiConfigured() {
-  return Boolean(env.geminiApiKey);
+  return Boolean(env.geminiProxyUrl);
 }

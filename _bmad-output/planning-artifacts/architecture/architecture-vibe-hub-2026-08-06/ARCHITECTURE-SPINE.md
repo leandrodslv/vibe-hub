@@ -53,6 +53,7 @@ flowchart LR
 - **Binds:** FR-5 (IA chat), FR-7 (UI Builder)
 - **Prevents:** the Gemini API key shipping in the browser bundle (current state: `VITE_GEMINI_API_KEY` is inlined by Vite and extractable from devtools — an open abuse/cost vector the PRD itself flags as rising, not static)
 - **Rule:** all Gemini calls go through a Supabase Edge Function (`gemini-proxy`, Deno runtime, built on `@google/genai` — see Stack). `services/ai.js` calls the Edge Function over HTTPS, never a Gemini SDK directly from the browser. The Gemini key lives only in Edge Function server-side env, never in a `VITE_`-prefixed variable.
+- **Status (branch `fix/ad-1-gemini-proxy`):** ✅ satisfied in code. `services/ai.js` is now a single `fetch()` to `env.geminiProxyUrl` (`{ history, systemInstruction }` → `{ text } | { error, status? }`); the `@google/generative-ai` dependency is removed; the only client-side env var is `VITE_GEMINI_PROXY_URL` (public). Remaining operational work: deploy `gemini-proxy`, set `GEMINI_API_KEY` + `ALLOWED_ORIGINS` secrets, wire `VITE_GEMINI_PROXY_URL` on Vercel, revoke the previously-inlined key.
 
 ### AD-2 — Service Adapters are the only importers of external SDKs
 

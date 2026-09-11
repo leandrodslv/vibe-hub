@@ -5,7 +5,12 @@
  */
 
 export { server, resetScenarios } from './server.js';
-export { setGeminiScenario, setGeminiLatency, geminiRequests } from './handlers/gemini.js';
+export {
+  setGeminiScenario,
+  setGeminiLatency,
+  geminiRequests,
+  GEMINI_PROXY_TEST_URL,
+} from './handlers/gemini.js';
 export { setSupabaseScenario, setSupabaseLatency } from './handlers/supabase.js';
 export { geminiScenarios } from './scenarios/gemini.js';
 export { courseScenarios, makeCourseRow } from './scenarios/courses.js';

@@ -34,7 +34,7 @@ export const supabaseUrlSchema = z
 export const envSchema = z.object({
   VITE_SUPABASE_URL: supabaseUrlSchema.optional(),
   VITE_SUPABASE_ANON_KEY: z.string().optional(),
-  VITE_GEMINI_API_KEY: z.string().optional(),
+  VITE_GEMINI_PROXY_URL: z.string().optional(),
 });
 
 export { isFilled };

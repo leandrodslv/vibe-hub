@@ -80,6 +80,31 @@ module.exports = {
   },
   overrides: [
     {
+      // AD-1 : aucun SDK Gemini dans `src/` — même `services/ai.js` fait un
+      // `fetch()` vers l'Edge Function. Le SDK `@google/genai` ne vit QUE dans
+      // supabase/functions/gemini-proxy (Deno). Cet override est REMPLACÉ (pas
+      // fusionné) par le suivant pour components/pages — d'où la répétition là-bas.
+      files: ['src/**/*.{js,jsx}'],
+      rules: {
+        'no-restricted-imports': [
+          'error',
+          {
+            paths: [
+              {
+                name: '@google/generative-ai',
+                message: 'AD-1 : SDK Gemini retiré du client. ai.js fetch() le proxy gemini-proxy.',
+              },
+              {
+                name: '@google/genai',
+                message:
+                  'AD-1 : le SDK Gemini ne vit que dans supabase/functions/gemini-proxy (Deno), jamais dans src/.',
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
       // Adaptateurs de services : seule couche autorisée à importer un SDK externe
       // (Architecture Spine AD-2). Interdit l'import direct depuis les composants.
       files: ['src/components/**/*.{js,jsx}', 'src/pages/**/*.{js,jsx}'],
@@ -96,7 +121,12 @@ module.exports = {
               {
                 name: '@google/generative-ai',
                 message:
-                  'AD-1/AD-2 : les appels Gemini passent par src/services/ai.js (puis un proxy serveur).',
+                  'AD-1/AD-2 : les appels Gemini passent par src/services/ai.js (qui fetch() le proxy gemini-proxy).',
+              },
+              {
+                name: '@google/genai',
+                message:
+                  'AD-1/AD-2 : les appels Gemini passent par src/services/ai.js (qui fetch() le proxy gemini-proxy).',
               },
             ],
           },
