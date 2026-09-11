@@ -10,6 +10,11 @@
 --     avant de l'appliquer, auditer les politiques réelles du projet Supabase
 --     (`supabase db dump` ou l'éditeur SQL) — les tables peuvent déjà exister
 --     avec d'autres policies.
+--
+-- ⚠️  SUPERSEDÉ pour `courses` par 0011_admin_access_control.sql (2026-09-11) :
+--     l'audit qui l'a appliquée a trouvé un schéma réel divergent de celui
+--     décrit ci-dessous (policies `auth_insert`/`auth_update`/`auth_delete`/
+--     `public_select`, non documentées ici) — 0011 fait foi pour `courses`.
 -- ════════════════════════════════════════════════════════════════════════════
 
 -- ─── courses ───────────────────────────────────────────────────────────────
