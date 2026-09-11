@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ArrowRight, Menu, X } from 'lucide-react';
 import { appHref, MENTION_NOUVEL_ONGLET, NOUVEL_ONGLET } from '../../lib/routes';
+import { useNotifications } from '../../hooks/useNotifications.js';
 
 const LINKS = [
   { href: '#top', label: 'Accueil' },
@@ -11,6 +12,7 @@ const LINKS = [
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeHref, setActiveHref] = useState(LINKS[0].href);
+  const { badgeCount, unreadCount } = useNotifications();
 
   return (
     <nav
@@ -52,8 +54,12 @@ export default function Navbar() {
           <a
             href={appHref('notifications')}
             {...NOUVEL_ONGLET}
-            aria-label={`Notifications${MENTION_NOUVEL_ONGLET}`}
-            className="hidden md:flex w-10 h-10 rounded-full bg-surface-container items-center justify-center text-on-surface hover:bg-surface-variant transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            aria-label={
+              badgeCount
+                ? `Notifications, ${unreadCount} non lues${MENTION_NOUVEL_ONGLET}`
+                : `Notifications${MENTION_NOUVEL_ONGLET}`
+            }
+            className="relative hidden md:flex w-10 h-10 rounded-full bg-surface-container items-center justify-center text-on-surface hover:bg-surface-variant transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             <span
               className="material-symbols-outlined text-[20px]"
@@ -62,6 +68,14 @@ export default function Navbar() {
             >
               notifications
             </span>
+            {badgeCount > 0 && (
+              <span
+                aria-hidden="true"
+                className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-error text-on-error text-[11px] font-bold leading-[18px] text-center"
+              >
+                {badgeCount > 9 ? '9+' : badgeCount}
+              </span>
+            )}
           </a>
           <span
             aria-hidden="true"

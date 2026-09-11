@@ -54,7 +54,7 @@ export default function WorkspacePage() {
         <div
           className={`w-full h-full min-h-0 overflow-hidden ${activeTab === 'notifications' ? '' : 'hidden'}`}
         >
-          <NotificationsTab />
+          <NotificationsTab onNavigate={setActiveTab} />
         </div>
       </main>
     </div>

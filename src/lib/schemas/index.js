@@ -16,6 +16,15 @@ export {
 } from './course.js';
 export { waitlistCountSchema, waitlistCountArraySchema } from './waitlist.js';
 export {
+  notificationSchema,
+  notificationArraySchema,
+  notificationCategorySchema,
+  notificationPreferencesSchema,
+  NOTIFICATION_CATEGORIES,
+  DEFAULT_PREFERENCES,
+  CATEGORY_PREF_KEY,
+} from './notification.js';
+export {
   geminiTextSchema,
   geminiProxyResponseSchema,
   geminiProxySuccessSchema,

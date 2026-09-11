@@ -1,5 +1,19 @@
 import { Bot, Wrench, Bell, Settings } from 'lucide-react';
 import { ROUTES } from '../../lib/routes';
+import { useNotifications } from '../../hooks/useNotifications.js';
+
+/** Pastille du nombre de non-lus sur la cloche (FR-13, UX-DR22). Rien si 0. */
+function BellBadge({ count }) {
+  if (!count) return null;
+  return (
+    <span
+      aria-hidden="true"
+      className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-error text-on-error text-[11px] font-bold leading-[18px] text-center"
+    >
+      {count > 9 ? '9+' : count}
+    </span>
+  );
+}
 
 // "view_quilt" reprend l'icône du nav Modules/Cours telle que produite par Stitch
 // (mockups/modules.html), d'où le glyphe Material Symbols plutôt qu'un icône Lucide
@@ -32,6 +46,7 @@ function TabIcon({ tab, active }) {
 // Le logo est un lien vers la landing et non un bouton : le logiciel vit à sa propre URL,
 // « revenir à l'accueil » est donc une navigation, pas un changement d'état local.
 export default function Sidebar({ activeTab, onTabChange }) {
+  const { badgeCount, unreadCount } = useNotifications();
   return (
     <>
       {/* Sidebar desktop */}
@@ -75,8 +90,16 @@ export default function Sidebar({ activeTab, onTabChange }) {
                 : 'text-on-surface-variant hover:text-primary hover:scale-105'
             }`}
           >
-            <Bell className="w-5 h-5" aria-hidden="true" />
+            <span className="relative">
+              <Bell className="w-5 h-5" aria-hidden="true" />
+              <BellBadge count={badgeCount} />
+            </span>
             Notifications
+            {unreadCount > 0 && (
+              <span className="sr-only" aria-live="polite">
+                {unreadCount} non lues
+              </span>
+            )}
           </button>
           {/* Décoratif : pas d'écran de profil en v1 (pas d'auth), même traitement que les
               icônes non fonctionnelles du Navbar landing. */}
@@ -105,11 +128,12 @@ export default function Sidebar({ activeTab, onTabChange }) {
           <button
             type="button"
             onClick={() => onTabChange('notifications')}
-            aria-label="Notifications"
+            aria-label={badgeCount ? `Notifications, ${unreadCount} non lues` : 'Notifications'}
             aria-current={activeTab === 'notifications' ? 'page' : undefined}
-            className={`rounded-lg ${FOCUS_RING} ${activeTab === 'notifications' ? 'text-primary' : 'text-on-surface-variant'}`}
+            className={`relative rounded-lg ${FOCUS_RING} ${activeTab === 'notifications' ? 'text-primary' : 'text-on-surface-variant'}`}
           >
             <Bell className="w-5 h-5" aria-hidden="true" />
+            <BellBadge count={badgeCount} />
           </button>
           {/* Décoratif : pas d'écran de profil en v1 (pas d'auth). */}
           <Settings className="w-5 h-5 text-on-surface-variant" aria-hidden="true" />
