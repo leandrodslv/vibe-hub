@@ -85,6 +85,37 @@ flowchart LR
 - **Prevents:** a feature inventing its own ad-hoc storage (`sessionStorage`, `IndexedDB`, a new global store) and fragmenting where "state" lives
 - **Rule:** durable/shared data (`courses`, `waitlist`) lives in Supabase, reached only via `services/supabase.js` (AD-2). Ephemeral, per-browser, non-authoritative UI state (Course Progress per FR-3; IA tab sessions/projects/skills, already true today) lives in `localStorage` under feature-prefixed keys (`ai_*`, `progress_*`). No global state manager (Redux/Zustand/Context-as-store) is introduced — component-local `useState` stays the pattern.
 
+## Post-v1 Amendments
+
+### PVA-1 — Workspace authentication, progressive gate (2026-09-10)
+
+Resolves the "Full user authentication (v2)" item below, scoped to the Notification Center
+(`epics-notifications.md`, Epic 7/8/9).
+
+- **Decision:** real Supabase Auth on the Workspace, applied as a **progressive gate** —
+  `/app` stays open for anonymous browsing exactly as today (Modules/IA/Outils unaffected,
+  FR-1 / Story 1.2 unchanged). Only per-user features — notifications, preferences, persistent
+  progress — require sign-in. An unauthenticated visitor hitting one of these sees a sign-in
+  affordance/prompt, never an error.
+- **Binds:** FR-10..FR-17, NFR6 (per-user isolation).
+- **Extends AD-2:** the Workspace and `/admin` converge on one auth adapter — the existing
+  `signIn`/`signOut`/`getSession`/`onAuthChange` wrappers in `services/supabase.js`, now joined
+  by `signUp`/`getCurrentUser`. No component calls `supabase.auth.*` directly.
+- **Extends AD-6:** notification data is durable/shared (Supabase, RLS-scoped per user) or,
+  when Supabase isn't configured, a `localStorage` demo fallback under `notif_*` keys — same
+  two-tier split, no third tier.
+- **New invariants (AD-7..AD-10)**, see `epics-notifications.md` Requirements Inventory:
+  AD-7 (notification data reached only via `services/supabase.js`, cross-tree access via the
+  non-store `useNotifications` hook), AD-8 (notification generation — email, reminders, event
+  triggers — server-side only: Edge Functions / `pg_cron` / `security definer` triggers, never
+  client-side `insert`), AD-9 (live badge updates via Supabase Realtime `postgres_changes`,
+  wrapped in the service layer, polling fallback when unconfigured), AD-10 (`snake_case`
+  columns, `uuid` ids, `created_at DESC` sanctioned specifically for the notification feed).
+- **Status (2026-09-11):** schema + RLS live in production (`0003_notifications.sql`,
+  hardened by `0004_notifications_hardening.sql`); client wrappers, hook, and UI implemented
+  and tested. Sign-up UI and a Workspace-wide "Se connecter" entry point (Story 7.1) and the
+  server-side generators (Stories 9.4-9.6) remain open — see `sprint-status.yaml`.
+
 ## Consistency Conventions
 
 | Concern | Convention |
@@ -157,7 +188,7 @@ flowchart TB
 - **Sandbox transform/runtime for FR-7** (AD-5 fixes the isolation boundary, not the library). Web-verified 2026-08-06: Sandpack (CodeSandbox) is no longer actively maintained as of March 2026; `react-live`'s latest release (4.1.8) is ~2 years stale. Neither is a safe new dependency to pin here. Resolve at implementation time against the then-current landscape (candidates to re-evaluate: `@babel/standalone` + hand-rolled iframe transform, or whatever has emerged as the maintained option).
 - **SPA host: Vercel vs Netlify** — user deferred; either satisfies AD-1/AD-3 identically since both are static hosts with no server responsibility. Pick at deploy time.
 - **Existing Supabase schema/RLS state** — no migration files exist in the repo; AD-3/AD-4 describe the target state, not a verified current state. First implementation step for FR-4/FR-9 must audit the live Supabase project's actual policies before assuming a clean slate.
-- **Full user authentication (v2)** — explicitly out of MVP scope per PRD §6.2; this spine's AD-6 persistence split (Supabase vs localStorage) is designed so that promoting Course Progress and IA-tab sessions from `localStorage` to per-user Supabase rows later is additive, not a rewrite — but the actual v2 auth model itself is undecided and out of this spine's scope.
+- **Full user authentication (v2)** — explicitly out of MVP scope per PRD §6.2; this spine's AD-6 persistence split (Supabase vs localStorage) is designed so that promoting Course Progress and IA-tab sessions from `localStorage` to per-user Supabase rows later is additive, not a rewrite — but the actual v2 auth model itself is undecided and out of this spine's scope. **Resolved for the Notification Center scope by PVA-1** (progressive gate) — Course Progress / IA-tab promotion to per-user rows remains deferred beyond that.
 - **Rate limiting / cost ceiling on Gemini usage** — PRD Constraints (§8) flags this as needed before SM-1 is actively optimized against; the Edge Function (AD-1) is the natural enforcement point once a limit is defined, but no limit is defined yet.
 - **Observability/logging** — no logging/monitoring convention exists in the codebase or PRD; not decided here, flagged as an open dimension for whoever builds the Edge Function.
 - **Vite 5.4.0 / Tailwind 3.4.7 version debt** (web-verified 2026-08-06) — Vite 5.4.0 is outside the currently-backported security-patch set (6.4/7.3/8.0/8.1 are patched; current major is 8.x), and Tailwind v4 is now the default for new work. Neither is architecturally load-bearing (Vite is build-time only; Tailwind's utility-class usage here doesn't lean on v4-only features) — a version bump is implementation housekeeping, not a spine decision, but shouldn't be silently ignored indefinitely.

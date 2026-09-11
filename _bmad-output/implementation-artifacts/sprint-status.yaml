@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-08-06
-last_updated: 2026-08-06 (story 1-1 in review)
+last_updated: 2026-09-11 (epic-7/8/9 notifications — client-side implémenté, migration 7.2 appliquée en prod)
 project: vibe-hub
 project_key: NOKEY
 tracking_system: file-system
@@ -80,3 +80,33 @@ development_status:
   6-1-join-the-waitlist-for-a-not-yet-built-tool: backlog
   6-2-view-aggregated-waitlist-demand-in-admin: backlog
   epic-6-retrospective: optional
+
+  # Notification Center — epics-notifications.md (FR-10..FR-17, NFR6-8, AD-7..AD-10).
+  # Décision PVA-1 (2026-09-10, ARCHITECTURE-SPINE.md) : vraie auth Supabase sur le
+  # Workspace, en gate progressif — /app reste ouvert en navigation anonyme (FR-1,
+  # 1-2 inchangée) ; seuls notifications/préférences/progression exigent une session.
+  epic-7: in-progress
+  7-1-real-supabase-auth-on-the-workspace-progressive-gate: in-progress  # signIn/signUp + gate OK ; pas de flux d'inscription en UI ni de point d'entrée hors onglet Notifications
+  7-2-notification-and-preference-schema-with-per-user-rls: done  # migration appliquée en prod le 2026-09-11 (audit préalable clean) + durcissement RLS/RPC (0004) ; advisor sécurité vérifié
+  7-3-notification-service-wrappers: review  # services/supabase.js + notifications.test.js (14 tests)
+  7-4-shared-unread-count-hook: review  # hooks/useNotifications.js + useNotifications.test.js (12 tests)
+  7-5-real-notification-feed-replaces-the-mock: review  # NotificationsTab.jsx branché sur le hook
+  epic-7-retrospective: optional
+
+  epic-8: review
+  8-1-mark-a-single-notification-as-read: review
+  8-2-mark-all-notifications-as-read: review
+  8-3-act-on-a-notification: review  # activate() : deep-link interne (tab), externe (_blank), navigation pleine
+  8-4-dismiss-a-notification: review  # gestion du focus (feedRef) à la suppression
+  8-5-unread-badge-on-the-bell: review  # Sidebar.jsx + Navbar.jsx, cap "9+"
+  8-6-relative-timestamps-and-live-refresh: review  # lib/relativeTime.js + Realtime (postgres_changes) / polling 60s de repli
+  epic-8-retrospective: optional
+
+  epic-9: in-progress
+  9-1-persist-notification-preferences: review  # updateNotificationPreferences, optimistic + rollback
+  9-2-category-toggles-filter-the-feed: review
+  9-3-master-switch-and-quiet-hours-suppress-the-badge: review  # isQuietHour(), badgeSuppressed
+  9-4-email-digest-channel: backlog  # Edge Function digest — nécessite un choix de fournisseur email
+  9-5-learning-reminder-scheduler: backlog  # pg_cron + Edge Function
+  9-6-event-driven-notification-generation: backlog  # déclencheurs serveur (cours publié / module terminé / outil en beta) — sans ça le flux reste vide en réel
+  epic-9-retrospective: optional

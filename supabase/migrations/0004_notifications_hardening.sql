@@ -1,0 +1,24 @@
+-- ════════════════════════════════════════════════════════════════════════════
+-- 0004 — Durcissement RLS/RPC de handle_new_user_notification_prefs()
+--
+-- Suite à 0003 : le linter sécurité Supabase (`get_advisors`) signale que toute
+-- fonction `security definer` du schéma public est exposée en RPC
+-- (`/rest/v1/rpc/...`) par défaut, même sans usage prévu côté client. C'est le
+-- cas de `handle_new_user_notification_prefs()`, qui n'a vocation qu'à être
+-- déclenchée par le trigger `on_auth_user_created_notif_prefs` sur
+-- `auth.users` — jamais appelée directement.
+--
+-- Révoquer EXECUTE ne casse pas le trigger : le déclenchement d'un trigger ne
+-- passe pas par le privilège EXECUTE du rôle appelant.
+--
+-- ✅ APPLIQUÉ en production le 2026-09-11 (migration live :
+--    lock_down_notification_prefs_trigger_fn). Vérifié : 0 finding
+--    « SECURITY DEFINER function executable » restant pour cette fonction.
+--
+-- Dette pré-existante non traitée ici (hors périmètre Epic 7/8/9, à signaler
+-- séparément) : `public.edf_handle_new_user()` a le même problème, et la
+-- protection « mot de passe compromis » (HaveIBeenPwned) est désactivée sur
+-- le projet.
+-- ════════════════════════════════════════════════════════════════════════════
+
+revoke execute on function public.handle_new_user_notification_prefs() from public, anon, authenticated;

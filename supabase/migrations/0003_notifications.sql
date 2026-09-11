@@ -9,8 +9,10 @@
 --
 -- NFR6 : isolation par utilisateur, appliquée par RLS — jamais par le React.
 --
--- ⚠️  ÉTAT CIBLE. Auditer le schéma réel du projet Supabase avant d'appliquer
---     (les tables peuvent déjà exister). La numérotation suit 0001 / 0002.
+-- ✅ APPLIQUÉ en production le 2026-09-11 sur le projet Vibe Hub (schéma audité
+--    au préalable : ni `notifications` ni `notification_preferences` n'existaient).
+--    Migration live : 20260911134408_create_notifications. Durcissement RLS
+--    complémentaire dans 0004_notifications_hardening.sql (advisor sécurité).
 --
 -- Dépend de : Supabase Auth actif sur le Workspace (Story 7.1, gate progressif).
 --             `auth.uid()` doit résoudre l'utilisateur connecté.
