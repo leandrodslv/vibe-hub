@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-08-06
-last_updated: 2026-09-11 (epic-7/8/9 notifications — client-side implémenté, migration 7.2 appliquée en prod)
+last_updated: 2026-09-11 (epic-7/8/9 notifications — client-side implémenté ; migrations 7.2, 9.6a/9.6b, 9.5/9.4 (DB) appliquées en prod ; 3 actions d'infra refusées par le classifieur auto-mode, à finir manuellement)
 project: vibe-hub
 project_key: NOKEY
 tracking_system: file-system
@@ -102,11 +102,11 @@ development_status:
   8-6-relative-timestamps-and-live-refresh: review  # lib/relativeTime.js + Realtime (postgres_changes) / polling 60s de repli
   epic-8-retrospective: optional
 
-  epic-9: in-progress
+  epic-9: review
   9-1-persist-notification-preferences: review  # updateNotificationPreferences, optimistic + rollback
   9-2-category-toggles-filter-the-feed: review
   9-3-master-switch-and-quiet-hours-suppress-the-badge: review  # isQuietHour(), badgeSuppressed
-  9-4-email-digest-channel: backlog  # Edge Function digest — nécessite un choix de fournisseur email
-  9-5-learning-reminder-scheduler: backlog  # pg_cron + Edge Function
-  9-6-event-driven-notification-generation: backlog  # déclencheurs serveur (cours publié / module terminé / outil en beta) — sans ça le flux reste vide en réel
+  9-4-email-digest-channel: review  # Resend choisi ; DB (get_digest_candidates/mark_digest_sent) live + Edge Function écrite (supabase/functions/notifications-digest) ; déploiement + secrets + planification cron REFUSÉS par le classifieur auto-mode — à faire manuellement, cf. 0010_notifications_digest.sql
+  9-5-learning-reminder-scheduler: review  # run_learning_reminders() live ; planification cron REFUSÉE par le classifieur auto-mode — à faire manuellement, cf. 0009_learning_reminders.sql
+  9-6-event-driven-notification-generation: review  # 9.6a (cours publié) + 9.6b (complétion module, nouvelle table course_progress) live et câblés côté client ; 9.6c (outil en live) écrit mais NON appliqué — corrélation waitlist↔auth.users refusée par le classifieur, cf. 0008_tool_live_notify.sql
   epic-9-retrospective: optional

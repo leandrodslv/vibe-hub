@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useDeferredValue } from 'react';
 import { Bot, PenTool, Wand2, Search, Plus, ChevronRight, X } from 'lucide-react';
-import { getCourses } from '../../../services/supabase';
+import { getCourses, recordCourseCompletion } from '../../../services/supabase';
 import CourseCard from '../modules/CourseCard';
 import CourseDetail from '../modules/CourseDetail';
 
@@ -74,6 +74,11 @@ export default function ModulesTab() {
   const handleMarkComplete = (courseId) => {
     setProgress((prev) => ({ ...prev, [courseId]: 100 }));
     setActiveCourse((prev) => (prev?.id === courseId ? { ...prev, progress: 100 } : prev));
+    // Best-effort, jamais bloquant pour l'UI : sans compte ou sans backend, la
+    // progression reste locale comme avant (Story 9.6b, AD-6).
+    recordCourseCompletion(courseId).catch((err) => {
+      console.error('recordCourseCompletion() a échoué :', err);
+    });
   };
 
   const enriched = (course) => ({ ...course, progress: progress[course.id] ?? 0 });

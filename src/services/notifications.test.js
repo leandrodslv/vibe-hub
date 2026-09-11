@@ -135,6 +135,11 @@ describe('notifications — repli localStorage (Supabase non configuré)', () =>
     const unsub = svc.onNotificationsChange(vi.fn());
     expect(() => unsub()).not.toThrow();
   });
+
+  it('recordCourseCompletion est un no-op silencieux sans backend', async () => {
+    await expect(svc.recordCourseCompletion('c1')).resolves.toBeUndefined();
+    expect(h.from).not.toHaveBeenCalledWith('course_progress');
+  });
 });
 
 describe('notifications — Supabase configuré', () => {
@@ -196,5 +201,32 @@ describe('notifications — Supabase configuré', () => {
     expect(h.channelHandle.subscribe).toHaveBeenCalled();
     off();
     expect(h.removeChannel).toHaveBeenCalled();
+  });
+
+  describe('recordCourseCompletion (Story 9.6b)', () => {
+    it('ne fait rien si personne n’est connecté', async () => {
+      h.auth.getSession.mockResolvedValueOnce({ data: { session: null }, error: null });
+      await svc.recordCourseCompletion('c1');
+      expect(h.from).not.toHaveBeenCalledWith('course_progress');
+    });
+
+    it('upsert la complétion avec ignoreDuplicates (idempotence, retry réseau)', async () => {
+      h.auth.getSession.mockResolvedValueOnce({
+        data: { session: { user: { id: 'u1' } } },
+        error: null,
+      });
+      setResult({ data: null, error: null });
+      await svc.recordCourseCompletion('c1');
+      expect(h.from).toHaveBeenCalledWith('course_progress');
+    });
+
+    it('relance sur erreur Postgres', async () => {
+      h.auth.getSession.mockResolvedValueOnce({
+        data: { session: { user: { id: 'u1' } } },
+        error: null,
+      });
+      setResult({ data: null, error: { message: 'échec upsert' } });
+      await expect(svc.recordCourseCompletion('c1')).rejects.toThrow(/échec upsert/);
+    });
   });
 });

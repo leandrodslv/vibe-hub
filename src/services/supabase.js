@@ -284,6 +284,31 @@ export function onNotificationsChange(onChange) {
   };
 }
 
+/**
+ * Enregistre la complétion d'un cours par l'utilisateur connecté (Story 9.6b) :
+ * déclenche server-side une notification « Succès » via le trigger Postgres
+ * `on_course_progress_insert` (AD-8 — le client n'insère jamais dans `notifications`
+ * lui-même). Upsert idempotent : un clic répété ou un retry réseau ne recrée pas
+ * la notification (`on conflict do nothing` sur la clé `(user_id, course_id)`).
+ *
+ * No-op silencieux si Supabase n'est pas configuré ou si personne n'est connecté —
+ * la progression reste alors purement locale/éphémère (AD-6), comme aujourd'hui.
+ * @param {string} courseId
+ */
+export async function recordCourseCompletion(courseId) {
+  if (!isSupabaseConfigured()) return;
+  const user = await getCurrentUser();
+  if (!user) return;
+
+  const { error } = await supabase
+    .from('course_progress')
+    .upsert(
+      { user_id: user.id, course_id: courseId },
+      { onConflict: 'user_id,course_id', ignoreDuplicates: true }
+    );
+  if (error) rethrow('recordCourseCompletion', error);
+}
+
 /* ─── Waitlist ─── */
 export async function addToWaitlist(toolId, email) {
   if (!isSupabaseConfigured()) return { error: 'Service indisponible.' };

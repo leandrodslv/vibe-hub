@@ -114,8 +114,15 @@ Resolves the "Full user authentication (v2)" item below, scoped to the Notificat
 - **Status (2026-09-11):** schema + RLS live in production (`0003_notifications.sql`,
   hardened by `0004_notifications_hardening.sql`); client wrappers, hook, and UI implemented
   and tested, including sign-up (with the email-confirmation-required path handled) and a
-  Workspace-wide "Se connecter"/"Se déconnecter" entry point in the sidebar (Story 7.1). Only
-  the server-side generators (Stories 9.4-9.6) remain open — see `sprint-status.yaml`.
+  Workspace-wide "Se connecter"/"Se déconnecter" entry point in the sidebar (Story 7.1).
+  Server-side generators (Stories 9.4-9.6, migrations `0006`-`0010`): course-published and
+  course-completion triggers are live and wired to the client (`course_progress` is a further,
+  narrow AD-6 extension — only the binary completion event is promoted server-side, fine-grained
+  % progress stays local); the reminder-scheduler and email-digest functions are live in the DB
+  and the digest Edge Function is written. Three infra actions (pg_cron scheduling ×2, the Edge
+  Function deploy, and the tool-live/waitlist correlation function) were refused by this session's
+  auto-mode classifier and are documented as manual steps — see `sprint-status.yaml` and the
+  migration files' headers.
 
 ## Consistency Conventions
 
