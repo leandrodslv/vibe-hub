@@ -1,0 +1,17 @@
+name: Vibe Hub — CodeQL
+
+# CodeQL analyse le code qui atterrit dans le bundle livré ou dans une Edge
+# Function : c'est là qu'une « erreur générée par une IA » devient exploitable.
+#
+# `scripts/` et `e2e/` sont exclus : outillage CLI de développement (jamais
+# bundlé, jamais exécuté sur une entrée d'un visiteur). Leurs alertes réelles
+# (clé d'API passée à `fetch`, sortie LLM écrite dans un rapport `reports/*.md`
+# à chemin fixe, création de fichier de scaffold) sont des faux positifs pour
+# notre surface d'attaque. La qualité de ces scripts est tenue par ESLint +
+# `npm run typecheck`.
+paths-ignore:
+  - scripts
+  - e2e
+
+queries:
+  - uses: security-and-quality
