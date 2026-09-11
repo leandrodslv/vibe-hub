@@ -18,7 +18,7 @@ import {
 import { useNotifications } from '../../../hooks/useNotifications.js';
 import { relativeTime } from '../../../lib/relativeTime.js';
 import { WORKSPACE_TABS } from '../../../lib/routes.js';
-import { signIn } from '../../../services/supabase.js';
+import { signIn, signUp } from '../../../services/supabase.js';
 
 // Métadonnées d'affichage par catégorie (enum DB → visuel Franc).
 const CATEGORY_META = {
@@ -123,16 +123,62 @@ function SkeletonCard() {
   );
 }
 
-function SignInPrompt() {
+/** Traduit les erreurs Supabase Auth les plus courantes à l'inscription (UI en français). */
+function mapSignUpError(message) {
+  if (/already registered|already exists/i.test(message)) {
+    return 'Un compte existe déjà avec cet email.';
+  }
+  if (/password/i.test(message)) {
+    return 'Mot de passe trop faible (6 caractères minimum).';
+  }
+  return 'Impossible de créer le compte. Réessayez.';
+}
+
+/**
+ * Formulaire d'authentification du gate progressif (Story 7.1, PVA-1) : connexion et
+ * inscription, dans le même composant pour ne pas dupliquer la logique de soumission.
+ * Passe par les wrappers `services/supabase.js` uniquement (AD-2).
+ */
+function AuthPrompt() {
+  const [mode, setMode] = useState(/** @type {'signin' | 'signup'} */ ('signin'));
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
+  const isSignup = mode === 'signup';
+
+  const toggleMode = () => {
+    setMode(isSignup ? 'signin' : 'signup');
+    setError('');
+    setNotice('');
+  };
 
   const submit = async (e) => {
     e.preventDefault();
     setBusy(true);
     setError('');
+    setNotice('');
+
+    if (isSignup) {
+      const res = await signUp(email, password);
+      setBusy(false);
+      if (res.error) {
+        setError(mapSignUpError(res.error));
+        return;
+      }
+      if (!res.session) {
+        // Confirmation par email requise côté projet : pas de session immédiate.
+        setNotice(
+          'Compte créé ! Vérifiez votre boîte mail pour confirmer votre adresse, puis connectez-vous.'
+        );
+        setMode('signin');
+        setPassword('');
+      }
+      // `res.session` présent (auto-confirmation activée) : `onAuthChange` rebranche le flux.
+      return;
+    }
+
     const res = await signIn(email, password);
     setBusy(false);
     if (res.error) setError('Identifiants incorrects.');
@@ -146,7 +192,7 @@ function SignInPrompt() {
       </div>
       <div>
         <h1 className="font-display-lg text-[28px] font-extrabold text-on-surface">
-          Connecte-toi pour tes notifications
+          {isSignup ? 'Crée ton compte' : 'Connecte-toi pour tes notifications'}
         </h1>
         <p className="font-body-md text-body-md text-on-surface-variant mt-2">
           Le reste du Workspace (Cours, IA, Outils) reste accessible sans compte.
@@ -154,33 +200,41 @@ function SignInPrompt() {
       </div>
       <form onSubmit={submit} className="w-full flex flex-col gap-3 text-left">
         <label
-          htmlFor="signin_email"
+          htmlFor="auth_email"
           className="font-label-caps text-label-caps text-on-surface-variant uppercase"
         >
           Email
         </label>
         <input
-          id="signin_email"
+          id="auth_email"
           type="email"
+          autoComplete="email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="bg-surface-container-lowest border border-outline-variant rounded-xl px-4 py-3 font-body-md text-body-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         />
         <label
-          htmlFor="signin_password"
+          htmlFor="auth_password"
           className="font-label-caps text-label-caps text-on-surface-variant uppercase"
         >
           Mot de passe
         </label>
         <input
-          id="signin_password"
+          id="auth_password"
           type="password"
+          autoComplete={isSignup ? 'new-password' : 'current-password'}
+          minLength={isSignup ? 6 : undefined}
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="bg-surface-container-lowest border border-outline-variant rounded-xl px-4 py-3 font-body-md text-body-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         />
+        {notice && (
+          <p role="status" className="font-body-md text-[14px] text-primary">
+            {notice}
+          </p>
+        )}
         {error && (
           <p role="alert" className="font-body-md text-[14px] text-error">
             {error}
@@ -191,9 +245,22 @@ function SignInPrompt() {
           disabled={busy}
           className="mt-2 bg-primary text-on-primary font-cta-pill text-cta-pill px-6 py-3 rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
         >
-          {busy ? 'Connexion…' : 'Se connecter'}
+          {busy
+            ? isSignup
+              ? 'Création…'
+              : 'Connexion…'
+            : isSignup
+              ? 'Créer mon compte'
+              : 'Se connecter'}
         </button>
       </form>
+      <button
+        type="button"
+        onClick={toggleMode}
+        className="font-cta-pill text-cta-pill text-primary hover:text-primary-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded"
+      >
+        {isSignup ? 'Déjà un compte ? Se connecter' : 'Pas encore de compte ? Créer un compte'}
+      </button>
     </div>
   );
 }
@@ -269,7 +336,7 @@ export default function NotificationsTab({ onNavigate }) {
           <SkeletonCard />
         </div>
       ) : !authenticated ? (
-        <SignInPrompt />
+        <AuthPrompt />
       ) : (
         <div className="flex flex-col lg:flex-row gap-12 pb-12">
           {/* Colonne gauche : centre de notifications */}

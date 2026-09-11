@@ -113,8 +113,9 @@ Resolves the "Full user authentication (v2)" item below, scoped to the Notificat
   columns, `uuid` ids, `created_at DESC` sanctioned specifically for the notification feed).
 - **Status (2026-09-11):** schema + RLS live in production (`0003_notifications.sql`,
   hardened by `0004_notifications_hardening.sql`); client wrappers, hook, and UI implemented
-  and tested. Sign-up UI and a Workspace-wide "Se connecter" entry point (Story 7.1) and the
-  server-side generators (Stories 9.4-9.6) remain open — see `sprint-status.yaml`.
+  and tested, including sign-up (with the email-confirmation-required path handled) and a
+  Workspace-wide "Se connecter"/"Se déconnecter" entry point in the sidebar (Story 7.1). Only
+  the server-side generators (Stories 9.4-9.6) remain open — see `sprint-status.yaml`.
 
 ## Consistency Conventions
 

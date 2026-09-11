@@ -8,6 +8,7 @@ const h = vi.hoisted(() => {
   const state = { nextResult: { data: null, error: null } };
   const auth = {
     signInWithPassword: vi.fn(),
+    signUp: vi.fn(),
     signOut: vi.fn(),
     getSession: vi.fn(),
     onAuthStateChange: vi.fn(),
@@ -175,5 +176,35 @@ describe('auth wrappers (AD-2)', () => {
     const off = svc.onAuthChange(() => {});
     off();
     expect(unsub).toHaveBeenCalled();
+  });
+
+  it('signUp renvoie { session } quand la confirmation email est désactivée (PVA-1)', async () => {
+    auth.signUp.mockResolvedValue({ data: { session: { user: 'new' } }, error: null });
+    await expect(svc.signUp('a@b.co', 'pw123456')).resolves.toEqual({ session: { user: 'new' } });
+  });
+
+  it('signUp renvoie { session: null } quand la confirmation email est requise', async () => {
+    auth.signUp.mockResolvedValue({ data: { session: null, user: { id: 'u1' } }, error: null });
+    await expect(svc.signUp('a@b.co', 'pw123456')).resolves.toEqual({ session: null });
+  });
+
+  it('signUp renvoie { error } en cas d’échec (ex. email déjà utilisé)', async () => {
+    auth.signUp.mockResolvedValue({ data: {}, error: { message: 'User already registered' } });
+    await expect(svc.signUp('a@b.co', 'pw123456')).resolves.toEqual({
+      error: 'User already registered',
+    });
+  });
+
+  it('getCurrentUser renvoie l’utilisateur de la session courante', async () => {
+    auth.getSession.mockResolvedValue({
+      data: { session: { user: { id: 'u1', email: 'a@b.co' } } },
+      error: null,
+    });
+    await expect(svc.getCurrentUser()).resolves.toEqual({ id: 'u1', email: 'a@b.co' });
+  });
+
+  it('getCurrentUser renvoie null en l’absence de session', async () => {
+    auth.getSession.mockResolvedValue({ data: { session: null }, error: null });
+    await expect(svc.getCurrentUser()).resolves.toBeNull();
   });
 });

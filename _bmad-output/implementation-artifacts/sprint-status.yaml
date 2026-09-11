@@ -85,8 +85,8 @@ development_status:
   # Décision PVA-1 (2026-09-10, ARCHITECTURE-SPINE.md) : vraie auth Supabase sur le
   # Workspace, en gate progressif — /app reste ouvert en navigation anonyme (FR-1,
   # 1-2 inchangée) ; seuls notifications/préférences/progression exigent une session.
-  epic-7: in-progress
-  7-1-real-supabase-auth-on-the-workspace-progressive-gate: in-progress  # signIn/signUp + gate OK ; pas de flux d'inscription en UI ni de point d'entrée hors onglet Notifications
+  epic-7: review
+  7-1-real-supabase-auth-on-the-workspace-progressive-gate: review  # AuthPrompt (connexion+inscription, gestion confirmation email) + AccountAffordance (Sidebar desktop/mobile, se connecter/déconnecter)
   7-2-notification-and-preference-schema-with-per-user-rls: done  # migration appliquée en prod le 2026-09-11 (audit préalable clean) + durcissement RLS/RPC (0004) ; advisor sécurité vérifié
   7-3-notification-service-wrappers: review  # services/supabase.js + notifications.test.js (14 tests)
   7-4-shared-unread-count-hook: review  # hooks/useNotifications.js + useNotifications.test.js (12 tests)

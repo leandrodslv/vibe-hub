@@ -1,6 +1,8 @@
-import { Bot, Wrench, Bell, Settings } from 'lucide-react';
+import { Bot, Wrench, Bell, LogIn, LogOut } from 'lucide-react';
 import { ROUTES } from '../../lib/routes';
 import { useNotifications } from '../../hooks/useNotifications.js';
+import { isSupabaseConfigured } from '../../config/env.js';
+import { signOut } from '../../services/supabase.js';
 
 /** Pastille du nombre de non-lus sur la cloche (FR-13, UX-DR22). Rien si 0. */
 function BellBadge({ count }) {
@@ -43,10 +45,48 @@ function TabIcon({ tab, active }) {
   return <Icon className="w-5 h-5" aria-hidden="true" />;
 }
 
+/**
+ * Point d'entrée d'auth du gate progressif (Story 7.1, PVA-1) : « Se connecter » quand
+ * anonyme — navigue vers l'onglet Notifications, où vit le formulaire (pas de duplication
+ * de la logique d'auth) — ou « Se déconnecter » une fois authentifié. Rien n'est rendu si
+ * Supabase n'est pas configuré : sans backend, il n'y a pas de session à gérer.
+ */
+function AccountAffordance({ authenticated, onSignIn, compact = false }) {
+  if (!isSupabaseConfigured()) return null;
+  const label = authenticated ? 'Se déconnecter' : 'Se connecter';
+  const Icon = authenticated ? LogOut : LogIn;
+  const handleClick = authenticated ? () => signOut() : onSignIn;
+
+  if (compact) {
+    return (
+      <button
+        type="button"
+        onClick={handleClick}
+        aria-label={label}
+        className={`rounded-lg text-on-surface-variant hover:text-primary ${FOCUS_RING}`}
+      >
+        <Icon className="w-5 h-5" aria-hidden="true" />
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={`flex items-center gap-3 p-3 rounded-lg font-cta-pill text-cta-pill text-on-surface-variant hover:text-primary hover:scale-105 transition-all duration-300 ${FOCUS_RING}`}
+    >
+      <Icon className="w-5 h-5" aria-hidden="true" />
+      {label}
+    </button>
+  );
+}
+
 // Le logo est un lien vers la landing et non un bouton : le logiciel vit à sa propre URL,
 // « revenir à l'accueil » est donc une navigation, pas un changement d'état local.
 export default function Sidebar({ activeTab, onTabChange }) {
-  const { badgeCount, unreadCount } = useNotifications();
+  const { badgeCount, unreadCount, authenticated } = useNotifications();
+  const goToSignIn = () => onTabChange('notifications');
   return (
     <>
       {/* Sidebar desktop */}
@@ -101,15 +141,7 @@ export default function Sidebar({ activeTab, onTabChange }) {
               </span>
             )}
           </button>
-          {/* Décoratif : pas d'écran de profil en v1 (pas d'auth), même traitement que les
-              icônes non fonctionnelles du Navbar landing. */}
-          <span
-            className="flex items-center gap-3 p-3 rounded-lg text-on-surface-variant"
-            aria-hidden="true"
-          >
-            <Settings className="w-5 h-5" />
-            <span className="font-cta-pill text-cta-pill">Profil</span>
-          </span>
+          <AccountAffordance authenticated={authenticated} onSignIn={goToSignIn} />
         </div>
       </header>
 
@@ -135,8 +167,7 @@ export default function Sidebar({ activeTab, onTabChange }) {
             <Bell className="w-5 h-5" aria-hidden="true" />
             <BellBadge count={badgeCount} />
           </button>
-          {/* Décoratif : pas d'écran de profil en v1 (pas d'auth). */}
-          <Settings className="w-5 h-5 text-on-surface-variant" aria-hidden="true" />
+          <AccountAffordance authenticated={authenticated} onSignIn={goToSignIn} compact />
         </div>
       </header>
 
