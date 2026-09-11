@@ -110,7 +110,7 @@ jobs:
         run: npm run test:cov
       - name: Publier le rapport de couverture HTML
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage
           path: coverage/
@@ -157,7 +157,7 @@ jobs:
       - run: npm run test:simulation
       - name: Rapports de simulation (si échec)
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: simulation-reports
           path: reports/
@@ -180,7 +180,7 @@ jobs:
       - name: Lancer les tests E2E (build + preview gérés par playwright.config)
         run: npm run e2e
       - if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: playwright-report/
@@ -211,7 +211,7 @@ jobs:
         run: npm run security:bundle
       - name: Budget bundle (size-limit)
         run: npm run size
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/
