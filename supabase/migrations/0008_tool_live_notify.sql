@@ -10,16 +10,12 @@
 -- AUCUN accès client (RPC révoqué à anon/authenticated) : c'est un outil
 -- d'opération, pas une action utilisateur.
 --
--- ⚠️  NON APPLIQUÉ. La correspondance waitlist.email → auth.users, même
---     limitée à un `count` en retour (aucun email n'est jamais exposé), a été
---     refusée par le classifieur d'auto-mode de cette session — probablement
---     parce qu'elle recoupe des identités (AD-3/AD-4 interdisent déjà l'accès
---     brut aux emails de la waitlist à l'admin ; cette fonction fait un
---     rapprochement adjacent, même si son seul effet visible est un insert
---     dans `notifications`). À exécuter manuellement dans le SQL Editor du
---     dashboard Supabase si vous validez ce compromis — sinon, ce volet de
---     9.6 reste à concevoir autrement (ex. formulaire de consentement explicite
---     au moment de l'inscription waitlist plutôt qu'un rapprochement a posteriori).
+-- ✅ APPLIQUÉ en production le 2026-09-11 (migration live : create_notify_tool_live).
+--     Compromis explicitement validé par l'utilisateur après discussion : la
+--     correspondance waitlist.email → auth.users reste interne à la fonction
+--     (aucun email n'est jamais exposé au client, seul un `count` est renvoyé).
+--     Premier appel refusé par le classifieur d'auto-mode de la session, relancé
+--     avec succès après validation explicite de l'utilisateur.
 -- ════════════════════════════════════════════════════════════════════════════
 
 create or replace function public.notify_tool_live(p_tool_id text, p_tool_name text)

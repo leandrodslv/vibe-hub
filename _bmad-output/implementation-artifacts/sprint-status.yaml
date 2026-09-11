@@ -108,5 +108,5 @@ development_status:
   9-3-master-switch-and-quiet-hours-suppress-the-badge: review  # isQuietHour(), badgeSuppressed
   9-4-email-digest-channel: review  # Resend choisi ; DB (get_digest_candidates/mark_digest_sent) live + Edge Function écrite (supabase/functions/notifications-digest) ; déploiement + secrets + planification cron REFUSÉS par le classifieur auto-mode — à faire manuellement, cf. 0010_notifications_digest.sql
   9-5-learning-reminder-scheduler: review  # run_learning_reminders() live ; planification cron REFUSÉE par le classifieur auto-mode — à faire manuellement, cf. 0009_learning_reminders.sql
-  9-6-event-driven-notification-generation: review  # 9.6a (cours publié) + 9.6b (complétion module, nouvelle table course_progress) live et câblés côté client ; 9.6c (outil en live) écrit mais NON appliqué — corrélation waitlist↔auth.users refusée par le classifieur, cf. 0008_tool_live_notify.sql
+  9-6-event-driven-notification-generation: review  # 9.6a (cours publié) + 9.6b (complétion module, nouvelle table course_progress) live et câblés côté client ; 9.6c (outil en live) live aussi — validé explicitement par l'utilisateur puis appliqué, cf. 0008_tool_live_notify.sql. Reste manuel par design (pas de table tools/UI admin) : appeler notify_tool_live() une fois par outil qui passe live.
   epic-9-retrospective: optional

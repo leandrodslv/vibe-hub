@@ -115,14 +115,21 @@ Resolves the "Full user authentication (v2)" item below, scoped to the Notificat
   hardened by `0004_notifications_hardening.sql`); client wrappers, hook, and UI implemented
   and tested, including sign-up (with the email-confirmation-required path handled) and a
   Workspace-wide "Se connecter"/"Se déconnecter" entry point in the sidebar (Story 7.1).
-  Server-side generators (Stories 9.4-9.6, migrations `0006`-`0010`): course-published and
+  Server-side generators (Stories 9.4-9.6, migrations `0006`-`0011`): course-published and
   course-completion triggers are live and wired to the client (`course_progress` is a further,
   narrow AD-6 extension — only the binary completion event is promoted server-side, fine-grained
   % progress stays local); the reminder-scheduler and email-digest functions are live in the DB
-  and the digest Edge Function is written. Three infra actions (pg_cron scheduling ×2, the Edge
-  Function deploy, and the tool-live/waitlist correlation function) were refused by this session's
-  auto-mode classifier and are documented as manual steps — see `sprint-status.yaml` and the
-  migration files' headers.
+  and the digest Edge Function is written; the tool-live notifier (`notify_tool_live`, waitlist
+  email ↔ account correlation, no email ever exposed to the client) is live too, applied after
+  explicit user sign-off. Two infra actions (pg_cron scheduling ×2, the digest Edge Function
+  deploy) were refused by this session's auto-mode classifier and are documented as manual
+  steps — see `sprint-status.yaml` and the migration files' headers.
+
+  Also fixed: 0011 closes a regression PVA-1 itself introduced — `courses` CRUD and
+  `get_waitlist_counts()` assumed "authenticated == admin" (true only while sign-up didn't
+  exist); any account created via Story 7.1's sign-up flow inherited full course-catalog write
+  access. A real `admins` table + `is_admin()` now gate both, with `AdminPage.jsx` showing an
+  explicit "access denied" screen (client-side comfort only, AD-3's real boundary is the RLS).
 
 ## Consistency Conventions
 
