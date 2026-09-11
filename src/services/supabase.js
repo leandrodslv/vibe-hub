@@ -287,8 +287,19 @@ export async function updateNotificationPreferences(patch) {
  */
 export function onNotificationsChange(onChange) {
   if (!isSupabaseConfigured()) return () => {};
+  // Topic unique par abonnement : `useNotifications()` est monté plusieurs fois en
+  // parallèle sur la même page (Sidebar, Navbar landing, NotificationsTab — voir le
+  // commentaire du hook), et React StrictMode (dev) double-invoque chaque effet de
+  // montage. Un topic fixe ('notifications:self') faisait retomber ces appels
+  // concurrents sur le même objet channel déjà `subscribe()`, et Supabase rejette
+  // tout `.on(...)` ajouté après coup avec une exception synchrone — non rattrapée,
+  // elle remontait jusqu'à l'ErrorBoundary racine et cassait toute la page.
+  const suffix =
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const channel = supabase
-    .channel('notifications:self')
+    .channel(`notifications:self:${suffix}`)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () =>
       onChange()
     )

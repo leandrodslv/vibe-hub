@@ -200,11 +200,21 @@ describe('notifications — Supabase configuré', () => {
 
   it('onNotificationsChange s’abonne et le désabonnement retire le channel', () => {
     const off = svc.onNotificationsChange(vi.fn());
-    expect(h.channel).toHaveBeenCalledWith('notifications:self');
+    // Topic unique par abonnement (pas fixe) : voir le commentaire dans
+    // supabase.js — évite la collision entre abonnements concurrents
+    // (Sidebar + NotificationsTab montés simultanément, StrictMode).
+    expect(h.channel).toHaveBeenCalledWith(expect.stringMatching(/^notifications:self:.+/));
     expect(h.channelHandle.on).toHaveBeenCalled();
     expect(h.channelHandle.subscribe).toHaveBeenCalled();
     off();
     expect(h.removeChannel).toHaveBeenCalled();
+  });
+
+  it('onNotificationsChange : deux abonnements concurrents utilisent des topics distincts', () => {
+    svc.onNotificationsChange(vi.fn());
+    svc.onNotificationsChange(vi.fn());
+    const topics = h.channel.mock.calls.map((c) => c[0]);
+    expect(new Set(topics).size).toBe(topics.length);
   });
 
   describe('recordCourseCompletion (Story 9.6b)', () => {
