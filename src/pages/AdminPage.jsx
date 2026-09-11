@@ -24,6 +24,7 @@ import {
   signOut,
   getSession,
   onAuthChange,
+  isAdmin,
 } from '../services/supabase';
 
 const MODULES = ['MODULE 1', 'MODULE 2', 'MODULE 3'];
@@ -33,6 +34,8 @@ const MODULES = ['MODULE 1', 'MODULE 2', 'MODULE 3'];
 ════════════════════════════════════════ */
 export default function AdminPage() {
   const [session, setSession] = useState(undefined); // undefined = loading
+  // undefined = pas encore vérifié, null = vérifié et refusé, true = admin confirmé.
+  const [admin, setAdmin] = useState(undefined);
 
   useEffect(() => {
     getSession()
@@ -41,12 +44,29 @@ export default function AdminPage() {
     return onAuthChange(setSession);
   }, []);
 
+  // Vérifie les droits admin à chaque changement de session — le contrôle réel
+  // reste la RLS Postgres (AD-3) ; ceci ne fait qu'éviter de laisser l'UI
+  // échouer silencieusement sur chaque action pour un compte non-admin.
+  useEffect(() => {
+    if (!session) {
+      setAdmin(undefined);
+      return;
+    }
+    let alive = true;
+    isAdmin()
+      .then((ok) => alive && setAdmin(ok))
+      .catch(() => alive && setAdmin(false));
+    return () => {
+      alive = false;
+    };
+  }, [session]);
+
   const handleLogout = async () => {
     await signOut();
   };
 
-  // Chargement initial
-  if (session === undefined) {
+  // Chargement initial (session ou vérification admin en cours)
+  if (session === undefined || (session && admin === undefined)) {
     return (
       <div className="min-h-screen bg-[#F9F9F9] flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-[#EAEAEA] border-t-black rounded-full animate-spin" />
@@ -55,7 +75,41 @@ export default function AdminPage() {
   }
 
   if (!session) return <LoginScreen />;
+  if (!admin) return <AccessDenied email={session.user?.email} onLogout={handleLogout} />;
   return <Dashboard onLogout={handleLogout} />;
+}
+
+/* ════════════════════════════════════════
+   ACCÈS REFUSÉ — session valide, pas admin
+════════════════════════════════════════ */
+function AccessDenied({ email, onLogout }) {
+  return (
+    <div className="min-h-screen bg-[#F9F9F9] flex items-center justify-center p-4">
+      <div className="bg-white border border-[#EAEAEA] rounded-2xl shadow-sm w-full max-w-sm p-8 text-center">
+        <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center mx-auto mb-4">
+          <AlertTriangle className="w-6 h-6 text-red-500" />
+        </div>
+        <h1 className="text-[16px] font-bold text-black mb-1.5">Accès refusé</h1>
+        <p className="text-[13px] text-[#666] mb-6">
+          {email ? (
+            <>
+              Le compte <span className="font-semibold text-black">{email}</span> n&apos;a pas les
+              droits admin.
+            </>
+          ) : (
+            "Ce compte n'a pas les droits admin."
+          )}
+        </p>
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center justify-center gap-2 bg-black text-white text-sm font-bold py-2.5 rounded-xl hover:bg-[#333] transition-colors cursor-pointer"
+        >
+          <LogOut className="w-4 h-4" />
+          Se déconnecter
+        </button>
+      </div>
+    </div>
+  );
 }
 
 /* ════════════════════════════════════════

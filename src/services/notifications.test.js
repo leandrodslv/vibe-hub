@@ -140,6 +140,10 @@ describe('notifications — repli localStorage (Supabase non configuré)', () =>
     await expect(svc.recordCourseCompletion('c1')).resolves.toBeUndefined();
     expect(h.from).not.toHaveBeenCalledWith('course_progress');
   });
+
+  it('isAdmin renvoie false sans backend (AdminPage.jsx)', async () => {
+    await expect(svc.isAdmin()).resolves.toBe(false);
+  });
 });
 
 describe('notifications — Supabase configuré', () => {

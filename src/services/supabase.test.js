@@ -21,16 +21,17 @@ const h = vi.hoisted(() => {
     return builder;
   };
   const from = vi.fn(() => makeBuilder());
-  return { state, auth, from };
+  const rpc = vi.fn(async () => ({ data: null, error: null }));
+  return { state, auth, from, rpc };
 });
 
-const { auth, from } = h;
+const { auth, from, rpc } = h;
 const setResult = (r) => {
   h.state.nextResult = r;
 };
 
 vi.mock('@supabase/supabase-js', () => ({
-  createClient: () => ({ from: h.from, auth: h.auth }),
+  createClient: () => ({ from: h.from, auth: h.auth, rpc: h.rpc }),
 }));
 
 vi.mock('../config/env.js', () => ({
@@ -206,5 +207,19 @@ describe('auth wrappers (AD-2)', () => {
   it('getCurrentUser renvoie null en l’absence de session', async () => {
     auth.getSession.mockResolvedValue({ data: { session: null }, error: null });
     await expect(svc.getCurrentUser()).resolves.toBeNull();
+  });
+
+  it('isAdmin relaie true/false depuis la RPC is_admin', async () => {
+    rpc.mockResolvedValueOnce({ data: true, error: null });
+    await expect(svc.isAdmin()).resolves.toBe(true);
+    expect(rpc).toHaveBeenCalledWith('is_admin');
+
+    rpc.mockResolvedValueOnce({ data: false, error: null });
+    await expect(svc.isAdmin()).resolves.toBe(false);
+  });
+
+  it('isAdmin relance sur erreur RPC', async () => {
+    rpc.mockResolvedValueOnce({ data: null, error: { message: 'boom' } });
+    await expect(svc.isAdmin()).rejects.toThrow(/boom/);
   });
 });

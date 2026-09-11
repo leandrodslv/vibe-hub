@@ -88,6 +88,20 @@ export async function getCurrentUser() {
   return session?.user ?? null;
 }
 
+/**
+ * L'utilisateur connecté a-t-il les droits admin ? Purement déclaratif côté
+ * client (confort UX, AdminPage.jsx) — la vraie frontière est la RLS
+ * Postgres (`is_admin()`, policies `courses`/`get_waitlist_counts`, AD-3) :
+ * un faux positif ici ne donnerait aucun accès réel.
+ * @returns {Promise<boolean>}
+ */
+export async function isAdmin() {
+  if (!isSupabaseConfigured()) return false;
+  const { data, error } = await supabase.rpc('is_admin');
+  if (error) rethrow('isAdmin', error);
+  return Boolean(data);
+}
+
 /* ─── Notifications (Epic 7/8, PVA-1) ──────────────────────────────────────
  *
  * Deux modes :
