@@ -36,7 +36,7 @@ jobs:
     name: k6 – ${{ inputs.scenario }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Toutes les entrées `workflow_dispatch` transitent par `env:` puis sont
       # référencées en `"$VAR"` — jamais interpolées directement dans un `run:`
