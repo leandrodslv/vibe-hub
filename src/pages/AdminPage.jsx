@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {
   Plus,
   Pencil,
@@ -14,6 +16,7 @@ import {
   Mail,
   Lock,
   Video,
+  FileText,
 } from 'lucide-react';
 import {
   getAllCourses,
@@ -433,9 +436,11 @@ function CourseModal({ mode, course, onSave, onClose }) {
     duration: course?.duration || '',
     image_url: course?.image_url || '',
     video_url: course?.video_url || '',
+    content: course?.content || '',
     published: course?.published ?? true,
   });
   const [saving, setSaving] = useState(false);
+  const [contentPreview, setContentPreview] = useState(false);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -592,6 +597,57 @@ function CourseModal({ mode, course, onSave, onClose }) {
             <p className="text-[11px] text-[#999] mt-1.5">
               Formats supportés : lien SharePoint, Microsoft Stream, YouTube, ou lien direct (.mp4)
             </p>
+          </div>
+
+          {/* Contenu écrit (Mode Lecture) */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-[12px] font-semibold text-black flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5 text-[#999]" />
+                Contenu écrit (Mode Lecture)
+              </label>
+              <div className="flex bg-[#F4F4F4] p-0.5 rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => setContentPreview(false)}
+                  className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors cursor-pointer ${
+                    !contentPreview ? 'bg-white text-black shadow-sm' : 'text-[#999]'
+                  }`}
+                >
+                  Écrire
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setContentPreview(true)}
+                  className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors cursor-pointer ${
+                    contentPreview ? 'bg-white text-black shadow-sm' : 'text-[#999]'
+                  }`}
+                >
+                  Aperçu
+                </button>
+              </div>
+            </div>
+            {contentPreview ? (
+              <div className="w-full min-h-[160px] max-h-64 overflow-y-auto bg-[#F9F9F9] border border-[#EAEAEA] rounded-xl px-4 py-3">
+                {form.content.trim() ? (
+                  <div className="prose prose-sm max-w-none">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{form.content}</ReactMarkdown>
+                  </div>
+                ) : (
+                  <p className="text-[13px] text-[#999]">Rien à prévisualiser pour l'instant.</p>
+                )}
+              </div>
+            ) : (
+              <textarea
+                value={form.content}
+                onChange={(e) => set('content', e.target.value)}
+                placeholder={
+                  'Le texte que lira le designer en "Mode Lecture" (Markdown supporté : titres avec #, listes, **gras**…).\n\nLaissez vide si ce cours reste uniquement vidéo.'
+                }
+                rows={8}
+                className="w-full bg-white border border-[#EAEAEA] rounded-xl px-4 py-3 text-[13px] outline-none focus:border-black transition-all placeholder:text-[#CCCCCC] text-black resize-y font-mono"
+              />
+            )}
           </div>
 
           {/* Actions */}

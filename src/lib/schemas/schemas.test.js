@@ -92,6 +92,17 @@ describe('courseInputSchema', () => {
     expect(courseInputSchema.safeParse({ ...input, title: '' }).success).toBe(false);
   });
 
+  it('accepte un contenu Markdown (espace de création admin)', () => {
+    expect(courseInputSchema.safeParse({ ...input, content: '# Titre\n\nDu texte.' }).success).toBe(
+      true
+    );
+  });
+
+  it('accepte un contenu absent (cours vidéo-only)', () => {
+    const { content: _content, ...withoutContent } = input;
+    expect(courseInputSchema.safeParse(withoutContent).success).toBe(true);
+  });
+
   it('courseUpdateSchema accepte une mise à jour partielle', () => {
     expect(courseUpdateSchema.safeParse({ published: false }).success).toBe(true);
   });

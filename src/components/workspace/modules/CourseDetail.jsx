@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { isAllowedVideoUrl, isSafeHttpUrl, matchesHost } from '../../../lib/validation';
 import {
   ChevronRight,
@@ -19,11 +21,11 @@ export default function CourseDetail({ course, onBack, onMarkComplete }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [showResources, setShowResources] = useState(false);
   const [learningMode, setLearningMode] = useState('video');
-  const [readingStep, setReadingStep] = useState(1);
+  const [textFinished, setTextFinished] = useState(false);
 
   const handleFinishModule = () => {
     onMarkComplete(course.id);
-    setReadingStep(3);
+    setTextFinished(true);
   };
 
   return (
@@ -35,7 +37,7 @@ export default function CourseDetail({ course, onBack, onMarkComplete }) {
             onClick={() => {
               onBack();
               setLearningMode('video');
-              setReadingStep(1);
+              setTextFinished(false);
               setIsPlaying(false);
             }}
             className={`flex items-center text-sm font-semibold text-on-surface-variant hover:text-primary w-fit bg-surface-container-lowest px-4 py-2 rounded-lg border border-surface-variant shadow-sm transition-all hover:shadow-md ${FOCUS_RING}`}
@@ -43,32 +45,6 @@ export default function CourseDetail({ course, onBack, onMarkComplete }) {
             <ChevronRight className="w-4 h-4 mr-1 rotate-180" aria-hidden="true" /> Retour aux cours
           </button>
         </div>
-
-        {/* Stepper */}
-        {learningMode === 'texte' && readingStep < 3 && (
-          <div className="flex items-center justify-center gap-2 md:gap-3">
-            {[1, 2, 3].map((step) => (
-              <span key={step} className="flex items-center gap-2 md:gap-3">
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors duration-500 shadow-sm ${
-                    readingStep >= step
-                      ? 'bg-primary text-on-primary'
-                      : 'bg-surface-container-lowest border border-surface-variant text-on-surface-variant'
-                  }`}
-                >
-                  {step}
-                </div>
-                {step < 3 && (
-                  <div
-                    className={`w-8 md:w-12 h-1 rounded-full transition-colors duration-500 ${
-                      readingStep > step ? 'bg-primary' : 'bg-surface-variant'
-                    }`}
-                  ></div>
-                )}
-              </span>
-            ))}
-          </div>
-        )}
 
         {/* Mode Toggle */}
         <div className="flex-1 flex justify-end">
@@ -87,7 +63,7 @@ export default function CourseDetail({ course, onBack, onMarkComplete }) {
               onClick={() => {
                 setLearningMode('texte');
                 setIsPlaying(false);
-                setReadingStep(1);
+                setTextFinished(false);
               }}
               className={`px-4 py-1.5 text-[13px] font-bold rounded-md transition-all flex items-center gap-2 ${FOCUS_RING} ${
                 learningMode === 'texte'
@@ -239,125 +215,60 @@ export default function CourseDetail({ course, onBack, onMarkComplete }) {
       {/* Reading Mode */}
       {learningMode === 'texte' && (
         <div className="bg-surface-container-lowest border border-surface-variant rounded-3xl p-10 shadow-sm animate-in fade-in duration-300">
-          {readingStep < 3 && (
+          {!textFinished && (
             <div className="mb-10">
               <span className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest block mb-4">
-                Transcription & Notes de cours
+                Notes de cours
               </span>
               <h1 className="font-display-lg text-[36px] text-on-surface">{course.title}</h1>
             </div>
           )}
 
-          <div className="prose prose-lg max-w-none text-on-surface-variant leading-relaxed">
-            {readingStep === 1 && (
-              <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-                <p className="text-xl text-on-surface-variant font-medium mb-8">{course.desc}</p>
-                <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mt-6 mb-4">
-                  1. Comprendre le "Latent Space"
-                </h3>
-                <p className="mb-6">
-                  Avant de pouvoir écrire des prompts efficaces, il est crucial de comprendre
-                  comment l'IA "voit" le design. Imaginez un espace mathématique infini (le latent
-                  space) où chaque point représente une composante visuelle : une couleur, un
-                  arrondi, une typographie.
-                </p>
-                <div className="bg-surface-container border-l-4 border-primary p-6 rounded-r-xl my-6">
-                  <strong className="text-on-surface block mb-2">💡 À retenir</strong>
-                  L'IA ne copie pas, elle prédit statistiquement le pixel suivant en fonction de
-                  votre requête textuelle.
+          {!textFinished ? (
+            <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+              {course.content?.trim() ? (
+                <div className="prose prose-lg max-w-none text-on-surface-variant leading-relaxed">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{course.content}</ReactMarkdown>
                 </div>
-              </div>
-            )}
+              ) : (
+                <p className="text-on-surface-variant">
+                  Pas de contenu écrit pour ce cours pour l'instant — regardez la vidéo en
+                  attendant.
+                </p>
+              )}
 
-            {readingStep === 2 && (
-              <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-                <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-4">
-                  2. De la théorie à la pratique visuelle
-                </h3>
-                <p className="mb-6">
-                  La théorie est utile, mais le design est avant tout visuel. Observez comment un
-                  simple prompt se transforme en wireframe fonctionnel.
-                </p>
-                <div className="w-full aspect-video rounded-xl overflow-hidden mb-6 border border-surface-variant shadow-sm">
-                  <img
-                    src="https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&q=80&w=1200"
-                    alt="Wireframe design example"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mt-8 mb-4">
-                  Anatomie d'un prompt UI parfait
-                </h3>
-                <ul className="list-disc pl-6 space-y-3 mb-8">
-                  <li>
-                    <strong className="text-on-surface">Le Sujet :</strong> "Une page de connexion
-                    SaaS"
-                  </li>
-                  <li>
-                    <strong className="text-on-surface">Le Style Visuel :</strong> "Minimaliste,
-                    style Apple, flat design"
-                  </li>
-                  <li>
-                    <strong className="text-on-surface">Le Format :</strong> "UI shot, high
-                    resolution"
-                  </li>
-                </ul>
-              </div>
-            )}
-
-            {readingStep === 3 && (
-              <div className="animate-in fade-in zoom-in duration-500 flex flex-col items-center justify-center text-center py-12">
-                <div className="w-20 h-20 bg-tertiary-fixed text-tertiary rounded-full flex items-center justify-center mb-6 shadow-sm">
-                  <CheckCircle className="w-10 h-10" aria-hidden="true" />
-                </div>
-                <h2 className="font-display-lg text-[36px] text-on-surface mb-4">
-                  Module Terminé !
-                </h2>
-                <p className="font-body-lg text-body-lg text-on-surface-variant max-w-md mx-auto mb-10">
-                  Félicitations, vous avez validé la partie théorique de ce module. Vous avez acquis
-                  de nouvelles compétences aujourd'hui !
-                </p>
+              <div className="flex justify-end mt-10 pt-8 border-t border-surface-variant">
                 <button
-                  onClick={() => {
-                    onBack();
-                    setLearningMode('video');
-                    setReadingStep(1);
-                  }}
-                  className={`bg-on-surface text-surface font-cta-pill text-cta-pill px-8 py-3.5 rounded-full hover:scale-105 transition-transform chunky-shadow chunky-shadow-pressed ${FOCUS_RING}`}
+                  onClick={handleFinishModule}
+                  className={`px-6 py-2.5 bg-primary text-on-primary rounded-lg font-semibold text-[14px] hover:opacity-90 transition-all flex items-center gap-2 group ${FOCUS_RING}`}
                 >
-                  Retour à mes cours
-                </button>
-              </div>
-            )}
-          </div>
-
-          {readingStep < 3 && (
-            <div className="flex items-center justify-between mt-6 pt-8 border-t border-surface-variant">
-              <button
-                onClick={() => setReadingStep(Math.max(1, readingStep - 1))}
-                disabled={readingStep === 1}
-                className={`px-6 py-2.5 rounded-lg font-semibold text-[14px] transition-colors ${FOCUS_RING} ${
-                  readingStep === 1
-                    ? 'opacity-0 cursor-default'
-                    : 'bg-surface-container text-on-surface hover:bg-surface-variant'
-                }`}
-              >
-                Précédent
-              </button>
-              <button
-                onClick={() => {
-                  if (readingStep === 2) handleFinishModule();
-                  else setReadingStep(readingStep + 1);
-                }}
-                className={`px-6 py-2.5 bg-primary text-on-primary rounded-lg font-semibold text-[14px] hover:opacity-90 transition-all flex items-center gap-2 group ${FOCUS_RING}`}
-              >
-                {readingStep === 2 ? 'Terminer le module' : 'Étape suivante'}
-                {readingStep !== 2 && (
+                  Terminer le module
                   <ArrowRight
                     className="w-4 h-4 group-hover:translate-x-1 transition-transform"
                     aria-hidden="true"
                   />
-                )}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="animate-in fade-in zoom-in duration-500 flex flex-col items-center justify-center text-center py-12">
+              <div className="w-20 h-20 bg-tertiary-fixed text-tertiary rounded-full flex items-center justify-center mb-6 shadow-sm">
+                <CheckCircle className="w-10 h-10" aria-hidden="true" />
+              </div>
+              <h2 className="font-display-lg text-[36px] text-on-surface mb-4">Module Terminé !</h2>
+              <p className="font-body-lg text-body-lg text-on-surface-variant max-w-md mx-auto mb-10">
+                Félicitations, vous avez validé la partie théorique de ce module. Vous avez acquis
+                de nouvelles compétences aujourd'hui !
+              </p>
+              <button
+                onClick={() => {
+                  onBack();
+                  setLearningMode('video');
+                  setTextFinished(false);
+                }}
+                className={`bg-on-surface text-surface font-cta-pill text-cta-pill px-8 py-3.5 rounded-full hover:scale-105 transition-transform chunky-shadow chunky-shadow-pressed ${FOCUS_RING}`}
+              >
+                Retour à mes cours
               </button>
             </div>
           )}
@@ -365,7 +276,7 @@ export default function CourseDetail({ course, onBack, onMarkComplete }) {
       )}
 
       {/* Info & Resources */}
-      {(learningMode === 'video' || (learningMode === 'texte' && readingStep < 3)) && (
+      {(learningMode === 'video' || (learningMode === 'texte' && !textFinished)) && (
         <div className="bg-surface-container-lowest border border-surface-variant rounded-3xl p-8 shadow-sm">
           {learningMode === 'video' && (
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-6">

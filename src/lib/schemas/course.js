@@ -27,6 +27,7 @@ export const courseSchema = z
     duration: z.string().nullish(),
     image_url: z.string().nullish(),
     video_url: z.string().nullish(),
+    content: z.string().nullish(),
     published: z.boolean(),
     order_index: z.number(),
     created_at: z.string().nullish(),
@@ -50,6 +51,7 @@ export const courseInputSchema = z
     duration: z.string().nullish(),
     image_url: z.string().nullish(),
     video_url: z.string().nullish(),
+    content: z.string().nullish(),
     published: z.boolean(),
     order_index: z.number().int(),
   })
