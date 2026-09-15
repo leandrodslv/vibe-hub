@@ -21,6 +21,7 @@ import {
   Download,
   KeyRound,
   BarChart3,
+  Wrench,
 } from 'lucide-react';
 import {
   getAllCourses,
@@ -304,7 +305,14 @@ function navPillClass(active) {
   }`;
 }
 
-function AdminHeader({ onLogout, view, onSelectCourses, onSelectWaitlist, onSelectAiUsage }) {
+function AdminHeader({
+  onLogout,
+  view,
+  onSelectAccueil,
+  onSelectCourses,
+  onSelectWaitlist,
+  onSelectAiUsage,
+}) {
   return (
     <div className="h-14 bg-surface-container-lowest border-b-2 border-surface-variant flex items-center justify-between gap-4 px-8 sticky top-0 z-20">
       <div className="flex items-center gap-3 flex-shrink-0">
@@ -320,10 +328,18 @@ function AdminHeader({ onLogout, view, onSelectCourses, onSelectWaitlist, onSele
         </span>
       </div>
 
-      {/* Onglets Cours / Demande outils / Utilisation IA — absents sur l'éditeur
-          de cours (view non fourni), présents uniquement sur le dashboard. */}
+      {/* Onglets Accueil / Cours / Demande outils / Utilisation IA — absents sur
+          l'éditeur de cours (view non fourni), présents uniquement sur le dashboard. */}
       {view && (
         <div className="flex items-center bg-surface-variant p-1 rounded-full gap-1 overflow-x-auto">
+          <button
+            type="button"
+            onClick={onSelectAccueil}
+            aria-pressed={view === 'accueil'}
+            className={navPillClass(view === 'accueil')}
+          >
+            Accueil
+          </button>
           <button
             type="button"
             onClick={onSelectCourses}
@@ -366,7 +382,7 @@ function AdminHeader({ onLogout, view, onSelectCourses, onSelectWaitlist, onSele
    DASHBOARD
 ════════════════════════════════════════ */
 function Dashboard({ onLogout }) {
-  const [view, setView] = useState('courses'); // 'courses' | 'waitlist' | 'ai-usage'
+  const [view, setView] = useState('accueil'); // 'accueil' | 'courses' | 'waitlist' | 'ai-usage'
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // null | { mode: 'add'|'edit', course? }
@@ -400,6 +416,13 @@ function Dashboard({ onLogout }) {
 
   useEffect(() => {
     load();
+    // Accueil est l'écran d'atterrissage (view initial) : on lance tout de suite
+    // ses deux fetchs paresseux au lieu d'attendre un premier clic sur les pills
+    // "Demande outils"/"Utilisation IA" — `openAccueilView` est redéfinie à
+    // chaque rendu mais n'est appelée qu'une fois le composant monté (effet),
+    // donc sa position dans le fichier (plus bas) n'a pas d'incidence ici.
+    openAccueilView();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadWaitlist = async () => {
@@ -441,6 +464,16 @@ function Dashboard({ onLogout }) {
 
   const openAiUsageView = () => {
     setView('ai-usage');
+    if (aiUsage === null) loadAiUsage();
+  };
+
+  // Epic 13 — Accueil est désormais le premier écran vu après connexion : on y
+  // déclenche les deux fetchs paresseux tout de suite (mêmes fonctions que les
+  // pills "Demande outils"/"Utilisation IA", même garde "déjà chargé ?") plutôt
+  // que d'attendre que l'admin clique dessus pour la première fois.
+  const openAccueilView = () => {
+    setView('accueil');
+    if (waitlistCounts === null) loadWaitlist();
     if (aiUsage === null) loadAiUsage();
   };
 
@@ -501,6 +534,7 @@ function Dashboard({ onLogout }) {
       <AdminHeader
         onLogout={onLogout}
         view={view}
+        onSelectAccueil={openAccueilView}
         onSelectCourses={() => setView('courses')}
         onSelectWaitlist={openWaitlistView}
         onSelectAiUsage={openAiUsageView}
@@ -508,7 +542,22 @@ function Dashboard({ onLogout }) {
 
       {/* ── Content ── */}
       <div className="max-w-5xl mx-auto px-8 py-10">
-        {view === 'waitlist' ? (
+        {view === 'accueil' ? (
+          <AdminAccueilView
+            courses={courses}
+            published={published}
+            waitlistCounts={waitlistCounts}
+            waitlistLoading={waitlistLoading}
+            waitlistError={waitlistError}
+            aiUsage={aiUsage}
+            lastRotation={lastRotation}
+            aiUsageLoading={aiUsageLoading}
+            aiUsageError={aiUsageError}
+            onSelectCourses={() => setView('courses')}
+            onSelectWaitlist={openWaitlistView}
+            onSelectAiUsage={openAiUsageView}
+          />
+        ) : view === 'waitlist' ? (
           <WaitlistView
             counts={waitlistCounts}
             loading={waitlistLoading}
@@ -668,6 +717,158 @@ function CourseRow({ course, onEdit, onDelete, onToggle }) {
         >
           <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
         </button>
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════
+   ACCUEIL — vue d'atterrissage admin (Epic 13, epics-admin-dashboard.md)
+   Pure composition en lecture : un highlight de chacune des trois autres vues
+   (Cours / Demande outils / Utilisation IA), chacun renvoyant vers sa vue
+   complète — aucun nouveau fetch propre à ce composant.
+════════════════════════════════════════ */
+function AccueilCard({ title, icon: Icon, children, onSelect, ctaLabel }) {
+  return (
+    <div className="bg-surface-container-lowest border border-surface-variant rounded-[24px] p-5 shadow-sm flex flex-col">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="w-8 h-8 rounded-lg bg-surface-variant flex items-center justify-center flex-shrink-0">
+          <Icon className="w-4 h-4 text-on-surface-variant" aria-hidden="true" />
+        </div>
+        <h2 className="text-[14px] font-bold text-on-surface">{title}</h2>
+      </div>
+      <div className="flex-1 mb-4">{children}</div>
+      <button
+        type="button"
+        onClick={onSelect}
+        className={`self-start text-[13px] font-bold text-primary hover:underline underline-offset-2 cursor-pointer rounded ${FOCUS_RING}`}
+      >
+        {ctaLabel} →
+      </button>
+    </div>
+  );
+}
+
+function AdminAccueilView({
+  courses,
+  published,
+  waitlistCounts,
+  waitlistLoading,
+  waitlistError,
+  aiUsage,
+  lastRotation,
+  aiUsageLoading,
+  aiUsageError,
+  onSelectCourses,
+  onSelectWaitlist,
+  onSelectAiUsage,
+}) {
+  const byToolId = new Map((waitlistCounts || []).map((c) => [c.tool_id, c.signups]));
+  const topTool = TOOLS.filter((t) => t.status !== 'live')
+    .map((t) => ({ ...t, signups: byToolId.get(t.id) ?? 0 }))
+    .sort((a, b) => b.signups - a.signups)[0];
+
+  const window7 = (aiUsage || []).filter((r) => r.window_days === 7);
+  const totalTokens7 = window7.reduce((sum, r) => sum + r.total_tokens, 0);
+  const totalCost7 = window7.reduce((sum, r) => sum + estimateUsdCost(r), 0);
+  const daysSinceRotation = lastRotation
+    ? Math.floor((Date.now() - new Date(lastRotation.rotated_at).getTime()) / 86_400_000)
+    : null;
+  const isKeyStale = daysSinceRotation === null || daysSinceRotation >= KEY_ROTATION_WARNING_DAYS;
+
+  return (
+    <div>
+      <div className="mb-5">
+        <h1 className="font-headline-lg-mobile text-[22px] font-bold text-on-surface">Accueil</h1>
+        <p className="text-on-surface-variant text-[13px] mt-1">
+          Un coup d&apos;œil sur les cours, la demande d&apos;outils et l&apos;utilisation IA.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <AccueilCard
+          title="Cours"
+          icon={BookOpen}
+          onSelect={onSelectCourses}
+          ctaLabel="Voir les cours"
+        >
+          <div className="flex items-baseline gap-5">
+            <div>
+              <div className="font-display-lg text-xl font-bold text-on-surface">
+                {courses.length}
+              </div>
+              <div className="font-label-caps text-label-caps uppercase text-on-surface-variant">
+                Total
+              </div>
+            </div>
+            <div>
+              <div className="font-display-lg text-xl font-bold text-on-surface">{published}</div>
+              <div className="font-label-caps text-label-caps uppercase text-on-surface-variant">
+                Publiés
+              </div>
+            </div>
+            <div>
+              <div className="font-display-lg text-xl font-bold text-on-surface">
+                {courses.length - published}
+              </div>
+              <div className="font-label-caps text-label-caps uppercase text-on-surface-variant">
+                Brouillons
+              </div>
+            </div>
+          </div>
+        </AccueilCard>
+
+        <AccueilCard
+          title="Demande outils"
+          icon={Wrench}
+          onSelect={onSelectWaitlist}
+          ctaLabel="Voir la demande"
+        >
+          {waitlistLoading ? (
+            <p className="text-on-surface-variant text-sm">Chargement…</p>
+          ) : waitlistError ? (
+            <p className="text-on-surface-variant text-sm">Indisponible pour l&apos;instant.</p>
+          ) : !topTool || topTool.signups === 0 ? (
+            <p className="text-on-surface-variant text-sm">
+              Aucune inscription pour l&apos;instant.
+            </p>
+          ) : (
+            <>
+              <div className="font-display-lg text-xl font-bold text-on-surface">
+                {topTool.signups} inscrit{topTool.signups > 1 ? 's' : ''}
+              </div>
+              <div className="text-on-surface-variant text-sm">{topTool.name}</div>
+            </>
+          )}
+        </AccueilCard>
+
+        <AccueilCard
+          title="Utilisation IA"
+          icon={BarChart3}
+          onSelect={onSelectAiUsage}
+          ctaLabel="Voir l'utilisation"
+        >
+          {aiUsageLoading ? (
+            <p className="text-on-surface-variant text-sm">Chargement…</p>
+          ) : aiUsageError ? (
+            <p className="text-on-surface-variant text-sm">Indisponible pour l&apos;instant.</p>
+          ) : (
+            <>
+              <div className="font-display-lg text-xl font-bold text-on-surface">
+                {totalTokens7.toLocaleString('fr-FR')} tokens
+              </div>
+              <div className="text-on-surface-variant text-sm mb-2">
+                ${totalCost7.toFixed(3)} estimé (7j)
+              </div>
+              {isKeyStale && (
+                <div className="flex items-center gap-1.5 text-on-error-container text-[12px] font-semibold">
+                  <KeyRound className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
+                  Clé à tourner bientôt
+                </div>
+              )}
+            </>
+          )}
+        </AccueilCard>
       </div>
     </div>
   );
