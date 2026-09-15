@@ -15,7 +15,7 @@ const h = vi.hoisted(() => {
   };
   const makeBuilder = () => {
     const builder = { then: (resolve) => resolve(state.nextResult) };
-    for (const m of ['select', 'eq', 'order', 'insert', 'update', 'delete', 'single']) {
+    for (const m of ['select', 'eq', 'order', 'limit', 'insert', 'update', 'delete', 'single']) {
       builder[m] = vi.fn(() => builder);
     }
     return builder;
@@ -144,6 +144,74 @@ describe('uploadCourseDraftVideo', () => {
   it('lève sur erreur de upload', async () => {
     storageUpload.mockResolvedValueOnce({ data: null, error: { message: 'quota' } });
     await expect(svc.uploadCourseDraftVideo(makeFile())).rejects.toThrow('quota');
+  });
+});
+
+describe('getAiUsageSummary', () => {
+  it('renvoie les agrégats validés en cas de succès', async () => {
+    const rows = [
+      {
+        endpoint: 'gemini-proxy',
+        window_days: 30,
+        calls: 4,
+        prompt_tokens: 100,
+        candidates_tokens: 50,
+        total_tokens: 150,
+      },
+    ];
+    rpc.mockResolvedValueOnce({ data: rows, error: null });
+    await expect(svc.getAiUsageSummary()).resolves.toEqual(rows);
+    expect(rpc).toHaveBeenCalledWith('get_ai_usage_summary');
+  });
+
+  it('lève quand la RPC renvoie une erreur (ex. anon sans droits admin)', async () => {
+    rpc.mockResolvedValueOnce({ data: null, error: { message: 'permission denied' } });
+    await expect(svc.getAiUsageSummary()).rejects.toThrow(/permission denied/);
+  });
+});
+
+describe('getLastKeyRotation', () => {
+  it('renvoie la ligne la plus récente en cas de succès', async () => {
+    const row = { id: 2, rotated_at: '2026-09-15T00:00:00Z', rotated_by: 'u1', note: 'ok' };
+    setResult({ data: [row], error: null });
+    await expect(svc.getLastKeyRotation()).resolves.toEqual(row);
+    expect(from).toHaveBeenCalledWith('ai_key_rotations');
+  });
+
+  it('renvoie null si aucune rotation n’a jamais été enregistrée', async () => {
+    setResult({ data: [], error: null });
+    await expect(svc.getLastKeyRotation()).resolves.toBeNull();
+  });
+
+  it('lève quand Supabase renvoie une erreur', async () => {
+    setResult({ data: null, error: new Error('rls') });
+    await expect(svc.getLastKeyRotation()).rejects.toThrow('rls');
+  });
+});
+
+describe('logKeyRotation', () => {
+  it('enregistre la rotation avec l’auteur courant et une note optionnelle', async () => {
+    auth.getSession.mockResolvedValue({
+      data: { session: { user: { id: 'admin-1' } } },
+      error: null,
+    });
+    const created = {
+      id: 3,
+      rotated_at: '2026-09-15T00:00:00Z',
+      rotated_by: 'admin-1',
+      note: 'rotée',
+    };
+    setResult({ data: created, error: null });
+    await expect(svc.logKeyRotation('rotée')).resolves.toEqual(created);
+  });
+
+  it('lève sur erreur d’insertion', async () => {
+    auth.getSession.mockResolvedValue({
+      data: { session: { user: { id: 'admin-1' } } },
+      error: null,
+    });
+    setResult({ data: null, error: new Error('rls') });
+    await expect(svc.logKeyRotation()).rejects.toThrow('rls');
   });
 });
 

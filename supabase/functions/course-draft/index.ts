@@ -42,6 +42,7 @@
 
 import { GoogleGenAI, Type } from 'npm:@google/genai@^2.15.0';
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { logAiUsage } from '../_shared/ai-usage-log.ts';
 
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
@@ -130,7 +131,7 @@ async function generateFromYouTube(ai: GoogleGenAI, videoUrl: string) {
     ],
     config: { responseMimeType: 'application/json', responseSchema: RESPONSE_SCHEMA },
   });
-  return res.text ?? '';
+  return { raw: res.text ?? '', usageMetadata: res.usageMetadata };
 }
 
 async function generateFromStorageFile(ai: GoogleGenAI, storagePath: string) {
@@ -158,7 +159,7 @@ async function generateFromStorageFile(ai: GoogleGenAI, storagePath: string) {
       ],
       config: { responseMimeType: 'application/json', responseSchema: RESPONSE_SCHEMA },
     });
-    return res.text ?? '';
+    return { raw: res.text ?? '', usageMetadata: res.usageMetadata };
   } finally {
     // Jamais conservé au-delà de la génération, succès ou échec.
     await serviceClient.storage.from(UPLOAD_BUCKET).remove([storagePath]);
@@ -191,12 +192,13 @@ Deno.serve(async (req) => {
   try {
     const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
     let raw: string;
+    let usageMetadata: Awaited<ReturnType<typeof generateFromYouTube>>['usageMetadata'];
 
     if (hasVideoUrl) {
       if (!isAllowedYouTubeUrl(body.videoUrl)) {
         return json({ error: 'videoUrl doit être une URL YouTube publique (https).' }, 400, cors);
       }
-      raw = await generateFromYouTube(ai, body.videoUrl);
+      ({ raw, usageMetadata } = await generateFromYouTube(ai, body.videoUrl));
     } else {
       if (!isSafeStoragePath(body.storagePath)) {
         return json({ error: 'storagePath invalide.' }, 400, cors);
@@ -213,8 +215,10 @@ Deno.serve(async (req) => {
       if (adminCheckError || !isAdmin) {
         return json({ error: 'Accès refusé.' }, 403, cors);
       }
-      raw = await generateFromStorageFile(ai, body.storagePath);
+      ({ raw, usageMetadata } = await generateFromStorageFile(ai, body.storagePath));
     }
+
+    logAiUsage('course-draft', MODEL, usageMetadata);
 
     let draft: unknown;
     try {

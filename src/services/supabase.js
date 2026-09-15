@@ -12,6 +12,9 @@ import {
   notificationPreferencesSchema,
   DEFAULT_PREFERENCES,
   waitlistCountArraySchema,
+  aiUsageSummaryArraySchema,
+  keyRotationSchema,
+  keyRotationArraySchema,
 } from '../lib/schemas/index.js';
 
 // Adaptateur unique vers Supabase (Architecture Spine AD-2) : aucun composant
@@ -428,4 +431,54 @@ export async function uploadCourseDraftVideo(file) {
     .upload(path, file, { contentType: file.type });
   if (error) rethrow('uploadCourseDraftVideo', error);
   return path;
+}
+
+/* ─── Utilisation IA (Epic 11, AD-12/AD-13) ─── */
+
+/**
+ * Agrégats de tokens Gemini réellement consommés (fenêtres 7j/30j, par
+ * endpoint) — jamais le contenu des prompts/réponses. `get_ai_usage_summary()`
+ * filtre déjà côté Postgres sur `is_admin()`, un appel non-admin renvoie un
+ * tableau vide.
+ * @returns {Promise<import('../lib/schemas/ai-usage.js').AiUsageSummaryRow[]>}
+ */
+export async function getAiUsageSummary() {
+  const { data, error } = await supabase.rpc('get_ai_usage_summary');
+  if (error) rethrow('getAiUsageSummary', error);
+  return parseOrThrow(aiUsageSummaryArraySchema, data, 'getAiUsageSummary');
+}
+
+/**
+ * Dernière rotation enregistrée de la clé Gemini — metadata seulement (date,
+ * qui, note), jamais la clé (AD-13). `null` si aucune rotation n'a encore été
+ * loguée.
+ * @returns {Promise<import('../lib/schemas/ai-usage.js').KeyRotation | null>}
+ */
+export async function getLastKeyRotation() {
+  const { data, error } = await supabase
+    .from('ai_key_rotations')
+    .select('*')
+    .order('rotated_at', { ascending: false })
+    .limit(1);
+  if (error) rethrow('getLastKeyRotation', error);
+  const rows = parseOrThrow(keyRotationArraySchema, data, 'getLastKeyRotation');
+  return rows[0] ?? null;
+}
+
+/**
+ * Enregistre qu'un admin a tourné la clé Gemini à la main (`supabase secrets
+ * set` + redeploy, en dehors de l'app — AD-13). N'écrit jamais la clé
+ * elle-même, uniquement la date/l'auteur/une note optionnelle.
+ * @param {string} [note]
+ * @returns {Promise<import('../lib/schemas/ai-usage.js').KeyRotation>}
+ */
+export async function logKeyRotation(note) {
+  const user = await getCurrentUser();
+  const { data, error } = await supabase
+    .from('ai_key_rotations')
+    .insert({ rotated_by: user?.id ?? null, note: note || null })
+    .select()
+    .single();
+  if (error) rethrow('logKeyRotation', error);
+  return parseOrThrow(keyRotationSchema, data, 'logKeyRotation');
 }

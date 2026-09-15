@@ -32,3 +32,9 @@ export {
   courseDraftSuccessSchema,
   courseDraftResponseSchema,
 } from './gemini.js';
+export {
+  aiUsageSummaryRowSchema,
+  aiUsageSummaryArraySchema,
+  keyRotationSchema,
+  keyRotationArraySchema,
+} from './ai-usage.js';

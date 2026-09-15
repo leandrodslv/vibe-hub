@@ -19,6 +19,8 @@ import {
   FileText,
   Sparkles,
   Download,
+  KeyRound,
+  BarChart3,
 } from 'lucide-react';
 import {
   getAllCourses,
@@ -32,6 +34,9 @@ import {
   isAdmin,
   getWaitlistCounts,
   uploadCourseDraftVideo,
+  getAiUsageSummary,
+  getLastKeyRotation,
+  logKeyRotation,
 } from '../services/supabase';
 import { generateCourseDraftFromVideo, generateCourseDraftFromUploadedVideo } from '../services/ai';
 import {
@@ -43,6 +48,18 @@ import {
 import { TOOLS } from '../data/tools';
 
 const YOUTUBE_HOSTS = ['youtube.com', 'youtu.be'];
+
+// Tarif public gemini-2.5-flash-lite (ai.google.dev/gemini-api/docs/pricing,
+// vérifié 2026-09-15) — sert UNIQUEMENT à une estimation affichée à l'admin,
+// jamais la facturation réelle Google (qui exige un compte Google, hors de
+// portée d'une simple clé API serveur — Epic 11, epics-ai-ops.md).
+const GEMINI_FLASH_LITE_PRICE_PER_1M = { input: 0.1, output: 0.4 };
+function estimateUsdCost({ prompt_tokens, candidates_tokens }) {
+  return (
+    (prompt_tokens / 1_000_000) * GEMINI_FLASH_LITE_PRICE_PER_1M.input +
+    (candidates_tokens / 1_000_000) * GEMINI_FLASH_LITE_PRICE_PER_1M.output
+  );
+}
 
 const MODULES = ['MODULE 1', 'MODULE 2', 'MODULE 3'];
 
@@ -305,7 +322,7 @@ function AdminHeader({ onLogout }) {
    DASHBOARD
 ════════════════════════════════════════ */
 function Dashboard({ onLogout }) {
-  const [view, setView] = useState('courses'); // 'courses' | 'waitlist'
+  const [view, setView] = useState('courses'); // 'courses' | 'waitlist' | 'ai-usage'
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // null | { mode: 'add'|'edit', course? }
@@ -320,6 +337,15 @@ function Dashboard({ onLogout }) {
   // les deux `false` via leur closure et lanceraient chacun un appel RPC. Un ref
   // est mutable immédiatement, sans attendre de re-render.
   const waitlistFetchInFlight = useRef(false);
+
+  // Epic 11 — "Utilisation IA" : mêmes garde-fous que la demande outils
+  // ci-dessus (fetch paresseux à l'ouverture, ref synchrone anti-double-fetch).
+  const [aiUsage, setAiUsage] = useState(null);
+  const [lastRotation, setLastRotation] = useState(null);
+  const [aiUsageLoading, setAiUsageLoading] = useState(false);
+  const [aiUsageError, setAiUsageError] = useState(null);
+  const [rotationSaving, setRotationSaving] = useState(false);
+  const aiUsageFetchInFlight = useRef(false);
 
   const load = async () => {
     setLoading(true);
@@ -350,6 +376,39 @@ function Dashboard({ onLogout }) {
   const openWaitlistView = () => {
     setView('waitlist');
     if (waitlistCounts === null) loadWaitlist();
+  };
+
+  const loadAiUsage = async () => {
+    if (aiUsageFetchInFlight.current) return;
+    aiUsageFetchInFlight.current = true;
+    setAiUsageLoading(true);
+    setAiUsageError(null);
+    try {
+      const [summary, rotation] = await Promise.all([getAiUsageSummary(), getLastKeyRotation()]);
+      setAiUsage(summary);
+      setLastRotation(rotation);
+    } catch (err) {
+      setAiUsageError(err.message || "Impossible de charger l'utilisation IA.");
+    } finally {
+      setAiUsageLoading(false);
+      aiUsageFetchInFlight.current = false;
+    }
+  };
+
+  const openAiUsageView = () => {
+    setView('ai-usage');
+    if (aiUsage === null) loadAiUsage();
+  };
+
+  const handleLogRotation = async (note) => {
+    setRotationSaving(true);
+    try {
+      setLastRotation(await logKeyRotation(note));
+    } catch (err) {
+      setAiUsageError(err.message || "Échec de l'enregistrement de la rotation.");
+    } finally {
+      setRotationSaving(false);
+    }
   };
 
   const handleSave = async (formData) => {
@@ -425,6 +484,18 @@ function Dashboard({ onLogout }) {
           >
             Demande outils
           </button>
+          <button
+            type="button"
+            onClick={openAiUsageView}
+            aria-pressed={view === 'ai-usage'}
+            className={`px-5 py-1.5 rounded-full text-[13px] font-semibold transition-all duration-300 cursor-pointer ${FOCUS_RING} ${
+              view === 'ai-usage'
+                ? 'bg-surface-container-lowest shadow-sm text-on-surface'
+                : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            Utilisation IA
+          </button>
         </div>
 
         {view === 'waitlist' ? (
@@ -433,6 +504,16 @@ function Dashboard({ onLogout }) {
             loading={waitlistLoading}
             error={waitlistError}
             onRetry={loadWaitlist}
+          />
+        ) : view === 'ai-usage' ? (
+          <AiUsageView
+            usage={aiUsage}
+            lastRotation={lastRotation}
+            loading={aiUsageLoading}
+            error={aiUsageError}
+            rotationSaving={rotationSaving}
+            onRetry={loadAiUsage}
+            onLogRotation={handleLogRotation}
           />
         ) : (
           <>
@@ -669,6 +750,193 @@ function WaitlistView({ counts, loading, error, onRetry }) {
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════
+   UTILISATION IA — dashboard coûts/tokens + suivi rotation de clé (Epic 11)
+   getAiUsageSummary() : agrégats 7j/30j par endpoint (tokens réellement
+   consommés par les appels de l'app, jamais le contenu prompts/réponses).
+   Le coût affiché est une ESTIMATION (tarif public flash-lite) — jamais la
+   facturation réelle Google, hors de portée d'une clé API serveur (AD-13).
+   La rotation de clé n'est que de la metadata : la vraie clé ne transite
+   jamais par cette vue (`supabase secrets set` reste la seule voie réelle).
+════════════════════════════════════════ */
+function AiUsageView({
+  usage,
+  lastRotation,
+  loading,
+  error,
+  rotationSaving,
+  onRetry,
+  onLogRotation,
+}) {
+  const [note, setNote] = useState('');
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div
+          className="w-8 h-8 border-2 border-surface-variant border-t-primary rounded-full animate-spin"
+          role="status"
+          aria-label="Chargement de l'utilisation IA"
+        />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-surface-container-low border border-surface-variant rounded-3xl py-16 flex flex-col items-center justify-center text-center">
+        <div className="w-14 h-14 bg-surface-container rounded-2xl flex items-center justify-center mb-4">
+          <AlertTriangle className="w-6 h-6 text-on-surface-variant" aria-hidden="true" />
+        </div>
+        <p className="font-headline-lg-mobile text-[16px] font-bold text-on-surface mb-1">
+          Impossible de charger l'utilisation IA
+        </p>
+        <p className="text-on-surface-variant text-sm mb-5">{error}</p>
+        <button
+          onClick={onRetry}
+          className={`flex items-center gap-2 bg-primary text-on-primary font-cta-pill text-sm font-bold px-5 py-2.5 rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors cursor-pointer chunky-shadow ${FOCUS_RING}`}
+        >
+          Réessayer
+        </button>
+      </div>
+    );
+  }
+
+  const rows = usage || [];
+  const window30 = rows.filter((r) => r.window_days === 30);
+  const totalTokens30 = window30.reduce((sum, r) => sum + r.total_tokens, 0);
+  const totalCalls30 = window30.reduce((sum, r) => sum + r.calls, 0);
+  const totalCost30 = window30.reduce((sum, r) => sum + estimateUsdCost(r), 0);
+  const ENDPOINT_LABELS = {
+    'gemini-proxy': 'Assistant IA (chat)',
+    'course-draft': 'Brouillon vidéo',
+  };
+
+  return (
+    <div>
+      <div className="mb-5">
+        <h1 className="font-headline-lg-mobile text-[22px] font-bold text-on-surface">
+          Utilisation IA
+        </h1>
+        <p className="text-on-surface-variant text-[13px] mt-1">
+          Tokens Gemini réellement consommés par l'app — coût estimé à titre indicatif, pas la
+          facturation réelle Google.
+        </p>
+      </div>
+
+      {rows.length === 0 ? (
+        <div className="bg-surface-container-low border border-surface-variant rounded-3xl py-16 flex flex-col items-center justify-center text-center mb-6">
+          <div className="w-14 h-14 bg-surface-container rounded-2xl flex items-center justify-center mb-4">
+            <BarChart3 className="w-6 h-6 text-on-surface-variant" aria-hidden="true" />
+          </div>
+          <p className="font-headline-lg-mobile text-[16px] font-bold text-on-surface mb-1">
+            Aucune donnée d'utilisation pour l'instant
+          </p>
+          <p className="text-on-surface-variant text-sm max-w-sm">
+            Les prochains appels à l'assistant IA ou au brouillon vidéo apparaîtront ici.
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            {[
+              { label: 'Tokens (30j)', value: totalTokens30.toLocaleString('fr-FR') },
+              { label: 'Appels (30j)', value: totalCalls30.toLocaleString('fr-FR') },
+              { label: 'Coût estimé (30j)', value: `$${totalCost30.toFixed(3)}` },
+            ].map(({ label, value }) => (
+              <div
+                key={label}
+                className="bg-surface-container-lowest border border-surface-variant rounded-[24px] p-5 shadow-sm"
+              >
+                <div className="font-display-lg text-2xl font-bold text-on-surface mb-0.5">
+                  {value}
+                </div>
+                <div className="font-label-caps text-label-caps uppercase text-on-surface-variant">
+                  {label}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="space-y-2.5 mb-6">
+            {window30.map((row) => (
+              <div
+                key={row.endpoint}
+                className="bg-surface-container-lowest border border-surface-variant rounded-[24px] px-5 py-4 flex items-center gap-4 shadow-sm"
+              >
+                <div className="w-10 h-10 rounded-xl bg-surface-variant flex items-center justify-center flex-shrink-0">
+                  <BarChart3 className="w-5 h-5 text-on-surface-variant" aria-hidden="true" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[14px] font-bold text-on-surface truncate mb-0.5">
+                    {ENDPOINT_LABELS[row.endpoint] || row.endpoint}
+                  </p>
+                  <p className="text-on-surface-variant text-[12px]">
+                    {row.calls} appel{row.calls > 1 ? 's' : ''} ·{' '}
+                    {row.total_tokens.toLocaleString('fr-FR')} tokens
+                  </p>
+                </div>
+                <div className="flex-shrink-0 text-right">
+                  <div className="font-display-lg text-xl font-bold text-on-surface">
+                    ${estimateUsdCost(row).toFixed(3)}
+                  </div>
+                  <div className="font-label-caps text-label-caps uppercase text-on-surface-variant">
+                    estimé
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Rotation de clé — metadata seulement, AD-13 : la vraie clé Gemini ne
+          transite jamais par cette vue, seule `supabase secrets set` la change. */}
+      <div className="bg-surface-container-lowest border border-surface-variant rounded-[24px] px-5 py-5 shadow-sm">
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 rounded-xl bg-surface-variant flex items-center justify-center flex-shrink-0">
+            <KeyRound className="w-5 h-5 text-on-surface-variant" aria-hidden="true" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[14px] font-bold text-on-surface mb-0.5">Clé Gemini</p>
+            <p className="text-on-surface-variant text-[13px] mb-3">
+              {lastRotation
+                ? `Dernière rotation : ${new Date(lastRotation.rotated_at).toLocaleDateString('fr-FR')}${lastRotation.note ? ` · ${lastRotation.note}` : ''}`
+                : 'Aucune rotation enregistrée.'}
+            </p>
+            <p className="text-on-surface-variant text-[12px] mb-3">
+              Cet écran ne fait que suivre la rotation, il ne la déclenche pas. Pour tourner la
+              vraie clé :{' '}
+              <code className="text-[11px]">supabase secrets set GEMINI_API_KEY=...</code> puis
+              redéployer les fonctions, comme aujourd'hui.
+            </p>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Note optionnelle"
+                className={`flex-1 bg-surface border border-surface-variant rounded-full px-4 py-1.5 text-[13px] text-on-surface placeholder:text-on-surface-variant ${FOCUS_RING}`}
+              />
+              <button
+                type="button"
+                disabled={rotationSaving}
+                onClick={() => {
+                  onLogRotation(note || undefined);
+                  setNote('');
+                }}
+                className={`flex-shrink-0 flex items-center gap-1.5 bg-primary text-on-primary font-cta-pill text-[13px] font-bold px-4 py-1.5 rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${FOCUS_RING}`}
+              >
+                {rotationSaving ? 'Enregistrement…' : "Marquer comme tournée aujourd'hui"}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

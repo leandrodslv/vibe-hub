@@ -18,6 +18,7 @@
 // ════════════════════════════════════════════════════════════════════════════
 
 import { GoogleGenAI } from 'npm:@google/genai@^2.15.0';
+import { logAiUsage } from '../_shared/ai-usage-log.ts';
 
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
 const MODEL = 'gemini-2.5-flash-lite';
@@ -91,6 +92,7 @@ Deno.serve(async (req) => {
         ? { systemInstruction: String(body.systemInstruction).slice(0, MAX_CHARS) }
         : undefined,
     });
+    logAiUsage('gemini-proxy', MODEL, res.usageMetadata);
     return json({ text: res.text ?? '' }, 200, cors);
   } catch (err) {
     const status = (err as { status?: number })?.status ?? 500;
