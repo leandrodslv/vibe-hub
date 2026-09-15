@@ -37,6 +37,9 @@ const YOUTUBE_HOSTS = ['youtube.com', 'youtu.be'];
 
 const MODULES = ['MODULE 1', 'MODULE 2', 'MODULE 3'];
 
+const FOCUS_RING =
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface';
+
 /* ════════════════════════════════════════
    PAGE PRINCIPALE
 ════════════════════════════════════════ */
@@ -76,8 +79,12 @@ export default function AdminPage() {
   // Chargement initial (session ou vérification admin en cours)
   if (session === undefined || (session && admin === undefined)) {
     return (
-      <div className="min-h-screen bg-[#F9F9F9] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#EAEAEA] border-t-black rounded-full animate-spin" />
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <div
+          className="w-8 h-8 border-2 border-surface-variant border-t-primary rounded-full animate-spin"
+          role="status"
+          aria-label="Chargement"
+        />
       </div>
     );
   }
@@ -92,17 +99,19 @@ export default function AdminPage() {
 ════════════════════════════════════════ */
 function AccessDenied({ email, onLogout }) {
   return (
-    <div className="min-h-screen bg-[#F9F9F9] flex items-center justify-center p-4">
-      <div className="bg-white border border-[#EAEAEA] rounded-2xl shadow-sm w-full max-w-sm p-8 text-center">
-        <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center mx-auto mb-4">
-          <AlertTriangle className="w-6 h-6 text-red-500" />
+    <div className="min-h-screen bg-surface flex items-center justify-center p-4">
+      <div className="bg-surface-container-lowest border border-surface-variant rounded-bento shadow-sm w-full max-w-sm p-8 text-center">
+        <div className="w-12 h-12 rounded-2xl bg-error-container flex items-center justify-center mx-auto mb-4">
+          <AlertTriangle className="w-6 h-6 text-on-error-container" aria-hidden="true" />
         </div>
-        <h1 className="text-[16px] font-bold text-black mb-1.5">Accès refusé</h1>
-        <p className="text-[13px] text-[#666] mb-6">
+        <h1 className="font-headline-lg-mobile text-[16px] font-bold text-on-surface mb-1.5">
+          Accès refusé
+        </h1>
+        <p className="font-body-md text-[13px] text-on-surface-variant mb-6">
           {email ? (
             <>
-              Le compte <span className="font-semibold text-black">{email}</span> n&apos;a pas les
-              droits admin.
+              Le compte <span className="font-semibold text-on-surface">{email}</span> n&apos;a pas
+              les droits admin.
             </>
           ) : (
             "Ce compte n'a pas les droits admin."
@@ -110,9 +119,9 @@ function AccessDenied({ email, onLogout }) {
         </p>
         <button
           onClick={onLogout}
-          className="w-full flex items-center justify-center gap-2 bg-black text-white text-sm font-bold py-2.5 rounded-xl hover:bg-[#333] transition-colors cursor-pointer"
+          className={`w-full flex items-center justify-center gap-2 bg-primary text-on-primary font-cta-pill text-sm font-bold py-2.5 rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors cursor-pointer ${FOCUS_RING}`}
         >
-          <LogOut className="w-4 h-4" />
+          <LogOut className="w-4 h-4" aria-hidden="true" />
           Se déconnecter
         </button>
       </div>
@@ -148,11 +157,13 @@ function LoginScreen() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9F9F9] flex items-center justify-center p-4">
-      <div className="bg-white border border-[#EAEAEA] rounded-2xl shadow-sm w-full max-w-sm p-8">
+    <div className="min-h-screen bg-surface flex items-center justify-center p-4">
+      <div className="bg-surface-container-lowest border border-surface-variant rounded-bento shadow-sm w-full max-w-sm p-8">
         <div className="mb-7 text-center">
-          <span className="text-xl font-extrabold tracking-tight text-black">vibe hub</span>
-          <p className="text-[#999] text-[12px] mt-1 font-medium uppercase tracking-widest">
+          <span className="font-display-lg text-xl font-extrabold tracking-tight text-on-surface">
+            vibe hub
+          </span>
+          <p className="font-label-caps text-label-caps text-on-surface-variant mt-1 uppercase">
             Admin
           </p>
         </div>
@@ -160,10 +171,19 @@ function LoginScreen() {
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
           {/* Email */}
           <div>
-            <label className="block text-[12px] font-semibold text-black mb-1.5">Email</label>
+            <label
+              htmlFor="admin_email"
+              className="block font-label-caps text-label-caps text-on-surface-variant uppercase mb-1.5"
+            >
+              Email
+            </label>
             <div className="relative">
-              <Mail className="w-4 h-4 text-[#999] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Mail
+                className="w-4 h-4 text-on-surface-variant absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+                aria-hidden="true"
+              />
               <input
+                id="admin_email"
                 ref={emailRef}
                 type="email"
                 value={email}
@@ -172,8 +192,8 @@ function LoginScreen() {
                   setError('');
                 }}
                 placeholder="admin@vibehub.com"
-                className={`w-full bg-white border rounded-xl pl-10 pr-4 py-2.5 text-[13px] outline-none transition-all placeholder:text-[#CCCCCC] text-black ${
-                  error ? 'border-red-400' : 'border-[#EAEAEA] focus:border-black'
+                className={`w-full bg-surface-container-lowest border rounded-xl pl-10 pr-4 py-2.5 text-[13px] outline-none transition-all placeholder:text-on-surface-variant/50 text-on-surface ${FOCUS_RING} ${
+                  error ? 'border-error' : 'border-outline-variant focus:border-primary'
                 }`}
               />
             </div>
@@ -181,12 +201,19 @@ function LoginScreen() {
 
           {/* Mot de passe */}
           <div>
-            <label className="block text-[12px] font-semibold text-black mb-1.5">
+            <label
+              htmlFor="admin_password"
+              className="block font-label-caps text-label-caps text-on-surface-variant uppercase mb-1.5"
+            >
               Mot de passe
             </label>
             <div className="relative">
-              <Lock className="w-4 h-4 text-[#999] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Lock
+                className="w-4 h-4 text-on-surface-variant absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+                aria-hidden="true"
+              />
               <input
+                id="admin_password"
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => {
@@ -194,29 +221,38 @@ function LoginScreen() {
                   setError('');
                 }}
                 placeholder="••••••••••"
-                className={`w-full bg-white border rounded-xl pl-10 pr-10 py-2.5 text-[13px] outline-none transition-all placeholder:text-[#CCCCCC] text-black ${
-                  error ? 'border-red-400' : 'border-[#EAEAEA] focus:border-black'
+                className={`w-full bg-surface-container-lowest border rounded-xl pl-10 pr-10 py-2.5 text-[13px] outline-none transition-all placeholder:text-on-surface-variant/50 text-on-surface ${FOCUS_RING} ${
+                  error ? 'border-error' : 'border-outline-variant focus:border-primary'
                 }`}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((p) => !p)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#999] hover:text-black transition-colors cursor-pointer"
+                aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                className={`absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer rounded ${FOCUS_RING}`}
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" aria-hidden="true" />
+                ) : (
+                  <Eye className="w-4 h-4" aria-hidden="true" />
+                )}
               </button>
             </div>
           </div>
 
-          {error && <p className="text-[12px] text-red-500 font-medium">{error}</p>}
+          {error && (
+            <p role="alert" className="font-body-md text-[12px] text-error font-medium">
+              {error}
+            </p>
+          )}
 
           <button
             type="submit"
             disabled={loading || !email || !password}
-            className="w-full flex items-center justify-center gap-2 bg-black text-white text-sm font-bold py-2.5 rounded-xl hover:bg-[#333] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-lg shadow-black/10"
+            className={`w-full flex items-center justify-center gap-2 bg-primary text-on-primary font-cta-pill text-sm font-bold py-2.5 rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer chunky-shadow ${FOCUS_RING}`}
           >
             {loading ? (
-              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span className="w-4 h-4 border-2 border-on-primary/30 border-t-on-primary rounded-full animate-spin" />
             ) : (
               'Se connecter'
             )}
@@ -232,22 +268,24 @@ function LoginScreen() {
 ════════════════════════════════════════ */
 function AdminHeader({ onLogout }) {
   return (
-    <div className="h-14 bg-white border-b border-[#EAEAEA] flex items-center justify-between px-8 sticky top-0 z-20">
+    <div className="h-14 bg-surface-container-lowest border-b-2 border-surface-variant flex items-center justify-between px-8 sticky top-0 z-20">
       <div className="flex items-center gap-3">
         <a
           href="/"
-          className="text-xl font-extrabold tracking-tight text-black hover:opacity-70 transition-opacity"
+          className={`font-display-lg text-xl font-extrabold tracking-tight text-on-surface hover:text-primary transition-colors rounded ${FOCUS_RING}`}
         >
           vibe hub
         </a>
-        <div className="w-px h-4 bg-[#EAEAEA]" />
-        <span className="text-[12px] font-bold uppercase tracking-widest text-[#999]">Admin</span>
+        <div className="w-px h-4 bg-surface-variant" aria-hidden="true" />
+        <span className="font-label-caps text-label-caps uppercase text-on-surface-variant">
+          Admin
+        </span>
       </div>
       <button
         onClick={onLogout}
-        className="flex items-center gap-1.5 text-[13px] font-semibold text-[#666] hover:text-black transition-colors cursor-pointer"
+        className={`flex items-center gap-1.5 text-[13px] font-semibold text-on-surface-variant hover:text-primary transition-colors cursor-pointer rounded ${FOCUS_RING}`}
       >
-        <LogOut className="w-4 h-4" />
+        <LogOut className="w-4 h-4" aria-hidden="true" />
         Déconnexion
       </button>
     </div>
@@ -303,7 +341,7 @@ function Dashboard({ onLogout }) {
   // le contenu écrit d'un cours a besoin de place pour être confortable à rédiger.
   if (editing) {
     return (
-      <div className="min-h-screen bg-[#F9F9F9]">
+      <div className="min-h-screen bg-surface">
         <AdminHeader onLogout={onLogout} />
         <CourseEditor
           mode={editing.mode}
@@ -316,7 +354,7 @@ function Dashboard({ onLogout }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#F9F9F9]">
+    <div className="min-h-screen bg-surface">
       <AdminHeader onLogout={onLogout} />
 
       {/* ── Content ── */}
@@ -328,9 +366,14 @@ function Dashboard({ onLogout }) {
             { label: 'Publiés', value: published },
             { label: 'Brouillons', value: courses.length - published },
           ].map(({ label, value }) => (
-            <div key={label} className="bg-white border border-[#EAEAEA] rounded-2xl p-5 shadow-sm">
-              <div className="text-2xl font-bold text-black mb-0.5">{value}</div>
-              <div className="text-[12px] font-semibold text-[#999] uppercase tracking-wide">
+            <div
+              key={label}
+              className="bg-surface-container-lowest border border-surface-variant rounded-[24px] p-5 shadow-sm"
+            >
+              <div className="font-display-lg text-2xl font-bold text-on-surface mb-0.5">
+                {value}
+              </div>
+              <div className="font-label-caps text-label-caps uppercase text-on-surface-variant">
                 {label}
               </div>
             </div>
@@ -339,19 +382,23 @@ function Dashboard({ onLogout }) {
 
         {/* Header liste */}
         <div className="flex items-center justify-between mb-5">
-          <h1 className="text-[22px] font-bold text-black">Cours</h1>
+          <h1 className="font-headline-lg-mobile text-[22px] font-bold text-on-surface">Cours</h1>
           <button
             onClick={() => setEditing({ mode: 'add' })}
-            className="flex items-center gap-2 bg-black text-white text-[13px] font-bold px-4 py-2.5 rounded-xl hover:bg-[#333] transition-colors cursor-pointer shadow-lg shadow-black/10"
+            className={`flex items-center gap-2 bg-primary text-on-primary font-cta-pill text-[13px] font-bold px-5 py-2.5 rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors cursor-pointer chunky-shadow ${FOCUS_RING}`}
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4" aria-hidden="true" />
             Ajouter un cours
           </button>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-24">
-            <div className="w-8 h-8 border-2 border-[#EAEAEA] border-t-black rounded-full animate-spin" />
+            <div
+              className="w-8 h-8 border-2 border-surface-variant border-t-primary rounded-full animate-spin"
+              role="status"
+              aria-label="Chargement des cours"
+            />
           </div>
         ) : courses.length === 0 ? (
           <EmptyState onAdd={() => setEditing({ mode: 'add' })} />
@@ -386,16 +433,16 @@ function Dashboard({ onLogout }) {
 ════════════════════════════════════════ */
 function CourseRow({ course, onEdit, onDelete, onToggle }) {
   return (
-    <div className="bg-white border border-[#EAEAEA] rounded-2xl px-5 py-4 flex items-center gap-4 hover:border-[#CCCCCC] transition-colors shadow-sm">
-      <GripVertical className="w-4 h-4 text-[#CCCCCC] flex-shrink-0" />
+    <div className="bg-surface-container-lowest border border-surface-variant rounded-[24px] px-5 py-4 flex items-center gap-4 hover:border-outline-variant transition-colors shadow-sm">
+      <GripVertical className="w-4 h-4 text-outline-variant flex-shrink-0" aria-hidden="true" />
 
       {/* Image */}
-      <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-[#F4F4F4]">
+      <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-surface-variant">
         {course.image_url ? (
           <img src={course.image_url} alt="" className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <BookOpen className="w-5 h-5 text-[#CCCCCC]" />
+            <BookOpen className="w-5 h-5 text-outline" aria-hidden="true" />
           </div>
         )}
       </div>
@@ -403,42 +450,51 @@ function CourseRow({ course, onEdit, onDelete, onToggle }) {
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-[#999] bg-[#F4F4F4] px-2 py-0.5 rounded">
+          <span className="font-label-caps text-label-caps uppercase text-on-surface-variant bg-surface-variant px-2 py-0.5 rounded">
             {course.module_name}
           </span>
-          <span className="text-[10px] font-medium text-[#999]">{course.duration}</span>
+          <span className="text-[10px] font-medium text-on-surface-variant">{course.duration}</span>
           {course.video_url && (
-            <span className="flex items-center gap-1 text-[10px] font-bold text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded">
-              <Video className="w-3 h-3" /> Vidéo
+            <span className="flex items-center gap-1 text-[10px] font-bold text-on-tertiary-fixed-variant bg-tertiary-fixed px-1.5 py-0.5 rounded">
+              <Video className="w-3 h-3" aria-hidden="true" /> Vidéo
             </span>
           )}
         </div>
-        <p className="text-[14px] font-bold text-black truncate">{course.title}</p>
-        <p className="text-[12px] text-[#666] truncate">{course.description}</p>
+        <p className="text-[14px] font-bold text-on-surface truncate">{course.title}</p>
+        <p className="text-[12px] text-on-surface-variant truncate">{course.description}</p>
       </div>
 
       {/* Actions */}
       <div className="flex items-center gap-2 flex-shrink-0">
         <button
           onClick={onToggle}
+          aria-label={course.published ? 'Masquer' : 'Publier'}
           title={course.published ? 'Masquer' : 'Publier'}
-          className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
-            course.published ? 'bg-black text-white' : 'bg-[#F4F4F4] text-[#999] hover:bg-[#EAEAEA]'
+          className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${FOCUS_RING} ${
+            course.published
+              ? 'bg-primary text-on-primary'
+              : 'bg-surface-variant text-on-surface-variant hover:bg-outline-variant'
           }`}
         >
-          {course.published ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+          {course.published ? (
+            <Eye className="w-3.5 h-3.5" aria-hidden="true" />
+          ) : (
+            <EyeOff className="w-3.5 h-3.5" aria-hidden="true" />
+          )}
         </button>
         <button
           onClick={onEdit}
-          className="w-8 h-8 rounded-lg bg-[#F4F4F4] text-[#666] hover:bg-[#EAEAEA] hover:text-black flex items-center justify-center transition-colors cursor-pointer"
+          aria-label="Modifier"
+          className={`w-8 h-8 rounded-lg bg-surface-variant text-on-surface-variant hover:bg-outline-variant hover:text-on-surface flex items-center justify-center transition-colors cursor-pointer ${FOCUS_RING}`}
         >
-          <Pencil className="w-3.5 h-3.5" />
+          <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
         </button>
         <button
           onClick={onDelete}
-          className="w-8 h-8 rounded-lg bg-[#F4F4F4] text-[#666] hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition-colors cursor-pointer"
+          aria-label="Supprimer"
+          className={`w-8 h-8 rounded-lg bg-surface-variant text-on-surface-variant hover:bg-error-container hover:text-on-error-container flex items-center justify-center transition-colors cursor-pointer ${FOCUS_RING}`}
         >
-          <Trash2 className="w-3.5 h-3.5" />
+          <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
         </button>
       </div>
     </div>
@@ -508,13 +564,13 @@ function CourseEditor({ mode, course, onSave, onCancel }) {
       <button
         type="button"
         onClick={onCancel}
-        className="flex items-center gap-1.5 text-[13px] font-semibold text-[#666] hover:text-black transition-colors cursor-pointer mb-6"
+        className={`flex items-center text-[13px] font-semibold text-on-surface-variant hover:text-primary w-fit bg-surface-container-lowest px-4 py-2 rounded-lg border border-surface-variant shadow-sm transition-all hover:shadow-md cursor-pointer mb-6 ${FOCUS_RING}`}
       >
-        <ArrowLeft className="w-4 h-4" />
+        <ArrowLeft className="w-4 h-4 mr-1.5" aria-hidden="true" />
         Retour aux cours
       </button>
 
-      <h1 className="text-[22px] font-bold text-black mb-8">
+      <h1 className="font-headline-lg-mobile text-[22px] font-bold text-on-surface mb-8">
         {mode === 'add' ? 'Ajouter un cours' : `Modifier « ${course.title} »`}
       </h1>
 
@@ -522,11 +578,17 @@ function CourseEditor({ mode, course, onSave, onCancel }) {
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Module */}
         <div>
-          <label className="block text-[12px] font-semibold text-black mb-1.5">Module</label>
+          <label
+            htmlFor="course_module"
+            className="block font-label-caps text-label-caps text-on-surface-variant uppercase mb-1.5"
+          >
+            Module
+          </label>
           <select
+            id="course_module"
             value={form.module_name}
             onChange={(e) => set('module_name', e.target.value)}
-            className="w-full bg-white border border-[#EAEAEA] rounded-xl px-4 py-2.5 text-[13px] outline-none focus:border-black transition-all text-black cursor-pointer"
+            className={`w-full bg-surface-container-lowest border border-outline-variant rounded-xl px-4 py-2.5 text-[13px] outline-none focus:border-primary transition-all text-on-surface cursor-pointer ${FOCUS_RING}`}
           >
             {MODULES.map((m) => (
               <option key={m} value={m}>
@@ -538,53 +600,77 @@ function CourseEditor({ mode, course, onSave, onCancel }) {
 
         {/* Titre */}
         <div>
-          <label className="block text-[12px] font-semibold text-black mb-1.5">Titre *</label>
+          <label
+            htmlFor="course_title"
+            className="block font-label-caps text-label-caps text-on-surface-variant uppercase mb-1.5"
+          >
+            Titre *
+          </label>
           <input
+            id="course_title"
             type="text"
             value={form.title}
             onChange={(e) => set('title', e.target.value)}
             placeholder="Ex : Introduction à l'IA pour l'UI"
-            className="w-full bg-white border border-[#EAEAEA] rounded-xl px-4 py-2.5 text-[13px] outline-none focus:border-black transition-all placeholder:text-[#CCCCCC] text-black"
+            className={`w-full bg-surface-container-lowest border border-outline-variant rounded-xl px-4 py-2.5 text-[13px] outline-none focus:border-primary transition-all placeholder:text-on-surface-variant/50 text-on-surface ${FOCUS_RING}`}
             required
           />
         </div>
 
         {/* Description */}
         <div>
-          <label className="block text-[12px] font-semibold text-black mb-1.5">Description</label>
+          <label
+            htmlFor="course_description"
+            className="block font-label-caps text-label-caps text-on-surface-variant uppercase mb-1.5"
+          >
+            Description
+          </label>
           <textarea
+            id="course_description"
             value={form.description}
             onChange={(e) => set('description', e.target.value)}
             placeholder="Décrivez le contenu de ce cours..."
             rows={3}
-            className="w-full bg-white border border-[#EAEAEA] rounded-xl px-4 py-2.5 text-[13px] outline-none focus:border-black transition-all placeholder:text-[#CCCCCC] text-black resize-none"
+            className={`w-full bg-surface-container-lowest border border-outline-variant rounded-xl px-4 py-2.5 text-[13px] outline-none focus:border-primary transition-all placeholder:text-on-surface-variant/50 text-on-surface resize-none ${FOCUS_RING}`}
           />
         </div>
 
         {/* Durée + Image */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-[12px] font-semibold text-black mb-1.5">Durée</label>
+            <label
+              htmlFor="course_duration"
+              className="block font-label-caps text-label-caps text-on-surface-variant uppercase mb-1.5"
+            >
+              Durée
+            </label>
             <input
+              id="course_duration"
               type="text"
               value={form.duration}
               onChange={(e) => set('duration', e.target.value)}
               placeholder="Ex : 12:45"
-              className="w-full bg-white border border-[#EAEAEA] rounded-xl px-4 py-2.5 text-[13px] outline-none focus:border-black transition-all placeholder:text-[#CCCCCC] text-black"
+              className={`w-full bg-surface-container-lowest border border-outline-variant rounded-xl px-4 py-2.5 text-[13px] outline-none focus:border-primary transition-all placeholder:text-on-surface-variant/50 text-on-surface ${FOCUS_RING}`}
             />
           </div>
           <div>
-            <label className="block text-[12px] font-semibold text-black mb-1.5">Statut</label>
+            <span className="block font-label-caps text-label-caps text-on-surface-variant uppercase mb-1.5">
+              Statut
+            </span>
             <button
               type="button"
               onClick={() => set('published', !form.published)}
-              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-colors cursor-pointer border ${
+              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-colors cursor-pointer border ${FOCUS_RING} ${
                 form.published
-                  ? 'bg-black text-white border-black'
-                  : 'bg-white text-[#666] border-[#EAEAEA] hover:border-[#CCCCCC]'
+                  ? 'bg-primary text-on-primary border-primary'
+                  : 'bg-surface-container-lowest text-on-surface-variant border-outline-variant hover:border-outline'
               }`}
             >
-              {form.published ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              {form.published ? (
+                <Eye className="w-4 h-4" aria-hidden="true" />
+              ) : (
+                <EyeOff className="w-4 h-4" aria-hidden="true" />
+              )}
               {form.published ? 'Publié' : 'Brouillon'}
             </button>
           </div>
@@ -592,18 +678,22 @@ function CourseEditor({ mode, course, onSave, onCancel }) {
 
         {/* Image URL */}
         <div>
-          <label className="block text-[12px] font-semibold text-black mb-1.5">
+          <label
+            htmlFor="course_image_url"
+            className="block font-label-caps text-label-caps text-on-surface-variant uppercase mb-1.5"
+          >
             URL de l'image
           </label>
           <input
+            id="course_image_url"
             type="url"
             value={form.image_url}
             onChange={(e) => set('image_url', e.target.value)}
             placeholder="https://..."
-            className="w-full bg-white border border-[#EAEAEA] rounded-xl px-4 py-2.5 text-[13px] outline-none focus:border-black transition-all placeholder:text-[#CCCCCC] text-black"
+            className={`w-full bg-surface-container-lowest border border-outline-variant rounded-xl px-4 py-2.5 text-[13px] outline-none focus:border-primary transition-all placeholder:text-on-surface-variant/50 text-on-surface ${FOCUS_RING}`}
           />
           {form.image_url && (
-            <div className="mt-2 w-full h-28 rounded-xl overflow-hidden bg-[#F4F4F4]">
+            <div className="mt-2 w-full h-28 rounded-xl overflow-hidden bg-surface-variant">
               <img
                 src={form.image_url}
                 alt="Preview"
@@ -618,18 +708,22 @@ function CourseEditor({ mode, course, onSave, onCancel }) {
 
         {/* Video URL */}
         <div>
-          <label className="block text-[12px] font-semibold text-black mb-1.5 flex items-center gap-1.5">
-            <Video className="w-3.5 h-3.5 text-blue-500" />
+          <label
+            htmlFor="course_video_url"
+            className="block font-label-caps text-label-caps text-on-surface-variant uppercase mb-1.5 flex items-center gap-1.5"
+          >
+            <Video className="w-3.5 h-3.5 text-tertiary" aria-hidden="true" />
             URL de la vidéo (Teams / Stream / YouTube)
           </label>
           <input
+            id="course_video_url"
             type="url"
             value={form.video_url}
             onChange={(e) => set('video_url', e.target.value)}
             placeholder="Collez ici le lien de partage de votre vidéo Teams..."
-            className="w-full bg-white border border-[#EAEAEA] rounded-xl px-4 py-2.5 text-[13px] outline-none focus:border-black transition-all placeholder:text-[#CCCCCC] text-black"
+            className={`w-full bg-surface-container-lowest border border-outline-variant rounded-xl px-4 py-2.5 text-[13px] outline-none focus:border-primary transition-all placeholder:text-on-surface-variant/50 text-on-surface ${FOCUS_RING}`}
           />
-          <p className="text-[11px] text-[#999] mt-1.5">
+          <p className="text-[11px] text-on-surface-variant mt-1.5">
             Formats supportés : lien SharePoint, Microsoft Stream, YouTube, ou lien direct (.mp4)
           </p>
           {isYouTubeUrl && (
@@ -638,12 +732,12 @@ function CourseEditor({ mode, course, onSave, onCancel }) {
                 type="button"
                 onClick={handleGenerateDraft}
                 disabled={draftLoading}
-                className="flex items-center gap-2 bg-[#F4F4F4] text-black text-[12px] font-semibold px-3.5 py-2 rounded-lg hover:bg-[#EAEAEA] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className={`flex items-center gap-2 bg-primary-fixed text-on-primary-fixed-variant text-[12px] font-semibold px-3.5 py-2 rounded-lg hover:bg-primary-fixed-dim transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${FOCUS_RING}`}
               >
                 {draftLoading ? (
-                  <span className="w-3.5 h-3.5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                  <span className="w-3.5 h-3.5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                 ) : (
-                  <Sparkles className="w-3.5 h-3.5" />
+                  <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
                 )}
                 {draftLoading
                   ? 'Génération en cours…'
@@ -651,12 +745,14 @@ function CourseEditor({ mode, course, onSave, onCancel }) {
                     ? 'Regénérer le brouillon IA'
                     : 'Générer un brouillon IA depuis la vidéo'}
               </button>
-              <p className="text-[11px] text-[#999] mt-1.5">
+              <p className="text-[11px] text-on-surface-variant mt-1.5">
                 Gemini regarde la vidéo YouTube et préremplit titre, description et contenu écrit —
                 à relire avant d'enregistrer, rien n'est publié automatiquement.
               </p>
               {draftError && (
-                <p className="text-[12px] text-red-500 font-medium mt-1.5">{draftError}</p>
+                <p role="alert" className="text-[12px] text-error font-medium mt-1.5">
+                  {draftError}
+                </p>
               )}
             </div>
           )}
@@ -665,16 +761,18 @@ function CourseEditor({ mode, course, onSave, onCancel }) {
         {/* Contenu écrit (Mode Lecture) */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="text-[12px] font-semibold text-black flex items-center gap-1.5">
-              <FileText className="w-3.5 h-3.5 text-[#999]" />
+            <span className="font-label-caps text-label-caps text-on-surface-variant uppercase flex items-center gap-1.5">
+              <FileText className="w-3.5 h-3.5 text-outline" aria-hidden="true" />
               Contenu écrit (Mode Lecture)
-            </label>
-            <div className="flex bg-[#F4F4F4] p-0.5 rounded-lg">
+            </span>
+            <div className="flex bg-surface-variant p-0.5 rounded-lg">
               <button
                 type="button"
                 onClick={() => setContentPreview(false)}
-                className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors cursor-pointer ${
-                  !contentPreview ? 'bg-white text-black shadow-sm' : 'text-[#999]'
+                className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors cursor-pointer ${FOCUS_RING} ${
+                  !contentPreview
+                    ? 'bg-surface-container-lowest text-on-surface shadow-sm'
+                    : 'text-on-surface-variant'
                 }`}
               >
                 Écrire
@@ -682,8 +780,10 @@ function CourseEditor({ mode, course, onSave, onCancel }) {
               <button
                 type="button"
                 onClick={() => setContentPreview(true)}
-                className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors cursor-pointer ${
-                  contentPreview ? 'bg-white text-black shadow-sm' : 'text-[#999]'
+                className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors cursor-pointer ${FOCUS_RING} ${
+                  contentPreview
+                    ? 'bg-surface-container-lowest text-on-surface shadow-sm'
+                    : 'text-on-surface-variant'
                 }`}
               >
                 Aperçu
@@ -691,13 +791,15 @@ function CourseEditor({ mode, course, onSave, onCancel }) {
             </div>
           </div>
           {contentPreview ? (
-            <div className="w-full min-h-[400px] bg-[#F9F9F9] border border-[#EAEAEA] rounded-xl px-5 py-4">
+            <div className="w-full min-h-[400px] bg-surface border border-outline-variant rounded-xl px-5 py-4">
               {form.content.trim() ? (
                 <div className="prose prose-sm max-w-none">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{form.content}</ReactMarkdown>
                 </div>
               ) : (
-                <p className="text-[13px] text-[#999]">Rien à prévisualiser pour l'instant.</p>
+                <p className="text-[13px] text-on-surface-variant">
+                  Rien à prévisualiser pour l'instant.
+                </p>
               )}
             </div>
           ) : (
@@ -708,29 +810,30 @@ function CourseEditor({ mode, course, onSave, onCancel }) {
                 'Le texte que lira le designer en "Mode Lecture" (Markdown supporté : titres avec #, listes, **gras**…).\n\nLaissez vide si ce cours reste uniquement vidéo.'
               }
               rows={18}
-              className="w-full bg-white border border-[#EAEAEA] rounded-xl px-5 py-4 text-[13px] outline-none focus:border-black transition-all placeholder:text-[#CCCCCC] text-black resize-y font-mono leading-relaxed"
+              aria-label="Contenu écrit du cours"
+              className={`w-full bg-surface-container-lowest border border-outline-variant rounded-xl px-5 py-4 text-[13px] outline-none focus:border-primary transition-all placeholder:text-on-surface-variant/50 text-on-surface resize-y font-mono leading-relaxed ${FOCUS_RING}`}
             />
           )}
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 pt-4 border-t border-[#EAEAEA]">
+        <div className="flex gap-3 pt-4 border-t border-surface-variant">
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 py-2.5 rounded-xl border border-[#EAEAEA] text-[13px] font-semibold text-[#666] hover:bg-[#F4F4F4] transition-colors cursor-pointer"
+            className={`flex-1 py-2.5 rounded-full border border-outline-variant text-[13px] font-semibold text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer ${FOCUS_RING}`}
           >
             Annuler
           </button>
           <button
             type="submit"
             disabled={saving || !form.title.trim()}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-black text-white text-[13px] font-bold hover:bg-[#333] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-lg shadow-black/10"
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full bg-primary text-on-primary text-[13px] font-bold hover:bg-primary-container hover:text-on-primary-container transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer chunky-shadow ${FOCUS_RING}`}
           >
             {saving ? (
-              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span className="w-4 h-4 border-2 border-on-primary/30 border-t-on-primary rounded-full animate-spin" />
             ) : (
-              <Save className="w-4 h-4" />
+              <Save className="w-4 h-4" aria-hidden="true" />
             )}
             {saving ? 'Enregistrement…' : 'Enregistrer'}
           </button>
@@ -760,30 +863,37 @@ function DeleteModal({ course, onConfirm, onCancel }) {
         if (e.target === e.currentTarget) onCancel();
       }}
     >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-7">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete_modal_title"
+        className="bg-surface-container-lowest rounded-bento shadow-2xl w-full max-w-sm p-7"
+      >
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
-            <AlertTriangle className="w-5 h-5 text-red-500" />
+          <div className="w-10 h-10 rounded-xl bg-error-container flex items-center justify-center flex-shrink-0">
+            <AlertTriangle className="w-5 h-5 text-on-error-container" aria-hidden="true" />
           </div>
           <div>
-            <h3 className="text-[15px] font-bold text-black">Supprimer ce cours ?</h3>
-            <p className="text-[12px] text-[#666]">Cette action est irréversible.</p>
+            <h3 id="delete_modal_title" className="text-[15px] font-bold text-on-surface">
+              Supprimer ce cours ?
+            </h3>
+            <p className="text-[12px] text-on-surface-variant">Cette action est irréversible.</p>
           </div>
         </div>
-        <div className="bg-[#F4F4F4] rounded-xl px-4 py-3 mb-6">
-          <p className="text-[13px] font-semibold text-black truncate">{course.title}</p>
-          <p className="text-[11px] text-[#999]">{course.module_name}</p>
+        <div className="bg-surface-variant rounded-xl px-4 py-3 mb-6">
+          <p className="text-[13px] font-semibold text-on-surface truncate">{course.title}</p>
+          <p className="text-[11px] text-on-surface-variant">{course.module_name}</p>
         </div>
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 py-2.5 rounded-xl border border-[#EAEAEA] text-[13px] font-semibold text-[#666] hover:bg-[#F4F4F4] transition-colors cursor-pointer"
+            className={`flex-1 py-2.5 rounded-full border border-outline-variant text-[13px] font-semibold text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer ${FOCUS_RING}`}
           >
             Annuler
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-[13px] font-bold hover:bg-red-600 transition-colors cursor-pointer"
+            className={`flex-1 py-2.5 rounded-full bg-error text-on-error text-[13px] font-bold hover:opacity-90 transition-opacity cursor-pointer ${FOCUS_RING}`}
           >
             Supprimer
           </button>
@@ -798,17 +908,21 @@ function DeleteModal({ course, onConfirm, onCancel }) {
 ════════════════════════════════════════ */
 function EmptyState({ onAdd }) {
   return (
-    <div className="flex flex-col items-center justify-center py-24 text-center">
-      <div className="w-16 h-16 bg-[#F4F4F4] rounded-2xl flex items-center justify-center mb-4">
-        <BookOpen className="w-7 h-7 text-[#999]" />
+    <div className="bg-surface-container-low border border-surface-variant rounded-3xl py-24 flex flex-col items-center justify-center text-center">
+      <div className="w-16 h-16 bg-surface-container rounded-2xl flex items-center justify-center mb-4">
+        <BookOpen className="w-7 h-7 text-on-surface-variant" aria-hidden="true" />
       </div>
-      <p className="text-black font-semibold mb-1">Aucun cours pour l'instant</p>
-      <p className="text-[#666] text-sm mb-5">Commencez par ajouter votre premier cours.</p>
+      <p className="font-headline-lg-mobile text-[16px] font-bold text-on-surface mb-1">
+        Aucun cours pour l'instant
+      </p>
+      <p className="text-on-surface-variant text-sm mb-5">
+        Commencez par ajouter votre premier cours.
+      </p>
       <button
         onClick={onAdd}
-        className="flex items-center gap-2 bg-black text-white text-sm font-bold px-5 py-2.5 rounded-xl hover:bg-[#333] transition-colors cursor-pointer"
+        className={`flex items-center gap-2 bg-primary text-on-primary font-cta-pill text-sm font-bold px-5 py-2.5 rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors cursor-pointer chunky-shadow ${FOCUS_RING}`}
       >
-        <Plus className="w-4 h-4" />
+        <Plus className="w-4 h-4" aria-hidden="true" />
         Ajouter un cours
       </button>
     </div>
