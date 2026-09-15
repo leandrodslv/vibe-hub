@@ -67,5 +67,23 @@ export const CATEGORY_PREF_KEY = /** @type {const} */ ({
   reminder: 'cat_milestone', // les rappels suivent l'opt-in « Jalons & Progrès »
 });
 
+/**
+ * Contrat de `get_notifications_overview()` (migration 0015, Epic 13 story
+ * 13.3) — agrégats admin only : jamais une ligne `notifications`/`preferences`
+ * individuelle, jamais un email (même posture que `waitlistCountSchema`, AD-4).
+ */
+export const notificationsOverviewSchema = z
+  .object({
+    total_users: z.number().int().nonnegative(),
+    total_notifications: z.number().int().nonnegative(),
+    unread_notifications: z.number().int().nonnegative(),
+    email_enabled_count: z.number().int().nonnegative(),
+    last_digest_sent_at: z.string().nullable(),
+  })
+  .strict();
+
+export const notificationsOverviewArraySchema = z.array(notificationsOverviewSchema);
+
 /** @typedef {z.infer<typeof notificationSchema>} Notification */
 /** @typedef {z.infer<typeof notificationPreferencesSchema>} NotificationPreferences */
+/** @typedef {z.infer<typeof notificationsOverviewSchema>} NotificationsOverview */

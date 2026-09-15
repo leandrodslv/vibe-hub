@@ -11,6 +11,7 @@ import {
   notificationArraySchema,
   notificationPreferencesSchema,
   DEFAULT_PREFERENCES,
+  notificationsOverviewArraySchema,
   waitlistCountArraySchema,
   aiUsageSummaryArraySchema,
   keyRotationSchema,
@@ -359,6 +360,20 @@ export async function getWaitlistCounts() {
   const { data, error } = await supabase.rpc('get_waitlist_counts');
   if (error) rethrow('getWaitlistCounts', error);
   return parseOrThrow(waitlistCountArraySchema, data, 'getWaitlistCounts');
+}
+
+/**
+ * Agrégats notifications pour l'Accueil admin (Epic 13, story 13.3) — jamais
+ * une ligne `notifications`/`notification_preferences` individuelle, jamais
+ * un email : `get_notifications_overview()` filtre côté Postgres sur
+ * `is_admin()` (0015), un appel non-admin renvoie un tableau vide.
+ * @returns {Promise<import('../lib/schemas/notification.js').NotificationsOverview | null>}
+ */
+export async function getNotificationsOverview() {
+  const { data, error } = await supabase.rpc('get_notifications_overview');
+  if (error) rethrow('getNotificationsOverview', error);
+  const rows = parseOrThrow(notificationsOverviewArraySchema, data, 'getNotificationsOverview');
+  return rows[0] ?? null;
 }
 
 /* ─── Courses ─── */

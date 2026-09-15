@@ -127,6 +127,32 @@ describe('getWaitlistCounts', () => {
   });
 });
 
+describe('getNotificationsOverview', () => {
+  const overview = {
+    total_users: 3,
+    total_notifications: 12,
+    unread_notifications: 4,
+    email_enabled_count: 1,
+    last_digest_sent_at: '2026-09-15T08:00:00Z',
+  };
+
+  it('renvoie l’agrégat validé en cas de succès', async () => {
+    rpc.mockResolvedValueOnce({ data: [overview], error: null });
+    await expect(svc.getNotificationsOverview()).resolves.toEqual(overview);
+    expect(rpc).toHaveBeenCalledWith('get_notifications_overview');
+  });
+
+  it('renvoie null pour un appel non-admin (0 ligne)', async () => {
+    rpc.mockResolvedValueOnce({ data: [], error: null });
+    await expect(svc.getNotificationsOverview()).resolves.toBeNull();
+  });
+
+  it('lève quand la RPC renvoie une erreur', async () => {
+    rpc.mockResolvedValueOnce({ data: null, error: { message: 'permission denied' } });
+    await expect(svc.getNotificationsOverview()).rejects.toThrow(/permission denied/);
+  });
+});
+
 describe('uploadCourseDraftVideo', () => {
   const makeFile = (name = 'clip.mp4', type = 'video/mp4') => new File(['x'], name, { type });
 

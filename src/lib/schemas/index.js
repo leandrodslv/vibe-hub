@@ -23,6 +23,8 @@ export {
   NOTIFICATION_CATEGORIES,
   DEFAULT_PREFERENCES,
   CATEGORY_PREF_KEY,
+  notificationsOverviewSchema,
+  notificationsOverviewArraySchema,
 } from './notification.js';
 export {
   geminiTextSchema,

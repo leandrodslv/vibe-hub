@@ -22,6 +22,8 @@ import {
   KeyRound,
   BarChart3,
   Wrench,
+  Bell,
+  ExternalLink,
 } from 'lucide-react';
 import {
   getAllCourses,
@@ -38,6 +40,7 @@ import {
   getAiUsageSummary,
   getLastKeyRotation,
   logKeyRotation,
+  getNotificationsOverview,
 } from '../services/supabase';
 import { generateCourseDraftFromVideo, generateCourseDraftFromUploadedVideo } from '../services/ai';
 import {
@@ -407,6 +410,13 @@ function Dashboard({ onLogout }) {
   const [rotationSaving, setRotationSaving] = useState(false);
   const aiUsageFetchInFlight = useRef(false);
 
+  // Epic 13 story 13.3 — carte "Notifications" de l'Accueil : mêmes garde-fous
+  // (fetch paresseux, ref synchrone anti-double-fetch) que waitlist/ai-usage.
+  const [notifOverview, setNotifOverview] = useState(null);
+  const [notifLoading, setNotifLoading] = useState(false);
+  const [notifError, setNotifError] = useState(null);
+  const notifFetchInFlight = useRef(false);
+
   const load = async () => {
     setLoading(true);
     const data = await getAllCourses();
@@ -467,14 +477,30 @@ function Dashboard({ onLogout }) {
     if (aiUsage === null) loadAiUsage();
   };
 
+  const loadNotifOverview = async () => {
+    if (notifFetchInFlight.current) return;
+    notifFetchInFlight.current = true;
+    setNotifLoading(true);
+    setNotifError(null);
+    try {
+      setNotifOverview(await getNotificationsOverview());
+    } catch (err) {
+      setNotifError(err.message || 'Impossible de charger les notifications.');
+    } finally {
+      setNotifLoading(false);
+      notifFetchInFlight.current = false;
+    }
+  };
+
   // Epic 13 — Accueil est désormais le premier écran vu après connexion : on y
-  // déclenche les deux fetchs paresseux tout de suite (mêmes fonctions que les
+  // déclenche les trois fetchs paresseux tout de suite (mêmes fonctions que les
   // pills "Demande outils"/"Utilisation IA", même garde "déjà chargé ?") plutôt
   // que d'attendre que l'admin clique dessus pour la première fois.
   const openAccueilView = () => {
     setView('accueil');
     if (waitlistCounts === null) loadWaitlist();
     if (aiUsage === null) loadAiUsage();
+    if (notifOverview === null) loadNotifOverview();
   };
 
   const handleLogRotation = async (note) => {
@@ -553,9 +579,13 @@ function Dashboard({ onLogout }) {
             lastRotation={lastRotation}
             aiUsageLoading={aiUsageLoading}
             aiUsageError={aiUsageError}
+            notifOverview={notifOverview}
+            notifLoading={notifLoading}
+            notifError={notifError}
             onSelectCourses={() => setView('courses')}
             onSelectWaitlist={openWaitlistView}
             onSelectAiUsage={openAiUsageView}
+            onAddCourse={() => setEditing({ mode: 'add' })}
           />
         ) : view === 'waitlist' ? (
           <WaitlistView
@@ -738,13 +768,17 @@ function AccueilCard({ title, icon: Icon, children, onSelect, ctaLabel }) {
         <h2 className="text-[14px] font-bold text-on-surface">{title}</h2>
       </div>
       <div className="flex-1 mb-4">{children}</div>
-      <button
-        type="button"
-        onClick={onSelect}
-        className={`self-start text-[13px] font-bold text-primary hover:underline underline-offset-2 cursor-pointer rounded ${FOCUS_RING}`}
-      >
-        {ctaLabel} →
-      </button>
+      {/* Pas toutes les cartes n'ont une vue complète à renvoyer (ex. Notifications,
+          Epic 13 story 13.3 — pas encore d'onglet admin dédié) : le CTA est optionnel. */}
+      {onSelect && ctaLabel && (
+        <button
+          type="button"
+          onClick={onSelect}
+          className={`self-start text-[13px] font-bold text-primary hover:underline underline-offset-2 cursor-pointer rounded ${FOCUS_RING}`}
+        >
+          {ctaLabel} →
+        </button>
+      )}
     </div>
   );
 }
@@ -759,15 +793,22 @@ function AdminAccueilView({
   lastRotation,
   aiUsageLoading,
   aiUsageError,
+  notifOverview,
+  notifLoading,
+  notifError,
   onSelectCourses,
   onSelectWaitlist,
   onSelectAiUsage,
+  onAddCourse,
 }) {
   const byToolId = new Map((waitlistCounts || []).map((c) => [c.tool_id, c.signups]));
-  const topTool = TOOLS.filter((t) => t.status !== 'live')
+  const topTools = TOOLS.filter((t) => t.status !== 'live')
     .map((t) => ({ ...t, signups: byToolId.get(t.id) ?? 0 }))
-    .sort((a, b) => b.signups - a.signups)[0];
+    .sort((a, b) => b.signups - a.signups)
+    .slice(0, 3);
+  const maxSignups = Math.max(1, ...topTools.map((t) => t.signups));
 
+  const ENDPOINT_LABELS = { 'gemini-proxy': 'Assistant IA', 'course-draft': 'Brouillon vidéo' };
   const window7 = (aiUsage || []).filter((r) => r.window_days === 7);
   const totalTokens7 = window7.reduce((sum, r) => sum + r.total_tokens, 0);
   const totalCost7 = window7.reduce((sum, r) => sum + estimateUsdCost(r), 0);
@@ -778,14 +819,38 @@ function AdminAccueilView({
 
   return (
     <div>
-      <div className="mb-5">
-        <h1 className="font-headline-lg-mobile text-[22px] font-bold text-on-surface">Accueil</h1>
-        <p className="text-on-surface-variant text-[13px] mt-1">
-          Un coup d&apos;œil sur les cours, la demande d&apos;outils et l&apos;utilisation IA.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4 mb-5">
+        <div>
+          <h1 className="font-headline-lg-mobile text-[22px] font-bold text-on-surface">Accueil</h1>
+          <p className="text-on-surface-variant text-[13px] mt-1">
+            Un coup d&apos;œil sur les cours, la demande d&apos;outils, l&apos;utilisation IA et les
+            notifications.
+          </p>
+        </div>
+
+        {/* Actions rapides */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            type="button"
+            onClick={onAddCourse}
+            className={`flex items-center gap-1.5 bg-primary text-on-primary font-cta-pill text-[13px] font-bold px-4 py-2 rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors cursor-pointer chunky-shadow ${FOCUS_RING}`}
+          >
+            <Plus className="w-4 h-4" aria-hidden="true" />
+            Ajouter un cours
+          </button>
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`flex items-center gap-1.5 text-[13px] font-semibold text-on-surface-variant hover:text-primary transition-colors rounded px-2 py-2 ${FOCUS_RING}`}
+          >
+            <ExternalLink className="w-4 h-4" aria-hidden="true" />
+            Voir le site
+          </a>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         <AccueilCard
           title="Cours"
           icon={BookOpen}
@@ -828,17 +893,29 @@ function AdminAccueilView({
             <p className="text-on-surface-variant text-sm">Chargement…</p>
           ) : waitlistError ? (
             <p className="text-on-surface-variant text-sm">Indisponible pour l&apos;instant.</p>
-          ) : !topTool || topTool.signups === 0 ? (
+          ) : topTools.every((t) => t.signups === 0) ? (
             <p className="text-on-surface-variant text-sm">
               Aucune inscription pour l&apos;instant.
             </p>
           ) : (
-            <>
-              <div className="font-display-lg text-xl font-bold text-on-surface">
-                {topTool.signups} inscrit{topTool.signups > 1 ? 's' : ''}
-              </div>
-              <div className="text-on-surface-variant text-sm">{topTool.name}</div>
-            </>
+            <div className="space-y-2">
+              {topTools.map((tool) => (
+                <div key={tool.id}>
+                  <div className="flex items-center justify-between text-[12px] mb-0.5">
+                    <span className="font-semibold text-on-surface truncate">{tool.name}</span>
+                    <span className="text-on-surface-variant flex-shrink-0 ml-2">
+                      {tool.signups}
+                    </span>
+                  </div>
+                  <div className="w-full h-1 bg-surface-variant rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary rounded-full"
+                      style={{ width: `${Math.round((tool.signups / maxSignups) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </AccueilCard>
 
@@ -860,12 +937,49 @@ function AdminAccueilView({
               <div className="text-on-surface-variant text-sm mb-2">
                 ${totalCost7.toFixed(3)} estimé (7j)
               </div>
+              {window7.length > 0 && (
+                <ul className="text-on-surface-variant text-[12px] space-y-0.5 mb-2">
+                  {window7.map((row) => (
+                    <li key={row.endpoint} className="flex items-center justify-between">
+                      <span>{ENDPOINT_LABELS[row.endpoint] || row.endpoint}</span>
+                      <span>{row.total_tokens.toLocaleString('fr-FR')}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
               {isKeyStale && (
                 <div className="flex items-center gap-1.5 text-on-error-container text-[12px] font-semibold">
                   <KeyRound className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
                   Clé à tourner bientôt
                 </div>
               )}
+            </>
+          )}
+        </AccueilCard>
+
+        <AccueilCard title="Notifications" icon={Bell}>
+          {notifLoading ? (
+            <p className="text-on-surface-variant text-sm">Chargement…</p>
+          ) : notifError ? (
+            <p className="text-on-surface-variant text-sm">Indisponible pour l&apos;instant.</p>
+          ) : !notifOverview ? (
+            <p className="text-on-surface-variant text-sm">Aucune donnée pour l&apos;instant.</p>
+          ) : (
+            <>
+              <div className="font-display-lg text-xl font-bold text-on-surface">
+                {notifOverview.unread_notifications.toLocaleString('fr-FR')} non lues
+              </div>
+              <div className="text-on-surface-variant text-sm mb-2">
+                {notifOverview.total_notifications.toLocaleString('fr-FR')} envoyées ·{' '}
+                {notifOverview.total_users.toLocaleString('fr-FR')} compte
+                {notifOverview.total_users > 1 ? 's' : ''}
+              </div>
+              <p className="text-on-surface-variant text-[12px]">
+                {notifOverview.email_enabled_count} avec email activé
+                {notifOverview.last_digest_sent_at
+                  ? ` · dernier digest le ${new Date(notifOverview.last_digest_sent_at).toLocaleDateString('fr-FR')}`
+                  : ' · aucun digest envoyé'}
+              </p>
             </>
           )}
         </AccueilCard>
