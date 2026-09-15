@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import Sidebar from '../components/workspace/Sidebar';
-import AccueilTab from '../components/workspace/tabs/AccueilTab';
 import IATab from '../components/workspace/tabs/IATab';
 import ModulesTab from '../components/workspace/tabs/ModulesTab';
 import OutilsTab from '../components/workspace/tabs/OutilsTab';
@@ -32,16 +31,11 @@ export default function WorkspacePage() {
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
       <main className="flex-1 w-full md:ml-64 flex overflow-hidden p-container-margin md:p-10 pb-32 md:pb-10 gap-6 max-w-7xl mx-auto min-h-0">
-        {/* Les 5 onglets restent montés en permanence (juste masqués) pour éviter de recharger
+        {/* Les 4 onglets restent montés en permanence (juste masqués) pour éviter de recharger
             leurs données et de reperdre leur état à chaque changement d'onglet. `min-h-0` est
             nécessaire ici et sur chaque enfant flex de la chaîne : un flex item refuse par défaut
             de rétrécir sous la hauteur de son contenu, ce qui neutralise silencieusement tout
             `overflow-hidden`/`overflow-y-auto` plus bas dans l'arbre. */}
-        <div
-          className={`w-full h-full min-h-0 overflow-hidden ${activeTab === 'accueil' ? '' : 'hidden'}`}
-        >
-          <AccueilTab active={activeTab === 'accueil'} onNavigate={setActiveTab} />
-        </div>
         <div
           className={`w-full h-full min-h-0 overflow-hidden ${activeTab === 'modules' ? '' : 'hidden'}`}
         >

@@ -1,4 +1,4 @@
-import { Home, Bot, Wrench, Bell, LogIn, LogOut } from 'lucide-react';
+import { Bot, Wrench, Bell, LogIn, LogOut } from 'lucide-react';
 import { ROUTES } from '../../lib/routes';
 import { useNotifications } from '../../hooks/useNotifications.js';
 import { isSupabaseConfigured } from '../../config/env.js';
@@ -21,7 +21,6 @@ function BellBadge({ count }) {
 // (mockups/modules.html), d'où le glyphe Material Symbols plutôt qu'un icône Lucide
 // comme les deux autres onglets.
 const TABS = [
-  { id: 'accueil', label: 'Accueil', icon: Home },
   { id: 'modules', label: 'Cours', symbol: 'view_quilt' },
   { id: 'ia', label: 'IA', icon: Bot },
   { id: 'outils', label: 'Outils', icon: Wrench },

@@ -1,9 +1,13 @@
 import { useState, useEffect, useMemo, useDeferredValue } from 'react';
 import { Bot, PenTool, Wand2, Search, Plus, ChevronRight, X } from 'lucide-react';
 import { getCourses, recordCourseCompletion } from '../../../services/supabase';
-import { PROGRESS_LS_KEY, getPersistedCourseProgress } from '../../../lib/progress.js';
+import { safeJsonParse } from '../../../lib/validation';
 import CourseCard from '../modules/CourseCard';
 import CourseDetail from '../modules/CourseDetail';
+
+// Story 2.3 / AD-6 : progression session-locale (pas de sync cross-device/compte),
+// donc localStorage préfixé plutôt que Supabase — jamais un 3ᵉ mécanisme (sessionStorage).
+const PROGRESS_LS_KEY = 'progress_courses';
 
 const ACCENTS = [
   {
@@ -59,7 +63,7 @@ export default function ModulesTab() {
         // Progression à 0 par défaut, écrasée par ce qui a été persisté localement
         // pour ce cours (story 2.3, AD-6) — seuls les cours qui existent encore
         // sont conservés, pour ne pas traîner des entrées orphelines.
-        const persisted = getPersistedCourseProgress();
+        const persisted = safeJsonParse(localStorage.getItem(PROGRESS_LS_KEY), {});
         const initial = {};
         data.forEach((c) => {
           initial[c.id] = typeof persisted[c.id] === 'number' ? persisted[c.id] : 0;
