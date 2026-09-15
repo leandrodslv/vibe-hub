@@ -873,11 +873,21 @@ function AccueilCard({ title, icon: Icon, children, onSelect, ctaLabel }) {
 }
 
 /* ── Epic 14 story 14.2 : bannière de bienvenue ─────────────────────────── */
+// Photo libre de droits (licence Unsplash), même convention que APropos.jsx/
+// CourseDetail.jsx : image directe images.unsplash.com, pas l'API source.unsplash.com
+// (dépréciée). Overlay dégradé violet (tokens primary/primary-container) posé
+// dessus en un seul `background` CSS — le texte reste lisible sans div en plus.
+const HERO_BG_IMAGE =
+  "linear-gradient(to bottom right, rgba(91,60,221,0.72), rgba(116,89,247,0.72)), url('https://images.unsplash.com/photo-1771814536262-3c1320c8e9ce?q=80&w=1200&auto=format&fit=crop')";
+
 function AccueilHero({ email, topTools }) {
   const name = email ? email.split('@')[0] : 'admin';
   const demanded = topTools.filter((t) => t.signups > 0);
   return (
-    <div className="rounded-[24px] p-6 mb-4 bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-sm">
+    <div
+      className="rounded-[24px] p-6 mb-4 text-on-primary shadow-sm bg-cover bg-center"
+      style={{ backgroundImage: HERO_BG_IMAGE }}
+    >
       <p className="text-[17px] font-bold mb-0.5">Bienvenue, {name} 👋</p>
       <p className="text-on-primary text-opacity-80 text-[13px] mb-4">
         Voici ce qui se passe cette semaine.
