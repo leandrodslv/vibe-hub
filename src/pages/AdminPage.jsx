@@ -296,10 +296,18 @@ function LoginScreen() {
 /* ════════════════════════════════════════
    HEADER (marque + déconnexion, commun à la liste et à l'éditeur)
 ════════════════════════════════════════ */
-function AdminHeader({ onLogout }) {
+function navPillClass(active) {
+  return `px-5 py-1.5 rounded-full text-[13px] font-semibold transition-all duration-300 cursor-pointer whitespace-nowrap ${FOCUS_RING} ${
+    active
+      ? 'bg-surface-container-lowest shadow-sm text-on-surface'
+      : 'text-on-surface-variant hover:text-on-surface'
+  }`;
+}
+
+function AdminHeader({ onLogout, view, onSelectCourses, onSelectWaitlist, onSelectAiUsage }) {
   return (
-    <div className="h-14 bg-surface-container-lowest border-b-2 border-surface-variant flex items-center justify-between px-8 sticky top-0 z-20">
-      <div className="flex items-center gap-3">
+    <div className="h-14 bg-surface-container-lowest border-b-2 border-surface-variant flex items-center justify-between gap-4 px-8 sticky top-0 z-20">
+      <div className="flex items-center gap-3 flex-shrink-0">
         <a
           href="/"
           className={`font-display-lg text-xl font-extrabold tracking-tight text-on-surface hover:text-primary transition-colors rounded ${FOCUS_RING}`}
@@ -311,9 +319,41 @@ function AdminHeader({ onLogout }) {
           Admin
         </span>
       </div>
+
+      {/* Onglets Cours / Demande outils / Utilisation IA — absents sur l'éditeur
+          de cours (view non fourni), présents uniquement sur le dashboard. */}
+      {view && (
+        <div className="flex items-center bg-surface-variant p-1 rounded-full gap-1 overflow-x-auto">
+          <button
+            type="button"
+            onClick={onSelectCourses}
+            aria-pressed={view === 'courses'}
+            className={navPillClass(view === 'courses')}
+          >
+            Cours
+          </button>
+          <button
+            type="button"
+            onClick={onSelectWaitlist}
+            aria-pressed={view === 'waitlist'}
+            className={navPillClass(view === 'waitlist')}
+          >
+            Demande outils
+          </button>
+          <button
+            type="button"
+            onClick={onSelectAiUsage}
+            aria-pressed={view === 'ai-usage'}
+            className={navPillClass(view === 'ai-usage')}
+          >
+            Utilisation IA
+          </button>
+        </div>
+      )}
+
       <button
         onClick={onLogout}
-        className={`flex items-center gap-1.5 text-[13px] font-semibold text-on-surface-variant hover:text-primary transition-colors cursor-pointer rounded ${FOCUS_RING}`}
+        className={`flex items-center gap-1.5 text-[13px] font-semibold text-on-surface-variant hover:text-primary transition-colors cursor-pointer rounded flex-shrink-0 ${FOCUS_RING}`}
       >
         <LogOut className="w-4 h-4" aria-hidden="true" />
         Déconnexion
@@ -458,50 +498,16 @@ function Dashboard({ onLogout }) {
 
   return (
     <div className="min-h-screen bg-surface">
-      <AdminHeader onLogout={onLogout} />
+      <AdminHeader
+        onLogout={onLogout}
+        view={view}
+        onSelectCourses={() => setView('courses')}
+        onSelectWaitlist={openWaitlistView}
+        onSelectAiUsage={openAiUsageView}
+      />
 
       {/* ── Content ── */}
       <div className="max-w-5xl mx-auto px-8 py-10">
-        {/* Onglets Cours / Demande outils */}
-        <div className="flex items-center bg-surface-variant p-1 rounded-full gap-1 w-fit mb-8">
-          <button
-            type="button"
-            onClick={() => setView('courses')}
-            aria-pressed={view === 'courses'}
-            className={`px-5 py-1.5 rounded-full text-[13px] font-semibold transition-all duration-300 cursor-pointer ${FOCUS_RING} ${
-              view === 'courses'
-                ? 'bg-surface-container-lowest shadow-sm text-on-surface'
-                : 'text-on-surface-variant hover:text-on-surface'
-            }`}
-          >
-            Cours
-          </button>
-          <button
-            type="button"
-            onClick={openWaitlistView}
-            aria-pressed={view === 'waitlist'}
-            className={`px-5 py-1.5 rounded-full text-[13px] font-semibold transition-all duration-300 cursor-pointer ${FOCUS_RING} ${
-              view === 'waitlist'
-                ? 'bg-surface-container-lowest shadow-sm text-on-surface'
-                : 'text-on-surface-variant hover:text-on-surface'
-            }`}
-          >
-            Demande outils
-          </button>
-          <button
-            type="button"
-            onClick={openAiUsageView}
-            aria-pressed={view === 'ai-usage'}
-            className={`px-5 py-1.5 rounded-full text-[13px] font-semibold transition-all duration-300 cursor-pointer ${FOCUS_RING} ${
-              view === 'ai-usage'
-                ? 'bg-surface-container-lowest shadow-sm text-on-surface'
-                : 'text-on-surface-variant hover:text-on-surface'
-            }`}
-          >
-            Utilisation IA
-          </button>
-        </div>
-
         {view === 'waitlist' ? (
           <WaitlistView
             counts={waitlistCounts}
