@@ -95,6 +95,41 @@ export function sanitizeText(value, maxLength = 5000) {
 }
 
 /**
+ * Extrait l'ID vidéo YouTube d'une URL, quelle que soit sa forme (`?v=`,
+ * `youtu.be/`, `/shorts/`) — même logique que CourseDetail.jsx (lecteur) et
+ * AdminPage.jsx (miniature auto), une seule source pour ne pas diverger.
+ * @param {unknown} value
+ * @returns {string | null}
+ */
+export function extractYouTubeVideoId(value) {
+  if (typeof value !== 'string') return null;
+  try {
+    if (value.includes('youtu.be/')) return value.split('youtu.be/')[1]?.split(/[?&]/)[0] || null;
+    if (value.includes('/shorts/')) return value.split('/shorts/')[1]?.split(/[?&]/)[0] || null;
+    return new URL(value).searchParams.get('v');
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Dérive un titre court à partir d'une légende TikTok (oEmbed) — coupe avant le
+ * premier hashtag (le "sujet" de la légende, pas les tags) puis tronque. Pure
+ * heuristique de chaîne, aucune IA : sert de point de départ éditable dans le
+ * formulaire admin, jamais enregistré tel quel sans relecture humaine.
+ * @param {unknown} caption
+ * @param {number} [maxLength]
+ * @returns {string}
+ */
+export function captionToTitle(caption, maxLength = 80) {
+  if (typeof caption !== 'string') return '';
+  const trimmed = sanitizeText(caption).trim();
+  const beforeHashtag = trimmed.split(/\s#/)[0]?.trim() ?? '';
+  const base = beforeHashtag || trimmed;
+  return base.length > maxLength ? `${base.slice(0, maxLength - 1).trimEnd()}…` : base;
+}
+
+/**
  * `JSON.parse` qui ne lève jamais — pour le localStorage édité à la main ou corrompu.
  * @template T
  * @param {string | null | undefined} raw

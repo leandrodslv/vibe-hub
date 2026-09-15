@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { isAllowedVideoUrl, isSafeHttpUrl, matchesHost } from '../../../lib/validation';
+import {
+  isAllowedVideoUrl,
+  isSafeHttpUrl,
+  matchesHost,
+  extractYouTubeVideoId,
+} from '../../../lib/validation';
 import {
   ChevronRight,
   PlayCircle,
@@ -100,11 +105,7 @@ export default function CourseDetail({ course, onBack, onMarkComplete }) {
 
               // YouTube embed — classique (?v=), court (youtu.be/) ou Short (/shorts/).
               if (isYouTube) {
-                let videoId = '';
-                if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1]?.split('?')[0];
-                else if (url.includes('/shorts/'))
-                  videoId = url.split('/shorts/')[1]?.split('?')[0];
-                else videoId = new URL(url).searchParams.get('v');
+                const videoId = extractYouTubeVideoId(url);
                 return (
                   // nosemgrep: iframe-without-sandbox -- hôte sur liste blanche
                   // (isAllowedVideoUrl) ; YouTube nécessite allow-same-origin +

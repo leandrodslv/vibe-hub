@@ -6,6 +6,8 @@ import {
   matchesHost,
   sanitizeText,
   safeJsonParse,
+  captionToTitle,
+  extractYouTubeVideoId,
 } from './validation.js';
 
 describe('isValidEmail', () => {
@@ -107,5 +109,55 @@ describe('safeJsonParse', () => {
     expect(safeJsonParse(null, [])).toEqual([]);
     expect(safeJsonParse(undefined, 'x')).toBe('x');
     expect(safeJsonParse('null', 'fallback')).toBe('fallback');
+  });
+});
+
+describe('captionToTitle', () => {
+  it('coupe avant le premier hashtag', () => {
+    expect(captionToTitle('Scramble up ur name #foryoupage #aesthetic')).toBe(
+      'Scramble up ur name'
+    );
+  });
+
+  it("garde la légende telle quelle quand il n'y a pas de hashtag", () => {
+    expect(captionToTitle('Un tuto rapide sur les tokens de design')).toBe(
+      'Un tuto rapide sur les tokens de design'
+    );
+  });
+
+  it('tronque avec une ellipse au-delà de maxLength', () => {
+    const long = 'a'.repeat(100);
+    const title = captionToTitle(long, 80);
+    expect(title).toHaveLength(80);
+    expect(title.endsWith('…')).toBe(true);
+  });
+
+  it('renvoie une chaîne vide pour une entrée non-string', () => {
+    expect(captionToTitle(null)).toBe('');
+    expect(captionToTitle(undefined)).toBe('');
+    expect(captionToTitle(42)).toBe('');
+  });
+
+  it('retombe sur la légende complète si elle ne contient que des hashtags', () => {
+    expect(captionToTitle('#onlyhashtags')).toBe('#onlyhashtags');
+  });
+});
+
+describe('extractYouTubeVideoId', () => {
+  it.each([
+    ['https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'dQw4w9WgXcQ'],
+    ['https://youtu.be/dQw4w9WgXcQ', 'dQw4w9WgXcQ'],
+    ['https://youtu.be/dQw4w9WgXcQ?t=30', 'dQw4w9WgXcQ'],
+    ['https://www.youtube.com/shorts/dQw4w9WgXcQ', 'dQw4w9WgXcQ'],
+    ['https://www.youtube.com/shorts/dQw4w9WgXcQ?feature=share', 'dQw4w9WgXcQ'],
+  ])('extrait l’ID de %s', (url, expected) => {
+    expect(extractYouTubeVideoId(url)).toBe(expected);
+  });
+
+  it('renvoie null pour une URL sans ID ou invalide', () => {
+    expect(extractYouTubeVideoId('https://www.youtube.com/')).toBeNull();
+    expect(extractYouTubeVideoId('not a url')).toBeNull();
+    expect(extractYouTubeVideoId(null)).toBeNull();
+    expect(extractYouTubeVideoId(undefined)).toBeNull();
   });
 });

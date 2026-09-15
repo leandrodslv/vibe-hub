@@ -18,6 +18,7 @@ import {
   Video,
   FileText,
   Sparkles,
+  Download,
 } from 'lucide-react';
 import {
   getAllCourses,
@@ -32,7 +33,12 @@ import {
   getWaitlistCounts,
 } from '../services/supabase';
 import { generateCourseDraftFromVideo } from '../services/ai';
-import { matchesHost } from '../lib/validation';
+import {
+  matchesHost,
+  extractYouTubeVideoId,
+  captionToTitle,
+  sanitizeText,
+} from '../lib/validation';
 import { TOOLS } from '../data/tools';
 
 const YOUTUBE_HOSTS = ['youtube.com', 'youtu.be'];
@@ -685,6 +691,9 @@ function CourseEditor({ mode, course, onSave, onCancel }) {
   const [contentPreview, setContentPreview] = useState(false);
   const [draftLoading, setDraftLoading] = useState(false);
   const [draftError, setDraftError] = useState('');
+  const [metaLoading, setMetaLoading] = useState(false);
+  const [metaError, setMetaError] = useState('');
+  const [metaNotice, setMetaNotice] = useState('');
 
   useEffect(() => {
     const onKey = (e) => {
@@ -697,6 +706,51 @@ function CourseEditor({ mode, course, onSave, onCancel }) {
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
   const isYouTubeUrl = matchesHost(form.video_url, YOUTUBE_HOSTS);
+  const isTikTokUrl = matchesHost(form.video_url, ['tiktok.com']);
+
+  // Sans IA : titre/description depuis la légende TikTok (oEmbed public, sans
+  // authentification — cf. epics-video-platforms.md Story 10.4). La miniature
+  // renvoyée est un lien CDN signé qui EXPIRE après quelques jours (constaté :
+  // ~2-3 jours) — on la propose quand même comme point de départ, avec un
+  // avertissement, plutôt que de forcer une étape manuelle en plus.
+  const handleFetchTikTokMetadata = async () => {
+    setMetaError('');
+    setMetaNotice('');
+    setMetaLoading(true);
+    try {
+      const res = await fetch(
+        `https://www.tiktok.com/oembed?url=${encodeURIComponent(form.video_url)}`
+      );
+      if (!res.ok) throw new Error(`TikTok a répondu ${res.status}`);
+      const data = await res.json();
+      const caption = sanitizeText(data.title);
+      setForm((f) => ({
+        ...f,
+        title: captionToTitle(caption) || f.title,
+        description: caption || f.description,
+        image_url: data.thumbnail_url || f.image_url,
+      }));
+      setMetaNotice(
+        data.thumbnail_url
+          ? 'Titre, description et miniature récupérés depuis TikTok — le lien de la miniature est temporaire (expire après quelques jours), remplace-le si tu veux la garder durablement.'
+          : 'Titre et description récupérés depuis TikTok.'
+      );
+    } catch {
+      setMetaError('Impossible de récupérer les informations depuis TikTok. Vérifie le lien.');
+    } finally {
+      setMetaLoading(false);
+    }
+  };
+
+  // Sans IA, sans appel réseau : la miniature YouTube se déduit directement de
+  // l'ID vidéo (URL CDN publique stable, jamais d'expiration).
+  const handleUseYouTubeThumbnail = () => {
+    const videoId = extractYouTubeVideoId(form.video_url);
+    if (!videoId) return;
+    setMetaError('');
+    set('image_url', `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`);
+    setMetaNotice('Miniature YouTube récupérée.');
+  };
 
   const handleGenerateDraft = async () => {
     setDraftError('');
@@ -921,7 +975,48 @@ function CourseEditor({ mode, course, onSave, onCancel }) {
                   {draftError}
                 </p>
               )}
+              <button
+                type="button"
+                onClick={handleUseYouTubeThumbnail}
+                className={`flex items-center gap-2 bg-surface-variant text-on-surface-variant hover:bg-outline-variant hover:text-on-surface text-[12px] font-semibold px-3.5 py-2 rounded-lg transition-colors cursor-pointer mt-2 ${FOCUS_RING}`}
+              >
+                <Download className="w-3.5 h-3.5" aria-hidden="true" />
+                Utiliser la miniature YouTube
+              </button>
             </div>
+          )}
+
+          {isTikTokUrl && (
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={handleFetchTikTokMetadata}
+                disabled={metaLoading}
+                className={`flex items-center gap-2 bg-surface-variant text-on-surface-variant hover:bg-outline-variant hover:text-on-surface text-[12px] font-semibold px-3.5 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${FOCUS_RING}`}
+              >
+                {metaLoading ? (
+                  <span className="w-3.5 h-3.5 border-2 border-on-surface-variant/30 border-t-on-surface-variant rounded-full animate-spin" />
+                ) : (
+                  <Download className="w-3.5 h-3.5" aria-hidden="true" />
+                )}
+                {metaLoading
+                  ? 'Récupération…'
+                  : 'Récupérer titre, description et miniature depuis TikTok'}
+              </button>
+              <p className="text-[11px] text-on-surface-variant mt-1.5">
+                Sans IA — lit uniquement la légende publique du post (API oEmbed officielle de
+                TikTok, sans authentification).
+              </p>
+            </div>
+          )}
+
+          {metaNotice && (
+            <p className="text-[12px] text-tertiary font-medium mt-1.5">{metaNotice}</p>
+          )}
+          {metaError && (
+            <p role="alert" className="text-[12px] text-error font-medium mt-1.5">
+              {metaError}
+            </p>
           )}
         </div>
 

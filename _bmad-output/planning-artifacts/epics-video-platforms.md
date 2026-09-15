@@ -266,3 +266,80 @@ real Whisper model download + transcription (tested with `Xenova/whisper-tiny` f
 smoke test; `Xenova/whisper-small` is the shipped default), real call through to the Gemini API
 (invalid key correctly rejected) — full success path with a real key and real speech content
 not exercised in this session, by design (the content author's own Gemini quota).
+
+### Story 10.4: No-AI Metadata Autofill — TikTok oEmbed, YouTube Thumbnail
+
+As a content author,
+I want title, description, and thumbnail pre-filled from the platform's own public metadata —
+with zero AI involved — as a free, instant alternative or complement to the AI-draft path,
+So that filling the basics of a course doesn't require spending Gemini quota when the
+platform already publishes that information openly.
+
+**Status: done — shipped 2026-09-15.**
+
+**Investigated first, asymmetric result across platforms:**
+- **TikTok**: its oEmbed endpoint (`https://www.tiktok.com/oembed`) is public, requires no
+  authentication, and — confirmed by inspecting real response headers — sends
+  `Access-Control-Allow-Origin: *`, so it can be called directly from the browser with no
+  server proxy. Response includes `title` (the post's caption — TikTok has no separate
+  short-title field) and `thumbnail_url`.
+- **YouTube**: also has a public oEmbed endpoint, but it sends **no** CORS header at all, so a
+  direct browser `fetch()` is blocked; using it would require a server-side proxy. Not built —
+  YouTube already has the strictly more capable AI-draft path (Story 3.x, watches the whole
+  video for title/description/**content**), so a proxy just to fetch a title would be
+  redundant effort for something already covered better. The video ID *is* already known
+  client-side, though, and YouTube's `https://i.ytimg.com/vi/<id>/hqdefault.jpg` thumbnail
+  pattern is a stable, permanent, unsigned CDN URL — no API call needed at all for that part.
+- **Facebook**: explicitly deferred (not built). Meta locked its oEmbed behind an app
+  access token in October 2020, and removed the `thumbnail_url` field from the response
+  entirely in the same change — building this would mean registering a Meta Developer app
+  (App ID/Secret) for a feature that couldn't return a thumbnail even then. Revisit only if
+  the user provides Meta app credentials and decides the title-only value is worth the setup.
+
+**Acceptance Criteria:**
+
+**Given** the video-URL field contains a TikTok URL
+**When** the content author clicks "Récupérer titre, description et miniature depuis TikTok"
+**Then** the app calls TikTok's public oEmbed endpoint directly from the browser (no secret, no
+Edge Function), and on success fills `title` (caption text before the first hashtag, via the
+pure `captionToTitle()` heuristic — no AI), `description` (the full caption), and `image_url`
+(the oEmbed `thumbnail_url`)
+
+**Given** the TikTok thumbnail URL returned by oEmbed
+**When** it is used
+**Then** the UI shows an explicit notice that this specific link is a signed, temporary CDN URL
+(observed expiry: a few days) and should be replaced with a durable one before relying on it
+long-term — the raw expiring link is still offered as an editable starting point rather than
+silently withheld, consistent with this form's existing "review before saving, nothing
+auto-publishes" posture
+
+**Given** the video-URL field contains a YouTube URL (standard, `youtu.be`, or Shorts)
+**When** the content author clicks "Utiliser la miniature YouTube"
+**Then** `image_url` is set to `https://i.ytimg.com/vi/<id>/hqdefault.jpg`, computed purely
+client-side from the already-shared `extractYouTubeVideoId()` helper — zero network calls,
+zero AI, zero expiry risk
+
+**Given** `CourseDetail.jsx` already parsed YouTube video IDs inline for its embed player
+**When** this story touched that logic
+**Then** it was extracted into the shared `extractYouTubeVideoId()` (`lib/validation.js`) and
+both `CourseDetail.jsx` and `AdminPage.jsx` now call the same implementation — avoids the kind
+of silent drift the `TOOLS` catalog had before Epic 6 Story 6.2 fixed it the same way
+
+**Given** the TikTok oEmbed call is now made directly from the browser
+**When** the CSP is evaluated in production
+**Then** `vercel.json`'s `connect-src` directive includes `https://www.tiktok.com` (`frame-src`
+already had it from Story 10.1) — without this the browser blocks the fetch even though
+TikTok's own CORS headers permit it
+
+**Given** the oEmbed request fails (network error, non-2xx, malformed URL)
+**When** the error surfaces
+**Then** an inline error message is shown ("Impossible de récupérer les informations depuis
+TikTok. Vérifie le lien.") — the form's existing field values are left untouched, never
+partially overwritten
+
+**Implementation:** `src/lib/validation.js` (`captionToTitle`, `extractYouTubeVideoId`),
+`src/pages/AdminPage.jsx` (`handleFetchTikTokMetadata`, `handleUseYouTubeThumbnail`, UI),
+`src/components/workspace/modules/CourseDetail.jsx` (refactored to the shared ID helper),
+`vercel.json` (`connect-src`). Tests: `src/lib/validation.test.js`. Verified live via Playwright
+against the real TikTok oEmbed endpoint (real post, real thumbnail image loaded) and the real
+YouTube thumbnail CDN (Rick Astley test video) — both confirmed visually in the running app.
