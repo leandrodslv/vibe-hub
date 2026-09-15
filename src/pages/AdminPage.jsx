@@ -54,6 +54,10 @@ const YOUTUBE_HOSTS = ['youtube.com', 'youtu.be'];
 // jamais la facturation réelle Google (qui exige un compte Google, hors de
 // portée d'une simple clé API serveur — Epic 11, epics-ai-ops.md).
 const GEMINI_FLASH_LITE_PRICE_PER_1M = { input: 0.1, output: 0.4 };
+// Seuil au-delà duquel on considère la clé Gemini "à tourner bientôt" —
+// pratique courante pour une clé API, pas une contrainte technique. Purement
+// indicatif côté client : aucune conséquence fonctionnelle si on l'ignore.
+const KEY_ROTATION_WARNING_DAYS = 90;
 function estimateUsdCost({ prompt_tokens, candidates_tokens }) {
   return (
     (prompt_tokens / 1_000_000) * GEMINI_FLASH_LITE_PRICE_PER_1M.input +
@@ -897,47 +901,71 @@ function AiUsageView({
 
       {/* Rotation de clé — metadata seulement, AD-13 : la vraie clé Gemini ne
           transite jamais par cette vue, seule `supabase secrets set` la change. */}
-      <div className="bg-surface-container-lowest border border-surface-variant rounded-[24px] px-5 py-5 shadow-sm">
-        <div className="flex items-start gap-4">
-          <div className="w-10 h-10 rounded-xl bg-surface-variant flex items-center justify-center flex-shrink-0">
-            <KeyRound className="w-5 h-5 text-on-surface-variant" aria-hidden="true" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-bold text-on-surface mb-0.5">Clé Gemini</p>
-            <p className="text-on-surface-variant text-[13px] mb-3">
-              {lastRotation
-                ? `Dernière rotation : ${new Date(lastRotation.rotated_at).toLocaleDateString('fr-FR')}${lastRotation.note ? ` · ${lastRotation.note}` : ''}`
-                : 'Aucune rotation enregistrée.'}
-            </p>
-            <p className="text-on-surface-variant text-[12px] mb-3">
-              Cet écran ne fait que suivre la rotation, il ne la déclenche pas. Pour tourner la
-              vraie clé :{' '}
-              <code className="text-[11px]">supabase secrets set GEMINI_API_KEY=...</code> puis
-              redéployer les fonctions, comme aujourd'hui.
-            </p>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="Note optionnelle"
-                className={`flex-1 bg-surface border border-surface-variant rounded-full px-4 py-1.5 text-[13px] text-on-surface placeholder:text-on-surface-variant ${FOCUS_RING}`}
-              />
-              <button
-                type="button"
-                disabled={rotationSaving}
-                onClick={() => {
-                  onLogRotation(note || undefined);
-                  setNote('');
-                }}
-                className={`flex-shrink-0 flex items-center gap-1.5 bg-primary text-on-primary font-cta-pill text-[13px] font-bold px-4 py-1.5 rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${FOCUS_RING}`}
+      {(() => {
+        const daysSinceRotation = lastRotation
+          ? Math.floor((Date.now() - new Date(lastRotation.rotated_at).getTime()) / 86_400_000)
+          : null;
+        // Jamais tournée = on ne sait rien de l'âge réel de la clé → traité
+        // comme "à vérifier" au même titre qu'une rotation trop ancienne.
+        const isStale =
+          daysSinceRotation === null || daysSinceRotation >= KEY_ROTATION_WARNING_DAYS;
+
+        return (
+          <div className="bg-surface-container-lowest border border-surface-variant rounded-[24px] px-5 py-5 shadow-sm">
+            <div className="flex items-start gap-4">
+              <div
+                className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isStale ? 'bg-error-container' : 'bg-surface-variant'}`}
               >
-                {rotationSaving ? 'Enregistrement…' : "Marquer comme tournée aujourd'hui"}
-              </button>
+                <KeyRound
+                  className={`w-5 h-5 ${isStale ? 'text-on-error-container' : 'text-on-surface-variant'}`}
+                  aria-hidden="true"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[14px] font-bold text-on-surface mb-0.5">Clé Gemini</p>
+                <p className="text-on-surface-variant text-[13px] mb-1">
+                  {lastRotation
+                    ? `Dernière rotation : ${new Date(lastRotation.rotated_at).toLocaleDateString('fr-FR')} (il y a ${daysSinceRotation} jour${daysSinceRotation > 1 ? 's' : ''})${lastRotation.note ? ` · ${lastRotation.note}` : ''}`
+                    : 'Aucune rotation enregistrée.'}
+                </p>
+                {isStale && (
+                  <p className="text-on-error-container text-[12.5px] font-semibold mb-2">
+                    {lastRotation
+                      ? `⚠ Plus de ${KEY_ROTATION_WARNING_DAYS} jours depuis la dernière rotation — c'est le moment d'y penser.`
+                      : '⚠ Aucune rotation connue — impossible de savoir depuis combien de temps cette clé est en service.'}
+                  </p>
+                )}
+                <p className="text-on-surface-variant text-[12px] mb-3">
+                  Cet écran ne fait que suivre la rotation, il ne la déclenche pas. Pour tourner la
+                  vraie clé :{' '}
+                  <code className="text-[11px]">supabase secrets set GEMINI_API_KEY=...</code> puis
+                  redéployer les fonctions, comme aujourd'hui.
+                </p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="Note optionnelle"
+                    className={`flex-1 bg-surface border border-surface-variant rounded-full px-4 py-1.5 text-[13px] text-on-surface placeholder:text-on-surface-variant ${FOCUS_RING}`}
+                  />
+                  <button
+                    type="button"
+                    disabled={rotationSaving}
+                    onClick={() => {
+                      onLogRotation(note || undefined);
+                      setNote('');
+                    }}
+                    className={`flex-shrink-0 flex items-center gap-1.5 bg-primary text-on-primary font-cta-pill text-[13px] font-bold px-4 py-1.5 rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${FOCUS_RING}`}
+                  >
+                    {rotationSaving ? 'Enregistrement…' : "Marquer comme tournée aujourd'hui"}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        );
+      })()}
     </div>
   );
 }

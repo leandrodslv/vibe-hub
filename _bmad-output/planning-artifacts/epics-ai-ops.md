@@ -211,8 +211,20 @@ app's own database
 *metadata*, and the view includes a short reminder of the real CLI command for admins who
 forget it
 
+**Given** no rotation has ever been logged, or the most recent one is 90+ days old
+**When** the "Clé Gemini" card renders
+**Then** it switches to a visible warning state (error-tinted icon, a bold warning line — "⚠
+Plus de 90 jours depuis la dernière rotation" or, if never logged, "⚠ Aucune rotation connue")
+instead of the neutral grey state — purely a client-side date comparison against
+`GEMINI_API_KEY` threshold `KEY_ROTATION_WARNING_DAYS = 90`, no new infrastructure; a rotation
+younger than the threshold shows the plain "Dernière rotation : `<date>` (il y a N jours)" line
+with no warning
+
 **Implementation:** `public.ai_key_rotations` (same migration as 11.1, RLS `select`/`insert`
 policies re-checking `is_admin()`, same posture as `courses`), `src/lib/schemas/ai-usage.js`
 (`keyRotationSchema`), `src/services/supabase.js` (`getLastKeyRotation()`, `logKeyRotation()`),
-`src/pages/AdminPage.jsx` (the "Clé Gemini" card inside `AiUsageView`, with the note input and
-"Marquer comme tournée aujourd'hui" button). Tests: `src/services/supabase.test.js`.
+`src/pages/AdminPage.jsx` (the "Clé Gemini" card inside `AiUsageView` — `KEY_ROTATION_WARNING_
+DAYS`, note input, "Marquer comme tournée aujourd'hui" button, staleness warning). Tests:
+`src/services/supabase.test.js`. Verified live via Playwright with mocked REST responses (real
+admin auth unavailable in this session) across all three states — never rotated, 5 days ago,
+120 days ago — confirming the warning triggers and clears exactly at the intended boundary.
