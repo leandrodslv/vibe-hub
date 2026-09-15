@@ -57,10 +57,10 @@ export default function AccueilTab({ active, onNavigate }) {
   const [courses, setCourses] = useState([]);
   const [coursesLoading, setCoursesLoading] = useState(true);
   const [coursesError, setCoursesError] = useState(null);
-  // Les quatre onglets restent montés en permanence (WorkspacePage.jsx) : sans ce
-  // re-lu à chaque activation, terminer un cours dans l'onglet Cours puis revenir
-  // ici afficherait encore l'ancien décompte (la lecture initiale ne capte pas les
-  // écritures localStorage faites pendant qu'Accueil était simplement masqué).
+  // Les cinq onglets restent montés en permanence (WorkspacePage.jsx) : sans cette
+  // relecture à chaque activation, terminer un cours dans l'onglet Cours puis
+  // revenir ici afficherait encore l'ancien décompte (la lecture initiale ne capte
+  // pas les écritures localStorage faites pendant qu'Accueil était simplement masqué).
   const [progress, setProgress] = useState(getPersistedCourseProgress);
 
   useEffect(() => {
