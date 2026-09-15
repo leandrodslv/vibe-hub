@@ -879,18 +879,19 @@ function CourseEditor({ mode, course, onSave, onCancel }) {
             className="block font-label-caps text-label-caps text-on-surface-variant uppercase mb-1.5 flex items-center gap-1.5"
           >
             <Video className="w-3.5 h-3.5 text-tertiary" aria-hidden="true" />
-            URL de la vidéo (Teams / Stream / YouTube)
+            URL de la vidéo (Teams / Stream / YouTube / TikTok / Facebook)
           </label>
           <input
             id="course_video_url"
             type="url"
             value={form.video_url}
             onChange={(e) => set('video_url', e.target.value)}
-            placeholder="Collez ici le lien de partage de votre vidéo Teams..."
+            placeholder="Collez ici le lien de partage de votre vidéo..."
             className={`w-full bg-surface-container-lowest border border-outline-variant rounded-xl px-4 py-2.5 text-[13px] outline-none focus:border-primary transition-all placeholder:text-on-surface-variant/50 text-on-surface ${FOCUS_RING}`}
           />
           <p className="text-[11px] text-on-surface-variant mt-1.5">
-            Formats supportés : lien SharePoint, Microsoft Stream, YouTube, ou lien direct (.mp4)
+            Formats supportés : SharePoint, Microsoft Stream, YouTube (dont Shorts), TikTok,
+            Facebook (dont Reels et liens fb.watch), ou lien direct (.mp4)
           </p>
           {isYouTubeUrl && (
             <div className="mt-3">

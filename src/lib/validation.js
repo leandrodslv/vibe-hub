@@ -51,6 +51,9 @@ const ALLOWED_VIDEO_HOSTS = [
   'sharepoint.com',
   'microsoftstream.com',
   'stream.office.com',
+  'tiktok.com',
+  'facebook.com',
+  'fb.watch',
 ];
 
 /**

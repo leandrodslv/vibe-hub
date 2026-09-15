@@ -95,11 +95,15 @@ export default function CourseDetail({ course, onBack, onMarkComplete }) {
               const isStream =
                 embeddable &&
                 matchesHost(url, ['sharepoint.com', 'microsoftstream.com', 'stream.office.com']);
+              const isTikTok = embeddable && matchesHost(url, ['tiktok.com']);
+              const isFacebook = embeddable && matchesHost(url, ['facebook.com', 'fb.watch']);
 
-              // YouTube embed
+              // YouTube embed — classique (?v=), court (youtu.be/) ou Short (/shorts/).
               if (isYouTube) {
                 let videoId = '';
                 if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1]?.split('?')[0];
+                else if (url.includes('/shorts/'))
+                  videoId = url.split('/shorts/')[1]?.split('?')[0];
                 else videoId = new URL(url).searchParams.get('v');
                 return (
                   // nosemgrep: iframe-without-sandbox -- hôte sur liste blanche
@@ -112,6 +116,46 @@ export default function CourseDetail({ course, onBack, onMarkComplete }) {
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                     className="absolute inset-0 w-full h-full"
+                  />
+                );
+              }
+
+              // TikTok embed — l'ID numérique se lit dans /video/<id> des URLs
+              // pleines (partage depuis l'app ou le navigateur) ; un lien court
+              // vm.tiktok.com n'expose pas cet ID côté client, on dégrade alors
+              // silencieusement vers le lecteur direct plus bas plutôt que de
+              // deviner une iframe cassée.
+              if (isTikTok) {
+                const videoId = url.match(/\/video\/(\d+)/)?.[1];
+                if (videoId) {
+                  return (
+                    // nosemgrep: iframe-without-sandbox -- hôte sur liste blanche (isAllowedVideoUrl)
+                    <iframe
+                      src={`https://www.tiktok.com/embed/v2/${videoId}`}
+                      title={course.title}
+                      sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
+                      allow="encrypted-media; picture-in-picture"
+                      allowFullScreen
+                      className="absolute inset-0 w-full h-full"
+                      style={{ border: 'none' }}
+                    />
+                  );
+                }
+              }
+
+              // Facebook embed (vidéos, Reels, liens courts fb.watch) — le plugin
+              // officiel résout `href` côté serveur Facebook, aucun ID à extraire ici.
+              if (isFacebook) {
+                return (
+                  // nosemgrep: iframe-without-sandbox -- hôte sur liste blanche (isAllowedVideoUrl)
+                  <iframe
+                    src={`https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false`}
+                    title={course.title}
+                    sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
+                    allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                    allowFullScreen
+                    className="absolute inset-0 w-full h-full"
+                    style={{ border: 'none' }}
                   />
                 );
               }

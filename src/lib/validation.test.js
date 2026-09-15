@@ -42,8 +42,13 @@ describe('isAllowedVideoUrl', () => {
   it.each([
     'https://www.youtube.com/watch?v=abc',
     'https://youtu.be/abc',
+    'https://www.youtube.com/shorts/abc',
     'https://contoso.sharepoint.com/video/x',
     'https://stream.office.com/embed/x',
+    'https://www.tiktok.com/@user/video/7123456789012345678',
+    'https://vm.tiktok.com/ZMabcdef/',
+    'https://www.facebook.com/user/videos/123456789/',
+    'https://fb.watch/abcdef/',
   ])('accepte un hôte vidéo autorisé : %s', (v) => {
     expect(isAllowedVideoUrl(v)).toBe(true);
   });
