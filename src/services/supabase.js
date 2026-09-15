@@ -16,6 +16,7 @@ import {
   aiUsageSummaryArraySchema,
   keyRotationSchema,
   keyRotationArraySchema,
+  aiUsageDailyArraySchema,
 } from '../lib/schemas/index.js';
 
 // Adaptateur unique vers Supabase (Architecture Spine AD-2) : aucun composant
@@ -461,6 +462,19 @@ export async function getAiUsageSummary() {
   const { data, error } = await supabase.rpc('get_ai_usage_summary');
   if (error) rethrow('getAiUsageSummary', error);
   return parseOrThrow(aiUsageSummaryArraySchema, data, 'getAiUsageSummary');
+}
+
+/**
+ * Série temporelle pour le graphique "Utilisation IA" (Epic 14, story 14.3) —
+ * une ligne par (jour, endpoint) sur la fenêtre demandée, jours sans appel
+ * inclus à zéro (axe continu côté graphique). Même garde que getAiUsageSummary.
+ * @param {number} [days]
+ * @returns {Promise<import('../lib/schemas/ai-usage.js').AiUsageDailyRow[]>}
+ */
+export async function getAiUsageDaily(days = 14) {
+  const { data, error } = await supabase.rpc('get_ai_usage_daily', { days });
+  if (error) rethrow('getAiUsageDaily', error);
+  return parseOrThrow(aiUsageDailyArraySchema, data, 'getAiUsageDaily');
 }
 
 /**

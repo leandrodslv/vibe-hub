@@ -39,4 +39,6 @@ export {
   aiUsageSummaryArraySchema,
   keyRotationSchema,
   keyRotationArraySchema,
+  aiUsageDailyRowSchema,
+  aiUsageDailyArraySchema,
 } from './ai-usage.js';

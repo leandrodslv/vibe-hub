@@ -34,5 +34,17 @@ export const keyRotationSchema = z
 
 export const keyRotationArraySchema = z.array(keyRotationSchema);
 
+/** Épic 14 story 14.3 — une ligne par (jour, endpoint), jours manquants à zéro. */
+export const aiUsageDailyRowSchema = z
+  .object({
+    day: z.string(),
+    endpoint: z.enum(['gemini-proxy', 'course-draft']),
+    total_tokens: z.number().int().nonnegative(),
+  })
+  .strict();
+
+export const aiUsageDailyArraySchema = z.array(aiUsageDailyRowSchema);
+
 /** @typedef {z.infer<typeof aiUsageSummaryRowSchema>} AiUsageSummaryRow */
 /** @typedef {z.infer<typeof keyRotationSchema>} KeyRotation */
+/** @typedef {z.infer<typeof aiUsageDailyRowSchema>} AiUsageDailyRow */

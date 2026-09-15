@@ -2,6 +2,16 @@ import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+} from 'recharts';
+import {
   Plus,
   Pencil,
   Trash2,
@@ -24,6 +34,8 @@ import {
   Wrench,
   Bell,
   ExternalLink,
+  Menu,
+  X,
 } from 'lucide-react';
 import {
   getAllCourses,
@@ -38,6 +50,7 @@ import {
   getWaitlistCounts,
   uploadCourseDraftVideo,
   getAiUsageSummary,
+  getAiUsageDaily,
   getLastKeyRotation,
   logKeyRotation,
   getNotificationsOverview,
@@ -125,7 +138,7 @@ export default function AdminPage() {
 
   if (!session) return <LoginScreen />;
   if (!admin) return <AccessDenied email={session.user?.email} onLogout={handleLogout} />;
-  return <Dashboard onLogout={handleLogout} />;
+  return <Dashboard onLogout={handleLogout} email={session.user?.email} />;
 }
 
 /* ════════════════════════════════════════
@@ -298,17 +311,27 @@ function LoginScreen() {
 }
 
 /* ════════════════════════════════════════
-   HEADER (marque + déconnexion, commun à la liste et à l'éditeur)
+   SIDEBAR (marque + nav + déconnexion, commune à la liste et à l'éditeur)
+   Epic 14 story 14.1 : remplace l'ancienne barre d'onglets du haut par une
+   sidebar fixe en desktop / tiroir hors-écran derrière un hamburger en mobile
+   — même posture que Sidebar.jsx (Workspace), adaptée aux 4 destinations admin.
 ════════════════════════════════════════ */
-function navPillClass(active) {
-  return `px-5 py-1.5 rounded-full text-[13px] font-semibold transition-all duration-300 cursor-pointer whitespace-nowrap ${FOCUS_RING} ${
+function sidebarItemClass(active) {
+  return `flex items-center px-3 py-2.5 rounded-xl text-[14px] font-semibold transition-colors duration-200 cursor-pointer ${FOCUS_RING} ${
     active
-      ? 'bg-surface-container-lowest shadow-sm text-on-surface'
-      : 'text-on-surface-variant hover:text-on-surface'
+      ? 'bg-primary text-on-primary'
+      : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-variant'
   }`;
 }
 
-function AdminHeader({
+const ADMIN_NAV_ITEMS = [
+  { id: 'accueil', label: 'Accueil' },
+  { id: 'courses', label: 'Cours' },
+  { id: 'waitlist', label: 'Demande outils' },
+  { id: 'ai-usage', label: 'Utilisation IA' },
+];
+
+function AdminSidebar({
   onLogout,
   view,
   onSelectAccueil,
@@ -316,75 +339,112 @@ function AdminHeader({
   onSelectWaitlist,
   onSelectAiUsage,
 }) {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  // Absent sur l'éditeur de cours (view non fourni) : éditer un cours n'est pas
+  // une des 4 destinations, même posture que l'ancienne barre d'onglets.
+  const handlers = {
+    accueil: onSelectAccueil,
+    courses: onSelectCourses,
+    waitlist: onSelectWaitlist,
+    'ai-usage': onSelectAiUsage,
+  };
+
+  const navList = view && (
+    <nav aria-label="Navigation admin" className="flex flex-col gap-1">
+      {ADMIN_NAV_ITEMS.map((item) => (
+        <button
+          key={item.id}
+          type="button"
+          onClick={() => {
+            handlers[item.id]();
+            setMobileOpen(false);
+          }}
+          aria-current={view === item.id ? 'page' : undefined}
+          className={sidebarItemClass(view === item.id)}
+        >
+          {item.label}
+        </button>
+      ))}
+    </nav>
+  );
+
+  const logoutButton = (
+    <button
+      onClick={onLogout}
+      className={`flex items-center gap-1.5 text-[13px] font-semibold text-on-surface-variant hover:text-primary transition-colors cursor-pointer rounded px-3 py-2 ${FOCUS_RING}`}
+    >
+      <LogOut className="w-4 h-4" aria-hidden="true" />
+      Déconnexion
+    </button>
+  );
+
   return (
-    <div className="h-14 bg-surface-container-lowest border-b-2 border-surface-variant flex items-center justify-between gap-4 px-8 sticky top-0 z-20">
-      <div className="flex items-center gap-3 flex-shrink-0">
+    <>
+      {/* Sidebar desktop */}
+      <aside className="hidden md:flex flex-col w-64 h-screen fixed left-0 top-0 bg-surface-container-lowest border-r-2 border-surface-variant p-6 z-30">
         <a
           href="/"
-          className={`font-display-lg text-xl font-extrabold tracking-tight text-on-surface hover:text-primary transition-colors rounded ${FOCUS_RING}`}
+          className={`font-display-lg text-xl font-extrabold tracking-tight text-on-surface hover:text-primary transition-colors rounded mb-1 w-fit ${FOCUS_RING}`}
         >
           vibe hub
         </a>
-        <div className="w-px h-4 bg-surface-variant" aria-hidden="true" />
-        <span className="font-label-caps text-label-caps uppercase text-on-surface-variant">
+        <span className="font-label-caps text-label-caps uppercase text-on-surface-variant mb-8">
           Admin
+        </span>
+        {navList}
+        <div className="mt-auto">{logoutButton}</div>
+      </aside>
+
+      {/* Barre du haut mobile : hamburger + marque */}
+      <div className="md:hidden flex items-center gap-3 h-14 px-4 bg-surface-container-lowest border-b-2 border-surface-variant sticky top-0 z-30">
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          aria-label="Ouvrir le menu"
+          className={`text-on-surface-variant hover:text-primary rounded ${FOCUS_RING}`}
+        >
+          <Menu className="w-5 h-5" aria-hidden="true" />
+        </button>
+        <span className="font-display-lg text-lg font-extrabold tracking-tight text-on-surface">
+          vibe hub
         </span>
       </div>
 
-      {/* Onglets Accueil / Cours / Demande outils / Utilisation IA — absents sur
-          l'éditeur de cours (view non fourni), présents uniquement sur le dashboard. */}
-      {view && (
-        <div className="flex items-center bg-surface-variant p-1 rounded-full gap-1 overflow-x-auto">
-          <button
-            type="button"
-            onClick={onSelectAccueil}
-            aria-pressed={view === 'accueil'}
-            className={navPillClass(view === 'accueil')}
-          >
-            Accueil
-          </button>
-          <button
-            type="button"
-            onClick={onSelectCourses}
-            aria-pressed={view === 'courses'}
-            className={navPillClass(view === 'courses')}
-          >
-            Cours
-          </button>
-          <button
-            type="button"
-            onClick={onSelectWaitlist}
-            aria-pressed={view === 'waitlist'}
-            className={navPillClass(view === 'waitlist')}
-          >
-            Demande outils
-          </button>
-          <button
-            type="button"
-            onClick={onSelectAiUsage}
-            aria-pressed={view === 'ai-usage'}
-            className={navPillClass(view === 'ai-usage')}
-          >
-            Utilisation IA
-          </button>
+      {/* Tiroir mobile */}
+      {mobileOpen && (
+        <div className="md:hidden fixed inset-0 z-40">
+          <div
+            className="absolute inset-0 bg-on-surface/40"
+            onClick={() => setMobileOpen(false)}
+            aria-hidden="true"
+          />
+          <aside className="absolute left-0 top-0 h-full w-64 bg-surface-container-lowest p-6 flex flex-col shadow-xl">
+            <div className="flex items-center justify-between mb-8">
+              <span className="font-display-lg text-lg font-extrabold tracking-tight text-on-surface">
+                vibe hub
+              </span>
+              <button
+                type="button"
+                onClick={() => setMobileOpen(false)}
+                aria-label="Fermer le menu"
+                className={`text-on-surface-variant hover:text-primary rounded ${FOCUS_RING}`}
+              >
+                <X className="w-5 h-5" aria-hidden="true" />
+              </button>
+            </div>
+            {navList}
+            <div className="mt-auto">{logoutButton}</div>
+          </aside>
         </div>
       )}
-
-      <button
-        onClick={onLogout}
-        className={`flex items-center gap-1.5 text-[13px] font-semibold text-on-surface-variant hover:text-primary transition-colors cursor-pointer rounded flex-shrink-0 ${FOCUS_RING}`}
-      >
-        <LogOut className="w-4 h-4" aria-hidden="true" />
-        Déconnexion
-      </button>
-    </div>
+    </>
   );
 }
 
 /* ════════════════════════════════════════
    DASHBOARD
 ════════════════════════════════════════ */
-function Dashboard({ onLogout }) {
+function Dashboard({ onLogout, email }) {
   const [view, setView] = useState('accueil'); // 'accueil' | 'courses' | 'waitlist' | 'ai-usage'
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -416,6 +476,13 @@ function Dashboard({ onLogout }) {
   const [notifLoading, setNotifLoading] = useState(false);
   const [notifError, setNotifError] = useState(null);
   const notifFetchInFlight = useRef(false);
+
+  // Epic 14 story 14.3 — série journalière pour le graphique Accueil, même
+  // garde-fous que les autres fetchs paresseux de cette vue.
+  const [aiDaily, setAiDaily] = useState(null);
+  const [aiDailyLoading, setAiDailyLoading] = useState(false);
+  const [aiDailyError, setAiDailyError] = useState(null);
+  const aiDailyFetchInFlight = useRef(false);
 
   const load = async () => {
     setLoading(true);
@@ -496,11 +563,27 @@ function Dashboard({ onLogout }) {
   // déclenche les trois fetchs paresseux tout de suite (mêmes fonctions que les
   // pills "Demande outils"/"Utilisation IA", même garde "déjà chargé ?") plutôt
   // que d'attendre que l'admin clique dessus pour la première fois.
+  const loadAiUsageDaily = async () => {
+    if (aiDailyFetchInFlight.current) return;
+    aiDailyFetchInFlight.current = true;
+    setAiDailyLoading(true);
+    setAiDailyError(null);
+    try {
+      setAiDaily(await getAiUsageDaily(14));
+    } catch (err) {
+      setAiDailyError(err.message || "Impossible de charger l'historique IA.");
+    } finally {
+      setAiDailyLoading(false);
+      aiDailyFetchInFlight.current = false;
+    }
+  };
+
   const openAccueilView = () => {
     setView('accueil');
     if (waitlistCounts === null) loadWaitlist();
     if (aiUsage === null) loadAiUsage();
     if (notifOverview === null) loadNotifOverview();
+    if (aiDaily === null) loadAiUsageDaily();
   };
 
   const handleLogRotation = async (note) => {
@@ -544,20 +627,22 @@ function Dashboard({ onLogout }) {
   if (editing) {
     return (
       <div className="min-h-screen bg-surface">
-        <AdminHeader onLogout={onLogout} />
-        <CourseEditor
-          mode={editing.mode}
-          course={editing.course}
-          onSave={handleSave}
-          onCancel={() => setEditing(null)}
-        />
+        <AdminSidebar onLogout={onLogout} />
+        <div className="md:ml-64">
+          <CourseEditor
+            mode={editing.mode}
+            course={editing.course}
+            onSave={handleSave}
+            onCancel={() => setEditing(null)}
+          />
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-surface">
-      <AdminHeader
+      <AdminSidebar
         onLogout={onLogout}
         view={view}
         onSelectAccueil={openAccueilView}
@@ -567,9 +652,10 @@ function Dashboard({ onLogout }) {
       />
 
       {/* ── Content ── */}
-      <div className="max-w-5xl mx-auto px-8 py-10">
+      <div className="md:ml-64 max-w-5xl mx-auto px-8 py-10">
         {view === 'accueil' ? (
           <AdminAccueilView
+            email={email}
             courses={courses}
             published={published}
             waitlistCounts={waitlistCounts}
@@ -579,6 +665,9 @@ function Dashboard({ onLogout }) {
             lastRotation={lastRotation}
             aiUsageLoading={aiUsageLoading}
             aiUsageError={aiUsageError}
+            aiDaily={aiDaily}
+            aiDailyLoading={aiDailyLoading}
+            aiDailyError={aiDailyError}
             notifOverview={notifOverview}
             notifLoading={notifLoading}
             notifError={notifError}
@@ -753,10 +842,10 @@ function CourseRow({ course, onEdit, onDelete, onToggle }) {
 }
 
 /* ════════════════════════════════════════
-   ACCUEIL — vue d'atterrissage admin (Epic 13, epics-admin-dashboard.md)
-   Pure composition en lecture : un highlight de chacune des trois autres vues
-   (Cours / Demande outils / Utilisation IA), chacun renvoyant vers sa vue
-   complète — aucun nouveau fetch propre à ce composant.
+   ACCUEIL — vue d'atterrissage admin (Epic 13 + Epic 14, epics-admin-redesign.md)
+   Pure composition en lecture : chaque section reflète une donnée déjà fetchée
+   ailleurs dans Dashboard — aucun composant ci-dessous ne fait son propre appel
+   Supabase (AD-2 : seul services/supabase.js importe le SDK).
 ════════════════════════════════════════ */
 function AccueilCard({ title, icon: Icon, children, onSelect, ctaLabel }) {
   return (
@@ -783,7 +872,361 @@ function AccueilCard({ title, icon: Icon, children, onSelect, ctaLabel }) {
   );
 }
 
+/* ── Epic 14 story 14.2 : bannière de bienvenue ─────────────────────────── */
+function AccueilHero({ email, topTools }) {
+  const name = email ? email.split('@')[0] : 'admin';
+  const demanded = topTools.filter((t) => t.signups > 0);
+  return (
+    <div className="rounded-[24px] p-6 mb-4 bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-sm">
+      <p className="text-[17px] font-bold mb-0.5">Bienvenue, {name} 👋</p>
+      <p className="text-on-primary text-opacity-80 text-[13px] mb-4">
+        Voici ce qui se passe cette semaine.
+      </p>
+      {demanded.length === 0 ? (
+        <p className="text-[13px] text-on-primary text-opacity-80">
+          Pas encore de demande sur les outils cette semaine.
+        </p>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {demanded.map((tool) => {
+            const ToolIcon = tool.icon;
+            return (
+              <div
+                key={tool.id}
+                className="flex items-center gap-1.5 bg-on-primary bg-opacity-10 rounded-full pl-2.5 pr-3 py-1.5"
+              >
+                <ToolIcon className="w-3.5 h-3.5" aria-hidden="true" />
+                <span className="text-[12.5px] font-semibold">{tool.name}</span>
+                <span className="text-[12px] text-on-primary text-opacity-70">{tool.signups}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Epic 14 story 14.2 : carte à anneau de progression ─────────────────── */
+function StatRingCard({ label, value, ratio, onSelect, loading, error }) {
+  const r = 24;
+  const circumference = 2 * Math.PI * r;
+  const displayValue = loading ? '…' : error ? '—' : value;
+  const clamped = loading || error ? 0 : Math.min(1, Math.max(0, ratio));
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      disabled={!onSelect}
+      className={`text-left bg-surface-container-lowest border border-surface-variant rounded-[24px] p-4 shadow-sm flex items-center gap-3 ${
+        onSelect
+          ? `cursor-pointer hover:border-outline-variant transition-colors ${FOCUS_RING}`
+          : 'cursor-default'
+      }`}
+    >
+      <svg width="56" height="56" viewBox="0 0 56 56" className="flex-shrink-0" aria-hidden="true">
+        <circle
+          cx="28"
+          cy="28"
+          r={r}
+          strokeWidth="5"
+          fill="none"
+          className="text-surface-variant"
+          stroke="currentColor"
+        />
+        <circle
+          cx="28"
+          cy="28"
+          r={r}
+          strokeWidth="5"
+          fill="none"
+          stroke="currentColor"
+          className="text-primary"
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference * (1 - clamped)}
+          strokeLinecap="round"
+          transform="rotate(-90 28 28)"
+        />
+      </svg>
+      <div className="min-w-0">
+        <div className="font-display-lg text-xl font-bold text-on-surface">{displayValue}</div>
+        <div className="font-label-caps text-label-caps uppercase text-on-surface-variant truncate">
+          {label}
+        </div>
+      </div>
+    </button>
+  );
+}
+
+/* ── Epic 14 story 14.3 : graphique quotidien d'utilisation IA ──────────── */
+const ENDPOINT_LABELS = { 'gemini-proxy': 'Assistant IA', 'course-draft': 'Brouillon vidéo' };
+const ENDPOINT_COLORS = { 'gemini-proxy': '#5b3cdd', 'course-draft': '#7459f7' };
+
+function pivotAiUsageDaily(rows) {
+  const byDay = new Map();
+  for (const row of rows) {
+    if (!byDay.has(row.day)) byDay.set(row.day, { day: row.day });
+    byDay.get(row.day)[row.endpoint] = row.total_tokens;
+  }
+  return [...byDay.values()];
+}
+
+function AiUsageChartCard({ daily, loading, error, onSelect }) {
+  const data = pivotAiUsageDaily(daily || []);
+  const hasData = data.some((d) => (d['gemini-proxy'] ?? 0) + (d['course-draft'] ?? 0) > 0);
+
+  return (
+    <AccueilCard
+      title="Utilisation IA — 14 derniers jours"
+      icon={BarChart3}
+      onSelect={onSelect}
+      ctaLabel="Voir l'utilisation"
+    >
+      {loading ? (
+        <p className="text-on-surface-variant text-sm">Chargement…</p>
+      ) : error ? (
+        <p className="text-on-surface-variant text-sm">Indisponible pour l&apos;instant.</p>
+      ) : !hasData ? (
+        <p className="text-on-surface-variant text-sm">Aucune donnée pour l&apos;instant.</p>
+      ) : (
+        <div className="h-56 -ml-3">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e2e1" />
+              <XAxis
+                dataKey="day"
+                tickFormatter={(d) =>
+                  new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+                }
+                tick={{ fontSize: 11, fill: '#484555' }}
+                axisLine={{ stroke: '#e5e2e1' }}
+                tickLine={false}
+              />
+              <YAxis
+                tick={{ fontSize: 11, fill: '#484555' }}
+                allowDecimals={false}
+                axisLine={false}
+                tickLine={false}
+                width={40}
+              />
+              <Tooltip
+                formatter={(v) => Number(v).toLocaleString('fr-FR')}
+                labelFormatter={(d) => new Date(d).toLocaleDateString('fr-FR')}
+              />
+              <Legend wrapperStyle={{ fontSize: 12 }} formatter={(v) => ENDPOINT_LABELS[v] || v} />
+              <Bar
+                dataKey="gemini-proxy"
+                stackId="tokens"
+                fill={ENDPOINT_COLORS['gemini-proxy']}
+                name="gemini-proxy"
+              />
+              <Bar
+                dataKey="course-draft"
+                stackId="tokens"
+                fill={ENDPOINT_COLORS['course-draft']}
+                name="course-draft"
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </AccueilCard>
+  );
+}
+
+/* ── Epic 14 stories 14.4/14.6 : signaux admin partagés ──────────────────
+   Une seule liste, dans l'ordre de priorité — TodoCard l'affiche en entier,
+   SuggestionBanner n'en montre que le premier. Jamais deux implémentations
+   du même calcul. */
+function computeAdminSignals({
+  isKeyStale,
+  daysSinceRotation,
+  draftCount,
+  topDemandTool,
+  onSelectAiUsage,
+  onSelectCourses,
+  onSelectWaitlist,
+}) {
+  const signals = [];
+  if (isKeyStale) {
+    signals.push({
+      id: 'key-stale',
+      text:
+        daysSinceRotation === null
+          ? 'Clé Gemini : aucune rotation connue'
+          : `Clé Gemini à tourner (${daysSinceRotation} jours)`,
+      cta: "Voir l'utilisation",
+      onSelect: onSelectAiUsage,
+    });
+  }
+  if (draftCount > 0) {
+    signals.push({
+      id: 'drafts',
+      text: `${draftCount} brouillon${draftCount > 1 ? 's' : ''} non publié${draftCount > 1 ? 's' : ''}`,
+      cta: 'Voir les cours',
+      onSelect: onSelectCourses,
+    });
+  }
+  if (topDemandTool && topDemandTool.signups > 0) {
+    signals.push({
+      id: 'demand',
+      text: `${topDemandTool.name} : ${topDemandTool.signups} inscription${topDemandTool.signups > 1 ? 's' : ''}, toujours en préparation`,
+      cta: 'Voir la demande',
+      onSelect: onSelectWaitlist,
+    });
+  }
+  return signals;
+}
+
+/* ── Epic 14 story 14.4 : derniers cours + à faire ───────────────────────── */
+function RecentCoursesCard({ courses, onSelectCourses }) {
+  const recent = [...courses]
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, 4);
+  return (
+    <AccueilCard
+      title="Derniers cours"
+      icon={BookOpen}
+      onSelect={onSelectCourses}
+      ctaLabel="Voir les cours"
+    >
+      {recent.length === 0 ? (
+        <p className="text-on-surface-variant text-sm">Aucun cours pour l&apos;instant.</p>
+      ) : (
+        <ul className="space-y-2.5">
+          {recent.map((c) => (
+            <li key={c.id} className="flex items-center justify-between gap-2">
+              <span className="text-[13px] font-semibold text-on-surface truncate">{c.title}</span>
+              <span
+                className={`flex-shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                  c.published
+                    ? 'bg-primary text-on-primary'
+                    : 'bg-surface-variant text-on-surface-variant'
+                }`}
+              >
+                {c.published ? 'Publié' : 'Brouillon'}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </AccueilCard>
+  );
+}
+
+function TodoCard({ signals }) {
+  return (
+    <AccueilCard title="À faire" icon={AlertTriangle}>
+      {signals.length === 0 ? (
+        <p className="text-on-surface-variant text-sm">Rien à signaler.</p>
+      ) : (
+        <ul className="space-y-2.5">
+          {signals.map((s) => (
+            <li key={s.id}>
+              <button
+                type="button"
+                onClick={s.onSelect}
+                className={`flex items-center justify-between gap-2 w-full text-left text-[13px] font-semibold text-on-surface hover:text-primary transition-colors rounded ${FOCUS_RING}`}
+              >
+                <span className="truncate">{s.text}</span>
+                <span className="flex-shrink-0 text-on-surface-variant">→</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </AccueilCard>
+  );
+}
+
+/* ── Epic 14 story 14.5 : leaderboard demande outils ─────────────────────── */
+const LEADERBOARD_RANK_CLASS = [
+  'bg-primary text-on-primary',
+  'bg-secondary text-on-secondary',
+  'bg-tertiary text-on-tertiary',
+];
+
+function DemandLeaderboardCard({ topTools, loading, error, onSelect }) {
+  return (
+    <AccueilCard
+      title="Outils les plus demandés"
+      icon={Wrench}
+      onSelect={onSelect}
+      ctaLabel="Voir la demande"
+    >
+      {loading ? (
+        <p className="text-on-surface-variant text-sm">Chargement…</p>
+      ) : error ? (
+        <p className="text-on-surface-variant text-sm">Indisponible pour l&apos;instant.</p>
+      ) : topTools.every((t) => t.signups === 0) ? (
+        <p className="text-on-surface-variant text-sm">Aucune inscription pour l&apos;instant.</p>
+      ) : (
+        <ul className="space-y-2.5">
+          {topTools.map((tool, i) => {
+            const ToolIcon = tool.icon;
+            return (
+              <li key={tool.id} className="flex items-center gap-3">
+                <span
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0 ${
+                    LEADERBOARD_RANK_CLASS[i] || 'bg-surface-variant text-on-surface-variant'
+                  }`}
+                >
+                  {i + 1}
+                </span>
+                <ToolIcon
+                  className="w-4 h-4 text-on-surface-variant flex-shrink-0"
+                  aria-hidden="true"
+                />
+                <span className="flex-1 min-w-0 text-[13px] font-semibold text-on-surface truncate">
+                  {tool.name}
+                </span>
+                <span className="text-[13px] text-on-surface-variant flex-shrink-0">
+                  {tool.signups}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </AccueilCard>
+  );
+}
+
+/* ── Epic 14 story 14.6 : bannière d'action suggérée ─────────────────────── */
+function SuggestionBanner({ signals }) {
+  if (signals.length === 0) {
+    return (
+      <div className="bg-surface-container-lowest border border-surface-variant rounded-[24px] px-6 py-4 flex items-center gap-3">
+        <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" aria-hidden="true" />
+        <p className="text-on-surface-variant text-[13px] font-semibold">
+          Tout est à jour — rien ne réclame ton attention.
+        </p>
+      </div>
+    );
+  }
+  const top = signals[0];
+  return (
+    <div className="bg-primary text-on-primary rounded-[24px] px-6 py-5 flex items-center justify-between gap-4 flex-wrap">
+      <div>
+        <p className="font-label-caps text-label-caps uppercase text-on-primary text-opacity-80 mb-1">
+          À faire en priorité
+        </p>
+        <p className="font-bold text-[15px]">{top.text}</p>
+      </div>
+      <button
+        type="button"
+        onClick={top.onSelect}
+        className={`flex-shrink-0 bg-on-primary text-primary font-cta-pill text-[13px] font-bold px-5 py-2.5 rounded-full hover:opacity-90 transition-opacity cursor-pointer ${FOCUS_RING}`}
+      >
+        {top.cta}
+      </button>
+    </div>
+  );
+}
+
 function AdminAccueilView({
+  email,
   courses,
   published,
   waitlistCounts,
@@ -793,6 +1236,9 @@ function AdminAccueilView({
   lastRotation,
   aiUsageLoading,
   aiUsageError,
+  aiDaily,
+  aiDailyLoading,
+  aiDailyError,
   notifOverview,
   notifLoading,
   notifError,
@@ -806,16 +1252,24 @@ function AdminAccueilView({
     .map((t) => ({ ...t, signups: byToolId.get(t.id) ?? 0 }))
     .sort((a, b) => b.signups - a.signups)
     .slice(0, 3);
-  const maxSignups = Math.max(1, ...topTools.map((t) => t.signups));
 
-  const ENDPOINT_LABELS = { 'gemini-proxy': 'Assistant IA', 'course-draft': 'Brouillon vidéo' };
   const window7 = (aiUsage || []).filter((r) => r.window_days === 7);
   const totalTokens7 = window7.reduce((sum, r) => sum + r.total_tokens, 0);
-  const totalCost7 = window7.reduce((sum, r) => sum + estimateUsdCost(r), 0);
   const daysSinceRotation = lastRotation
     ? Math.floor((Date.now() - new Date(lastRotation.rotated_at).getTime()) / 86_400_000)
     : null;
   const isKeyStale = daysSinceRotation === null || daysSinceRotation >= KEY_ROTATION_WARNING_DAYS;
+  const draftCount = courses.length - published;
+
+  const signals = computeAdminSignals({
+    isKeyStale,
+    daysSinceRotation,
+    draftCount,
+    topDemandTool: topTools[0],
+    onSelectAiUsage,
+    onSelectCourses,
+    onSelectWaitlist,
+  });
 
   return (
     <div>
@@ -850,113 +1304,60 @@ function AdminAccueilView({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <AccueilCard
-          title="Cours"
-          icon={BookOpen}
+      <AccueilHero email={email} topTools={topTools} />
+
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
+        <StatRingCard
+          label="Total cours"
+          value={courses.length}
+          ratio={1}
           onSelect={onSelectCourses}
-          ctaLabel="Voir les cours"
-        >
-          <div className="flex items-baseline gap-5">
-            <div>
-              <div className="font-display-lg text-xl font-bold text-on-surface">
-                {courses.length}
-              </div>
-              <div className="font-label-caps text-label-caps uppercase text-on-surface-variant">
-                Total
-              </div>
-            </div>
-            <div>
-              <div className="font-display-lg text-xl font-bold text-on-surface">{published}</div>
-              <div className="font-label-caps text-label-caps uppercase text-on-surface-variant">
-                Publiés
-              </div>
-            </div>
-            <div>
-              <div className="font-display-lg text-xl font-bold text-on-surface">
-                {courses.length - published}
-              </div>
-              <div className="font-label-caps text-label-caps uppercase text-on-surface-variant">
-                Brouillons
-              </div>
-            </div>
-          </div>
-        </AccueilCard>
-
-        <AccueilCard
-          title="Demande outils"
-          icon={Wrench}
-          onSelect={onSelectWaitlist}
-          ctaLabel="Voir la demande"
-        >
-          {waitlistLoading ? (
-            <p className="text-on-surface-variant text-sm">Chargement…</p>
-          ) : waitlistError ? (
-            <p className="text-on-surface-variant text-sm">Indisponible pour l&apos;instant.</p>
-          ) : topTools.every((t) => t.signups === 0) ? (
-            <p className="text-on-surface-variant text-sm">
-              Aucune inscription pour l&apos;instant.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {topTools.map((tool) => (
-                <div key={tool.id}>
-                  <div className="flex items-center justify-between text-[12px] mb-0.5">
-                    <span className="font-semibold text-on-surface truncate">{tool.name}</span>
-                    <span className="text-on-surface-variant flex-shrink-0 ml-2">
-                      {tool.signups}
-                    </span>
-                  </div>
-                  <div className="w-full h-1 bg-surface-variant rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary rounded-full"
-                      style={{ width: `${Math.round((tool.signups / maxSignups) * 100)}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </AccueilCard>
-
-        <AccueilCard
-          title="Utilisation IA"
-          icon={BarChart3}
+        />
+        <StatRingCard
+          label="Publiés"
+          value={published}
+          ratio={courses.length > 0 ? published / courses.length : 0}
+          onSelect={onSelectCourses}
+        />
+        <StatRingCard
+          label="Brouillons"
+          value={draftCount}
+          ratio={courses.length > 0 ? draftCount / courses.length : 0}
+          onSelect={onSelectCourses}
+        />
+        <StatRingCard
+          // Pas de dénominateur naturel pour un total de tokens : 20k/7j sert de
+          // repère informel pour l'anneau, jamais un vrai quota ou une limite.
+          label="Tokens IA (7j)"
+          value={totalTokens7.toLocaleString('fr-FR')}
+          ratio={totalTokens7 / 20_000}
           onSelect={onSelectAiUsage}
-          ctaLabel="Voir l'utilisation"
-        >
-          {aiUsageLoading ? (
-            <p className="text-on-surface-variant text-sm">Chargement…</p>
-          ) : aiUsageError ? (
-            <p className="text-on-surface-variant text-sm">Indisponible pour l&apos;instant.</p>
-          ) : (
-            <>
-              <div className="font-display-lg text-xl font-bold text-on-surface">
-                {totalTokens7.toLocaleString('fr-FR')} tokens
-              </div>
-              <div className="text-on-surface-variant text-sm mb-2">
-                ${totalCost7.toFixed(3)} estimé (7j)
-              </div>
-              {window7.length > 0 && (
-                <ul className="text-on-surface-variant text-[12px] space-y-0.5 mb-2">
-                  {window7.map((row) => (
-                    <li key={row.endpoint} className="flex items-center justify-between">
-                      <span>{ENDPOINT_LABELS[row.endpoint] || row.endpoint}</span>
-                      <span>{row.total_tokens.toLocaleString('fr-FR')}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {isKeyStale && (
-                <div className="flex items-center gap-1.5 text-on-error-container text-[12px] font-semibold">
-                  <KeyRound className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
-                  Clé à tourner bientôt
-                </div>
-              )}
-            </>
-          )}
-        </AccueilCard>
+          loading={aiUsageLoading}
+          error={aiUsageError}
+        />
+      </div>
 
+      <div className="mb-4">
+        <AiUsageChartCard
+          daily={aiDaily}
+          loading={aiDailyLoading}
+          error={aiDailyError}
+          onSelect={onSelectAiUsage}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <RecentCoursesCard courses={courses} onSelectCourses={onSelectCourses} />
+        <TodoCard signals={signals} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <DemandLeaderboardCard
+          topTools={topTools}
+          loading={waitlistLoading}
+          error={waitlistError}
+          onSelect={onSelectWaitlist}
+        />
         <AccueilCard title="Notifications" icon={Bell}>
           {notifLoading ? (
             <p className="text-on-surface-variant text-sm">Chargement…</p>
@@ -984,6 +1385,8 @@ function AdminAccueilView({
           )}
         </AccueilCard>
       </div>
+
+      <SuggestionBanner signals={signals} />
     </div>
   );
 }

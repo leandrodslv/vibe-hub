@@ -196,6 +196,29 @@ describe('getAiUsageSummary', () => {
   });
 });
 
+describe('getAiUsageDaily', () => {
+  it('renvoie la série journalière validée, avec un défaut de 14 jours', async () => {
+    const rows = [
+      { day: '2026-09-14', endpoint: 'gemini-proxy', total_tokens: 0 },
+      { day: '2026-09-15', endpoint: 'gemini-proxy', total_tokens: 120 },
+    ];
+    rpc.mockResolvedValueOnce({ data: rows, error: null });
+    await expect(svc.getAiUsageDaily()).resolves.toEqual(rows);
+    expect(rpc).toHaveBeenCalledWith('get_ai_usage_daily', { days: 14 });
+  });
+
+  it('transmet un nombre de jours personnalisé', async () => {
+    rpc.mockResolvedValueOnce({ data: [], error: null });
+    await svc.getAiUsageDaily(30);
+    expect(rpc).toHaveBeenCalledWith('get_ai_usage_daily', { days: 30 });
+  });
+
+  it('lève quand la RPC renvoie une erreur', async () => {
+    rpc.mockResolvedValueOnce({ data: null, error: { message: 'permission denied' } });
+    await expect(svc.getAiUsageDaily()).rejects.toThrow(/permission denied/);
+  });
+});
+
 describe('getLastKeyRotation', () => {
   it('renvoie la ligne la plus récente en cas de succès', async () => {
     const row = { id: 2, rotated_at: '2026-09-15T00:00:00Z', rotated_by: 'u1', note: 'ok' };
