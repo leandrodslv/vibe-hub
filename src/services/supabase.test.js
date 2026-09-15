@@ -98,6 +98,33 @@ describe('addToWaitlist', () => {
   });
 });
 
+describe('getWaitlistCounts', () => {
+  it('renvoie les agrégats validés en cas de succès', async () => {
+    const rows = [
+      { tool_id: 'code-auditor', signups: 3 },
+      { tool_id: 'vision-lens', signups: 0 },
+    ];
+    rpc.mockResolvedValueOnce({ data: rows, error: null });
+    await expect(svc.getWaitlistCounts()).resolves.toEqual(rows);
+    expect(rpc).toHaveBeenCalledWith('get_waitlist_counts');
+  });
+
+  it('lève quand la RPC renvoie une erreur (ex. anon sans droits admin)', async () => {
+    rpc.mockResolvedValueOnce({ data: null, error: { message: 'permission denied' } });
+    await expect(svc.getWaitlistCounts()).rejects.toThrow(/permission denied/);
+  });
+
+  it('lève une SchemaError si une ligne exposait un email (fuite AD-4)', async () => {
+    rpc.mockResolvedValueOnce({
+      data: [{ tool_id: 'code-auditor', signups: 1, email: 'leak@x.co' }],
+      error: null,
+    });
+    await expect(svc.getWaitlistCounts()).rejects.toThrow(
+      /Réponse inattendue \[getWaitlistCounts\]/
+    );
+  });
+});
+
 describe('getCourses', () => {
   it('renvoie les données validées en cas de succès', async () => {
     const rows = [makeCourse({ id: 1 }), makeCourse({ id: 2, title: 'Autre' })];

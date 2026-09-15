@@ -29,9 +29,11 @@ import {
   getSession,
   onAuthChange,
   isAdmin,
+  getWaitlistCounts,
 } from '../services/supabase';
 import { generateCourseDraftFromVideo } from '../services/ai';
 import { matchesHost } from '../lib/validation';
+import { TOOLS } from '../data/tools';
 
 const YOUTUBE_HOSTS = ['youtube.com', 'youtu.be'];
 
@@ -296,10 +298,21 @@ function AdminHeader({ onLogout }) {
    DASHBOARD
 ════════════════════════════════════════ */
 function Dashboard({ onLogout }) {
+  const [view, setView] = useState('courses'); // 'courses' | 'waitlist'
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // null | { mode: 'add'|'edit', course? }
   const [deleteTarget, setDeleteTarget] = useState(null); // course object
+
+  // null = pas encore chargé (fetch paresseux, seulement à l'ouverture de l'onglet).
+  const [waitlistCounts, setWaitlistCounts] = useState(null);
+  const [waitlistLoading, setWaitlistLoading] = useState(false);
+  const [waitlistError, setWaitlistError] = useState(null);
+  // Garde synchrone contre le double-fetch : `waitlistLoading` (state) n'est mis à
+  // jour qu'au prochain render, donc deux clics rapides sur l'onglet liraient tous
+  // les deux `false` via leur closure et lanceraient chacun un appel RPC. Un ref
+  // est mutable immédiatement, sans attendre de re-render.
+  const waitlistFetchInFlight = useRef(false);
 
   const load = async () => {
     setLoading(true);
@@ -311,6 +324,26 @@ function Dashboard({ onLogout }) {
   useEffect(() => {
     load();
   }, []);
+
+  const loadWaitlist = async () => {
+    if (waitlistFetchInFlight.current) return;
+    waitlistFetchInFlight.current = true;
+    setWaitlistLoading(true);
+    setWaitlistError(null);
+    try {
+      setWaitlistCounts(await getWaitlistCounts());
+    } catch (err) {
+      setWaitlistError(err.message || 'Impossible de charger la demande.');
+    } finally {
+      setWaitlistLoading(false);
+      waitlistFetchInFlight.current = false;
+    }
+  };
+
+  const openWaitlistView = () => {
+    setView('waitlist');
+    if (waitlistCounts === null) loadWaitlist();
+  };
 
   const handleSave = async (formData) => {
     if (editing.mode === 'add') {
@@ -359,61 +392,102 @@ function Dashboard({ onLogout }) {
 
       {/* ── Content ── */}
       <div className="max-w-5xl mx-auto px-8 py-10">
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          {[
-            { label: 'Total cours', value: courses.length },
-            { label: 'Publiés', value: published },
-            { label: 'Brouillons', value: courses.length - published },
-          ].map(({ label, value }) => (
-            <div
-              key={label}
-              className="bg-surface-container-lowest border border-surface-variant rounded-[24px] p-5 shadow-sm"
-            >
-              <div className="font-display-lg text-2xl font-bold text-on-surface mb-0.5">
-                {value}
-              </div>
-              <div className="font-label-caps text-label-caps uppercase text-on-surface-variant">
-                {label}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Header liste */}
-        <div className="flex items-center justify-between mb-5">
-          <h1 className="font-headline-lg-mobile text-[22px] font-bold text-on-surface">Cours</h1>
+        {/* Onglets Cours / Demande outils */}
+        <div className="flex items-center bg-surface-variant p-1 rounded-full gap-1 w-fit mb-8">
           <button
-            onClick={() => setEditing({ mode: 'add' })}
-            className={`flex items-center gap-2 bg-primary text-on-primary font-cta-pill text-[13px] font-bold px-5 py-2.5 rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors cursor-pointer chunky-shadow ${FOCUS_RING}`}
+            type="button"
+            onClick={() => setView('courses')}
+            aria-pressed={view === 'courses'}
+            className={`px-5 py-1.5 rounded-full text-[13px] font-semibold transition-all duration-300 cursor-pointer ${FOCUS_RING} ${
+              view === 'courses'
+                ? 'bg-surface-container-lowest shadow-sm text-on-surface'
+                : 'text-on-surface-variant hover:text-on-surface'
+            }`}
           >
-            <Plus className="w-4 h-4" aria-hidden="true" />
-            Ajouter un cours
+            Cours
+          </button>
+          <button
+            type="button"
+            onClick={openWaitlistView}
+            aria-pressed={view === 'waitlist'}
+            className={`px-5 py-1.5 rounded-full text-[13px] font-semibold transition-all duration-300 cursor-pointer ${FOCUS_RING} ${
+              view === 'waitlist'
+                ? 'bg-surface-container-lowest shadow-sm text-on-surface'
+                : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            Demande outils
           </button>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-24">
-            <div
-              className="w-8 h-8 border-2 border-surface-variant border-t-primary rounded-full animate-spin"
-              role="status"
-              aria-label="Chargement des cours"
-            />
-          </div>
-        ) : courses.length === 0 ? (
-          <EmptyState onAdd={() => setEditing({ mode: 'add' })} />
+        {view === 'waitlist' ? (
+          <WaitlistView
+            counts={waitlistCounts}
+            loading={waitlistLoading}
+            error={waitlistError}
+            onRetry={loadWaitlist}
+          />
         ) : (
-          <div className="space-y-2.5">
-            {courses.map((course) => (
-              <CourseRow
-                key={course.id}
-                course={course}
-                onEdit={() => setEditing({ mode: 'edit', course })}
-                onDelete={() => setDeleteTarget(course)}
-                onToggle={() => togglePublished(course)}
-              />
-            ))}
-          </div>
+          <>
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-4 mb-8">
+              {[
+                { label: 'Total cours', value: courses.length },
+                { label: 'Publiés', value: published },
+                { label: 'Brouillons', value: courses.length - published },
+              ].map(({ label, value }) => (
+                <div
+                  key={label}
+                  className="bg-surface-container-lowest border border-surface-variant rounded-[24px] p-5 shadow-sm"
+                >
+                  <div className="font-display-lg text-2xl font-bold text-on-surface mb-0.5">
+                    {value}
+                  </div>
+                  <div className="font-label-caps text-label-caps uppercase text-on-surface-variant">
+                    {label}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Header liste */}
+            <div className="flex items-center justify-between mb-5">
+              <h1 className="font-headline-lg-mobile text-[22px] font-bold text-on-surface">
+                Cours
+              </h1>
+              <button
+                onClick={() => setEditing({ mode: 'add' })}
+                className={`flex items-center gap-2 bg-primary text-on-primary font-cta-pill text-[13px] font-bold px-5 py-2.5 rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors cursor-pointer chunky-shadow ${FOCUS_RING}`}
+              >
+                <Plus className="w-4 h-4" aria-hidden="true" />
+                Ajouter un cours
+              </button>
+            </div>
+
+            {loading ? (
+              <div className="flex items-center justify-center py-24">
+                <div
+                  className="w-8 h-8 border-2 border-surface-variant border-t-primary rounded-full animate-spin"
+                  role="status"
+                  aria-label="Chargement des cours"
+                />
+              </div>
+            ) : courses.length === 0 ? (
+              <EmptyState onAdd={() => setEditing({ mode: 'add' })} />
+            ) : (
+              <div className="space-y-2.5">
+                {courses.map((course) => (
+                  <CourseRow
+                    key={course.id}
+                    course={course}
+                    onEdit={() => setEditing({ mode: 'edit', course })}
+                    onDelete={() => setDeleteTarget(course)}
+                    onToggle={() => togglePublished(course)}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -496,6 +570,98 @@ function CourseRow({ course, onEdit, onDelete, onToggle }) {
         >
           <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
         </button>
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════
+   DEMANDE OUTILS — dashboard waitlist (Epic 6, story 6.2)
+   Vue séparée du CRUD cours : décompte par outil via get_waitlist_counts()
+   (RPC, agrégat only — jamais les emails bruts, AD-4).
+════════════════════════════════════════ */
+function WaitlistView({ counts, loading, error, onRetry }) {
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div
+          className="w-8 h-8 border-2 border-surface-variant border-t-primary rounded-full animate-spin"
+          role="status"
+          aria-label="Chargement de la demande"
+        />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-surface-container-low border border-surface-variant rounded-3xl py-16 flex flex-col items-center justify-center text-center">
+        <div className="w-14 h-14 bg-surface-container rounded-2xl flex items-center justify-center mb-4">
+          <AlertTriangle className="w-6 h-6 text-on-surface-variant" aria-hidden="true" />
+        </div>
+        <p className="font-headline-lg-mobile text-[16px] font-bold text-on-surface mb-1">
+          Impossible de charger la demande
+        </p>
+        <p className="text-on-surface-variant text-sm mb-5">{error}</p>
+        <button
+          onClick={onRetry}
+          className={`flex items-center gap-2 bg-primary text-on-primary font-cta-pill text-sm font-bold px-5 py-2.5 rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors cursor-pointer chunky-shadow ${FOCUS_RING}`}
+        >
+          Réessayer
+        </button>
+      </div>
+    );
+  }
+
+  const byToolId = new Map((counts || []).map((c) => [c.tool_id, c.signups]));
+  const rows = TOOLS.filter((t) => t.status !== 'live')
+    .map((t) => ({ ...t, signups: byToolId.get(t.id) ?? 0 }))
+    .sort((a, b) => b.signups - a.signups);
+  const maxSignups = Math.max(1, ...rows.map((r) => r.signups));
+
+  return (
+    <div>
+      <div className="mb-5">
+        <h1 className="font-headline-lg-mobile text-[22px] font-bold text-on-surface">
+          Demande outils
+        </h1>
+        <p className="text-on-surface-variant text-[13px] mt-1">
+          Inscriptions à la liste d'attente par outil, pour décider quoi construire ensuite.
+        </p>
+      </div>
+
+      <div className="space-y-2.5">
+        {rows.map((tool) => {
+          const Icon = tool.icon;
+          const pct = Math.round((tool.signups / maxSignups) * 100);
+          return (
+            <div
+              key={tool.id}
+              className="bg-surface-container-lowest border border-surface-variant rounded-[24px] px-5 py-4 flex items-center gap-4 shadow-sm"
+            >
+              <div className="w-10 h-10 rounded-xl bg-surface-variant flex items-center justify-center flex-shrink-0">
+                <Icon className="w-5 h-5 text-on-surface-variant" aria-hidden="true" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[14px] font-bold text-on-surface truncate mb-1.5">{tool.name}</p>
+                <div className="w-full h-1.5 bg-surface-variant rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-primary rounded-full transition-all duration-700"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+              </div>
+              <div className="flex-shrink-0 text-right">
+                <div className="font-display-lg text-xl font-bold text-on-surface">
+                  {tool.signups}
+                </div>
+                <div className="font-label-caps text-label-caps uppercase text-on-surface-variant">
+                  inscrit{tool.signups > 1 ? 's' : ''}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

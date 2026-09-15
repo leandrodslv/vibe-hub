@@ -3,11 +3,6 @@ import {
   Sparkles,
   ArrowRight,
   Network,
-  LayoutTemplate,
-  ShieldCheck,
-  PenTool,
-  Palette,
-  Eye,
   ChevronLeft,
   X,
   Bell,
@@ -17,84 +12,10 @@ import {
   Puzzle,
   Plus,
   Search,
-  Mic,
-  TrendingUp,
-  BarChart3,
-  Shapes,
 } from 'lucide-react';
 import { addToWaitlist } from '../../../services/supabase';
 import { isValidEmail } from '../../../lib/validation';
-
-const TOOLS = [
-  {
-    id: 'ui-builder',
-    name: 'UI Builder',
-    description:
-      'Concevez des interfaces utilisateur complexes avec notre constructeur visuel intuitif. Génération de code en temps réel incluse.',
-    icon: LayoutTemplate,
-    status: 'live',
-  },
-  {
-    id: 'code-auditor',
-    name: 'Code Auditor',
-    description:
-      "Analyse statique et recommandations d'optimisation basées sur l'IA pour vos projets.",
-    icon: ShieldCheck,
-    status: 'coming',
-  },
-  {
-    id: 'content-writer',
-    name: 'Content Writer',
-    description:
-      'Générateur de copie UX et de contenu marketing intégré directement dans votre workflow.',
-    icon: PenTool,
-    status: 'coming',
-  },
-  {
-    id: 'color-studio',
-    name: 'Color Studio',
-    description:
-      'Création et gestion de systèmes de couleurs accessibles avec prévisualisation en direct.',
-    icon: Palette,
-    status: 'coming',
-  },
-  {
-    id: 'vision-lens',
-    name: 'Vision Lens',
-    description:
-      "Testeur d'accessibilité visuelle simulant différents types de daltonisme sur vos maquettes.",
-    icon: Eye,
-    status: 'coming',
-  },
-  {
-    id: 'voice-studio',
-    name: 'Voice Studio',
-    description: 'Synthèse et clonage de voix pour vos prototypes, démos et vidéos.',
-    icon: Mic,
-    status: 'coming',
-  },
-  {
-    id: 'seo-analyzer',
-    name: 'SEO Analyzer',
-    description: "Audit SEO automatisé et suggestions d'optimisation on-page en temps réel.",
-    icon: TrendingUp,
-    status: 'coming',
-  },
-  {
-    id: 'data-viz',
-    name: 'Data Viz',
-    description: 'Générez des graphiques et tableaux de bord à partir de vos données brutes.',
-    icon: BarChart3,
-    status: 'coming',
-  },
-  {
-    id: 'icon-forge',
-    name: 'Icon Forge',
-    description: "Générateur d'icônes cohérentes pour vos design systems et interfaces.",
-    icon: Shapes,
-    status: 'coming',
-  },
-];
+import { TOOLS } from '../../../data/tools';
 
 const FOCUS_RING =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface';

@@ -11,6 +11,7 @@ import {
   notificationArraySchema,
   notificationPreferencesSchema,
   DEFAULT_PREFERENCES,
+  waitlistCountArraySchema,
 } from '../lib/schemas/index.js';
 
 // Adaptateur unique vers Supabase (Architecture Spine AD-2) : aucun composant
@@ -343,6 +344,18 @@ export async function addToWaitlist(toolId, email) {
   if (error.code === '23505') return { duplicate: true };
   logger.warn('supabase:addToWaitlist', { code: error.code });
   return { error: error.message };
+}
+
+/**
+ * Demande agrégée par outil (Epic 6 story 6.2, AD-4) — jamais les emails bruts :
+ * `get_waitlist_counts()` filtre déjà côté Postgres sur `is_admin()` (0011), un
+ * appel non-admin renvoie simplement un tableau vide.
+ * @returns {Promise<{tool_id: string, signups: number}[]>}
+ */
+export async function getWaitlistCounts() {
+  const { data, error } = await supabase.rpc('get_waitlist_counts');
+  if (error) rethrow('getWaitlistCounts', error);
+  return parseOrThrow(waitlistCountArraySchema, data, 'getWaitlistCounts');
 }
 
 /* ─── Courses ─── */
