@@ -1,12 +1,16 @@
 // @ts-check
-import { env, isAiConfigured } from '../config/env.js';
+import { env, isAiConfigured, isCourseDraftConfigured } from '../config/env.js';
 import { logger, serializeError } from '../lib/logger.js';
 import { parseOrThrow } from '../lib/schemas/parse.js';
 import {
   geminiTextSchema,
   geminiProxySuccessSchema,
   geminiProxyErrorSchema,
+  courseDraftSuccessSchema,
 } from '../lib/schemas/index.js';
+// AD-2 : import d'un autre service, pas du SDK Supabase directement — seul
+// services/supabase.js importe `@supabase/supabase-js`.
+import { getSession } from './supabase.js';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Architecture Spine AD-1 — RÉSOLU (branche fix/ad-1-gemini-proxy).
@@ -89,5 +93,76 @@ export const generateAIResponse = async (history, customInstruction = null) => {
   } catch (error) {
     logger.error('ai:proxy-call-failed', { ...serializeError(error) });
     return GENERIC_ERROR;
+  }
+};
+
+/**
+ * Génère un brouillon de cours (titre/description/durée/contenu Markdown) à
+ * partir d'une URL YouTube publique, via l'Edge Function `course-draft`.
+ *
+ * Admin uniquement (AdminPage.jsx → CourseEditor) : la fonction exige un JWT
+ * valide (`verify_jwt: true` côté Edge Function), donc un appel sans session
+ * active échoue proprement plutôt que de partir en requête vouée à l'échec.
+ * Jamais de publication automatique : le résultat ne fait que préremplir le
+ * formulaire, l'admin relit et enregistre (ou pas) lui-même.
+ *
+ * @param {string} videoUrl
+ * @returns {Promise<
+ *   | { success: true, draft: { title: string, description: string, duration: string, content: string } }
+ *   | { success: false, error: string }
+ * >}
+ */
+export const generateCourseDraftFromVideo = async (videoUrl) => {
+  if (!isCourseDraftConfigured()) {
+    return {
+      success: false,
+      error: "Le brouillon IA n'est pas configuré (VITE_COURSE_DRAFT_URL absente).",
+    };
+  }
+
+  try {
+    const session = await getSession();
+    if (!session) {
+      return { success: false, error: 'Session expirée — reconnectez-vous puis réessayez.' };
+    }
+
+    const res = await fetch(env.courseDraftUrl, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ videoUrl }),
+    });
+
+    /** @type {unknown} */
+    let payload;
+    try {
+      payload = await res.json();
+    } catch (parseErr) {
+      logger.error('ai:course-draft-bad-json', { status: res.status, ...serializeError(parseErr) });
+      return { success: false, error: 'Réponse illisible du serveur.' };
+    }
+
+    if (!res.ok) {
+      const err = geminiProxyErrorSchema.safeParse(payload);
+      logger.error('ai:course-draft-failed', {
+        httpStatus: res.status,
+        proxyError: err.success ? err.data.error : undefined,
+      });
+      if (res.status === 429) {
+        return { success: false, error: "Limite d'utilisation IA atteinte, réessayez plus tard." };
+      }
+      return {
+        success: false,
+        error: err.success ? err.data.error : 'Échec de génération du brouillon.',
+      };
+    }
+
+    const draft = parseOrThrow(courseDraftSuccessSchema, payload, 'course-draft:response');
+    return { success: true, draft };
+  } catch (error) {
+    logger.error('ai:course-draft-failed', { ...serializeError(error) });
+    return { success: false, error: 'Échec de génération du brouillon.' };
   }
 };

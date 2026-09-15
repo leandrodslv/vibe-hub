@@ -1,20 +1,42 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { setGeminiScenario, geminiRequests, GEMINI_PROXY_TEST_URL } from '../test/mocks';
+import {
+  setGeminiScenario,
+  geminiRequests,
+  GEMINI_PROXY_TEST_URL,
+  setCourseDraftScenario,
+  courseDraftRequests,
+  COURSE_DRAFT_TEST_URL,
+} from '../test/mocks';
 
 // Seul l'accès env est mocké : `ai.js` fait un vrai `fetch()` vers le proxy, et
 // c'est MSW (src/test/mocks/handlers/gemini.js) qui répond. On teste donc le
 // VRAI code de mapping d'erreur d'ai.js, pas un double.
-const h = vi.hoisted(() => ({ aiConfigured: true }));
+const h = vi.hoisted(() => ({ aiConfigured: true, courseDraftConfigured: true, session: null }));
 
 vi.mock('../config/env.js', () => ({
-  env: { geminiProxyUrl: 'https://proxy.test/gemini-proxy', mode: 'test', isProd: false },
+  env: {
+    geminiProxyUrl: 'https://proxy.test/gemini-proxy',
+    courseDraftUrl: 'https://proxy.test/course-draft',
+    mode: 'test',
+    isProd: false,
+  },
   isAiConfigured: () => h.aiConfigured,
+  isCourseDraftConfigured: () => h.courseDraftConfigured,
 }));
 
-const { generateAIResponse } = await import('./ai.js');
+// getSession() vient de services/supabase.js (AD-2 : ai.js n'importe jamais le
+// SDK Supabase directement) — mocké ici plutôt que de faire tourner un vrai
+// client Supabase dans ce test unitaire.
+vi.mock('./supabase.js', () => ({
+  getSession: () => Promise.resolve(h.session),
+}));
+
+const { generateAIResponse, generateCourseDraftFromVideo } = await import('./ai.js');
 
 beforeEach(() => {
   h.aiConfigured = true;
+  h.courseDraftConfigured = true;
+  h.session = { access_token: 'fake-jwt-for-test' };
 });
 
 describe('generateAIResponse', () => {
@@ -103,5 +125,68 @@ describe('generateAIResponse', () => {
     const out = await generateAIResponse([{ role: 'user', text: 'x' }]);
     expect(out).toContain('<script>alert(1)</script>');
     expect(typeof out).toBe('string');
+  });
+});
+
+describe('generateCourseDraftFromVideo', () => {
+  const YOUTUBE_URL = 'https://www.youtube.com/watch?v=abc123';
+
+  it("renvoie une erreur explicite si le proxy n'est pas configuré", async () => {
+    h.courseDraftConfigured = false;
+    const out = await generateCourseDraftFromVideo(YOUTUBE_URL);
+    expect(out).toEqual({
+      success: false,
+      error: expect.stringMatching(/pas configuré/i),
+    });
+    expect(courseDraftRequests).toHaveLength(0);
+  });
+
+  it("renvoie une erreur si aucune session n'est active", async () => {
+    h.session = null;
+    const out = await generateCourseDraftFromVideo(YOUTUBE_URL);
+    expect(out).toEqual({ success: false, error: expect.stringMatching(/session/i) });
+    expect(courseDraftRequests).toHaveLength(0);
+  });
+
+  it('renvoie le brouillon en cas de succès', async () => {
+    const out = await generateCourseDraftFromVideo(YOUTUBE_URL);
+    expect(out).toEqual({
+      success: true,
+      draft: {
+        title: 'Prompts efficaces pour le design UI',
+        description: 'Comprendre comment formuler un prompt qui produit un résultat exploitable.',
+        duration: '08:30',
+        content: '# Introduction\n\nCeci est le contenu généré depuis la vidéo.',
+      },
+    });
+  });
+
+  it("transmet l'URL vidéo et le JWT de session au proxy", async () => {
+    await generateCourseDraftFromVideo(YOUTUBE_URL);
+    expect(COURSE_DRAFT_TEST_URL).toBe('https://proxy.test/course-draft');
+    expect(courseDraftRequests[0]).toEqual({
+      videoUrl: YOUTUBE_URL,
+      authorization: 'Bearer fake-jwt-for-test',
+    });
+  });
+
+  it('mappe une erreur 429 sur un message de quota', async () => {
+    setCourseDraftScenario('quotaExceeded');
+    const out = await generateCourseDraftFromVideo(YOUTUBE_URL);
+    expect(out.success).toBe(false);
+    expect(out.error).toMatch(/limite d.utilisation|quota/i);
+  });
+
+  it('relaie le message du proxy sur une erreur serveur (JSON illisible côté modèle)', async () => {
+    setCourseDraftScenario('malformedJson');
+    const out = await generateCourseDraftFromVideo(YOUTUBE_URL);
+    expect(out).toEqual({ success: false, error: 'Réponse du modèle illisible (JSON invalide).' });
+  });
+
+  it('renvoie une erreur générique si le proxy n’est pas configuré côté serveur (503)', async () => {
+    setCourseDraftScenario('proxyNotConfigured');
+    const out = await generateCourseDraftFromVideo(YOUTUBE_URL);
+    expect(out.success).toBe(false);
+    expect(out.error).toMatch(/proxy non configuré/i);
   });
 });

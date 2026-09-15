@@ -12,5 +12,11 @@ export {
   GEMINI_PROXY_TEST_URL,
 } from './handlers/gemini.js';
 export { setSupabaseScenario, setSupabaseLatency } from './handlers/supabase.js';
+export {
+  setCourseDraftScenario,
+  courseDraftRequests,
+  COURSE_DRAFT_TEST_URL,
+} from './handlers/course-draft.js';
 export { geminiScenarios } from './scenarios/gemini.js';
 export { courseScenarios, makeCourseRow } from './scenarios/courses.js';
+export { courseDraftScenarios } from './scenarios/course-draft.js';

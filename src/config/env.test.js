@@ -48,4 +48,15 @@ describe('config/env', () => {
     expect(mod.isAiConfigured()).toBe(true);
     expect(mod.env.geminiProxyUrl).toBe('https://ref.functions.supabase.co/gemini-proxy');
   });
+
+  it('isCourseDraftConfigured suit VITE_COURSE_DRAFT_URL', async () => {
+    vi.stubEnv('VITE_COURSE_DRAFT_URL', '');
+    let mod = await loadEnv();
+    expect(mod.isCourseDraftConfigured()).toBe(false);
+
+    vi.stubEnv('VITE_COURSE_DRAFT_URL', 'https://ref.functions.supabase.co/course-draft');
+    mod = await loadEnv();
+    expect(mod.isCourseDraftConfigured()).toBe(true);
+    expect(mod.env.courseDraftUrl).toBe('https://ref.functions.supabase.co/course-draft');
+  });
 });

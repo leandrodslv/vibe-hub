@@ -6,11 +6,14 @@
  * une IA » que la règle d'or veut attraper tôt. Ici on est donc STRICT : un
  * format inattendu lève (`parseOrThrow`), il ne dégrade pas en silence.
  *
- * Deux surfaces :
+ * Trois surfaces :
  *  - `geminiProxyResponseSchema` : le JSON de l'Edge Function `gemini-proxy`,
  *    parsé par `src/services/ai.js` (`{ text }` ou `{ error, status? }`).
  *  - `geminiTextSchema` : le champ `text` de la réponse du proxy — chaîne non
  *    vide (une chaîne vide = complétion silencieuse à rejeter).
+ *  - `courseDraftResponseSchema` : le JSON de l'Edge Function `course-draft`
+ *    (brouillon de cours généré depuis une URL YouTube), même contrat
+ *    succès/échec que le proxy de chat mais un succès structuré.
  */
 
 import { z } from 'zod';
@@ -33,3 +36,26 @@ export const geminiProxyResponseSchema = z.union([
 ]);
 
 /** @typedef {z.infer<typeof geminiProxyResponseSchema>} GeminiProxyResponse */
+
+/**
+ * Succès de l'Edge Function `course-draft` : brouillon de cours généré par Gemini
+ * depuis une vidéo YouTube. `duration` peut être vide (le modèle ne perçoit pas
+ * toujours la durée réelle) — champ librement éditable ensuite dans l'admin, ce
+ * n'est qu'un brouillon à relire, jamais publié automatiquement.
+ */
+export const courseDraftSuccessSchema = z
+  .object({
+    title: z.string().min(1, 'titre manquant'),
+    description: z.string(),
+    duration: z.string(),
+    content: z.string().min(1, 'contenu manquant'),
+  })
+  .strict();
+
+/** Réponse de `course-draft`, succès structuré OU échec `{ error, status? }`. */
+export const courseDraftResponseSchema = z.union([
+  courseDraftSuccessSchema,
+  geminiProxyErrorSchema,
+]);
+
+/** @typedef {z.infer<typeof courseDraftResponseSchema>} CourseDraftResponse */

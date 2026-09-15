@@ -16,12 +16,19 @@
 import { setupServer } from 'msw/node';
 import { geminiHandlers, resetGeminiScenario, geminiRequests } from './handlers/gemini.js';
 import { supabaseHandlers, resetSupabaseScenario } from './handlers/supabase.js';
+import {
+  courseDraftHandlers,
+  resetCourseDraftScenario,
+  courseDraftRequests,
+} from './handlers/course-draft.js';
 
-export const server = setupServer(...geminiHandlers, ...supabaseHandlers);
+export const server = setupServer(...geminiHandlers, ...supabaseHandlers, ...courseDraftHandlers);
 
 /** Remet tous les scénarios et les journaux de requêtes à l'état initial. */
 export function resetScenarios() {
   resetGeminiScenario();
   resetSupabaseScenario();
+  resetCourseDraftScenario();
   geminiRequests.length = 0;
+  courseDraftRequests.length = 0;
 }

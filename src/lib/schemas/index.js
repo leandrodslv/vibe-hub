@@ -29,4 +29,6 @@ export {
   geminiProxyResponseSchema,
   geminiProxySuccessSchema,
   geminiProxyErrorSchema,
+  courseDraftSuccessSchema,
+  courseDraftResponseSchema,
 } from './gemini.js';

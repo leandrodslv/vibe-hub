@@ -31,6 +31,7 @@ const RAW = {
   VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
   VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
   VITE_GEMINI_PROXY_URL: import.meta.env.VITE_GEMINI_PROXY_URL,
+  VITE_COURSE_DRAFT_URL: import.meta.env.VITE_COURSE_DRAFT_URL,
   VITE_METRICS_URL: import.meta.env.VITE_METRICS_URL,
   VITE_SENTRY_DSN: import.meta.env.VITE_SENTRY_DSN,
 };
@@ -94,6 +95,14 @@ export const env = Object.freeze({
    */
   geminiProxyUrl: read('VITE_GEMINI_PROXY_URL', { required: false }),
 
+  /**
+   * URL de l'Edge Function `course-draft` (brouillon de cours généré par Gemini
+   * depuis une URL YouTube, admin uniquement). Vide → le bouton "Générer un
+   * brouillon IA" reste désactivé côté admin, aucune dégradation pour le reste
+   * de l'app (feature admin-only).
+   */
+  courseDraftUrl: read('VITE_COURSE_DRAFT_URL', { required: false }),
+
   /** Endpoint de collecte des métriques / erreurs (V10). Vide → log seul. */
   metricsUrl: read('VITE_METRICS_URL', { required: false }),
 
@@ -109,4 +118,9 @@ export function isSupabaseConfigured() {
 /** @returns {boolean} true si l'assistant IA peut répondre (proxy configuré). */
 export function isAiConfigured() {
   return Boolean(env.geminiProxyUrl);
+}
+
+/** @returns {boolean} true si le brouillon de cours par IA est disponible (admin). */
+export function isCourseDraftConfigured() {
+  return Boolean(env.courseDraftUrl);
 }
