@@ -11,10 +11,12 @@ export const ROUTES = {
   admin: '/admin',
 };
 
-// « notifications » n'apparaît pas dans la nav principale des onglets (Cours/IA/Outils) :
+// « notifications » n'apparaît pas dans la nav principale des onglets (Accueil/Cours/IA/Outils) :
 // on y accède via l'icône cloche (Sidebar, TopBar mobile, Navbar landing), pas via ces tabs.
-export const WORKSPACE_TABS = ['modules', 'ia', 'outils', 'notifications'];
-export const DEFAULT_TAB = 'ia';
+export const WORKSPACE_TABS = ['accueil', 'modules', 'ia', 'outils', 'notifications'];
+// Epic 12 : ouvrir /app atterrit sur un aperçu (progression, notifs, outils) plutôt que
+// directement dans le chat IA — l'onglet par défaut n'écrit jamais ?tab= dans l'URL (ci-dessous).
+export const DEFAULT_TAB = 'accueil';
 
 // URL du logiciel, éventuellement ciblée sur un onglet. L'onglet par défaut n'est pas
 // écrit dans l'URL pour garder `/app` propre.
