@@ -97,8 +97,10 @@ export const generateAIResponse = async (history, customInstruction = null) => {
 };
 
 /**
- * Génère un brouillon de cours (titre/description/durée/contenu Markdown) à
- * partir d'une URL YouTube publique, via l'Edge Function `course-draft`.
+ * Cœur partagé des deux entrées du brouillon IA (URL YouTube ou fichier
+ * uploadé) — même Edge Function `course-draft`, même gestion d'erreur, seul
+ * le corps de la requête diffère. Jamais appelée directement en dehors de ce
+ * module (cf. les deux exports ci-dessous).
  *
  * Admin uniquement (AdminPage.jsx → CourseEditor) : la fonction exige un JWT
  * valide (`verify_jwt: true` côté Edge Function), donc un appel sans session
@@ -106,13 +108,13 @@ export const generateAIResponse = async (history, customInstruction = null) => {
  * Jamais de publication automatique : le résultat ne fait que préremplir le
  * formulaire, l'admin relit et enregistre (ou pas) lui-même.
  *
- * @param {string} videoUrl
+ * @param {{ videoUrl: string } | { storagePath: string }} body
  * @returns {Promise<
  *   | { success: true, draft: { title: string, description: string, duration: string, content: string } }
  *   | { success: false, error: string }
  * >}
  */
-export const generateCourseDraftFromVideo = async (videoUrl) => {
+const requestCourseDraft = async (body) => {
   if (!isCourseDraftConfigured()) {
     return {
       success: false,
@@ -132,7 +134,7 @@ export const generateCourseDraftFromVideo = async (videoUrl) => {
         'content-type': 'application/json',
         authorization: `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({ videoUrl }),
+      body: JSON.stringify(body),
     });
 
     /** @type {unknown} */
@@ -166,3 +168,23 @@ export const generateCourseDraftFromVideo = async (videoUrl) => {
     return { success: false, error: 'Échec de génération du brouillon.' };
   }
 };
+
+/**
+ * Brouillon de cours à partir d'une URL YouTube publique — Gemini l'ingère
+ * nativement, aucun fichier n'est jamais téléchargé côté serveur.
+ * @param {string} videoUrl
+ * @returns {ReturnType<typeof requestCourseDraft>}
+ */
+export const generateCourseDraftFromVideo = (videoUrl) => requestCourseDraft({ videoUrl });
+
+/**
+ * Brouillon de cours à partir d'un fichier vidéo déjà uploadé (via
+ * `uploadCourseDraftVideo`, services/supabase.js) dans le bucket
+ * `course-draft-uploads` — pour TikTok/Facebook, que Gemini ne sait pas
+ * ingérer par URL (Story 10.1/10.5). Le fichier est supprimé côté serveur
+ * une fois la génération terminée, succès ou échec.
+ * @param {string} storagePath
+ * @returns {ReturnType<typeof requestCourseDraft>}
+ */
+export const generateCourseDraftFromUploadedVideo = (storagePath) =>
+  requestCourseDraft({ storagePath });

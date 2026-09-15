@@ -343,3 +343,92 @@ partially overwritten
 `vercel.json` (`connect-src`). Tests: `src/lib/validation.test.js`. Verified live via Playwright
 against the real TikTok oEmbed endpoint (real post, real thumbnail image loaded) and the real
 YouTube thumbnail CDN (Rick Astley test video) — both confirmed visually in the running app.
+
+### Story 10.5: In-App AI Draft for Uploaded Video Files (TikTok/Facebook, No CLI Required)
+
+As a content author,
+I want the same "Générer un brouillon IA depuis la vidéo" button to work for a TikTok/Facebook
+video I've saved locally,
+So that I don't have to leave the admin UI and run a terminal command (Story 10.2) to get an AI
+draft for a non-YouTube video.
+
+**Status: done — shipped 2026-09-15.**
+
+Supersedes the CLI-only posture of Story 10.2 for admin-UI usage (the script stays available
+for users who prefer a terminal / batch workflow) — reframes it as "port the same pipeline into
+the browser," turning the local script's upload → Gemini → draft flow into a file picker behind
+the existing button. The Story 10.1 investigation still holds and remains the hard boundary:
+**the browser still cannot fetch the video from TikTok/Facebook itself** — the content author
+must have already saved it, exactly as in Story 10.2.
+
+**Architecture decision:** the earlier CLI-first choice (Story 10.2) was made because a
+server-side pipeline meant either an Edge Function payload-size ceiling or standing up Storage
+infrastructure for what looked like a one-off need. Once the requirement became "must work as a
+single in-app click," the Storage-bucket + Edge Function design (the *original* proposal from
+earlier in this thread, before the CLI pivot) became the right call after all — the browser
+can't hold multi-hundred-MB files in a function payload, but Storage has no such limit and
+Edge Functions can read from it directly via `service_role`.
+
+**Acceptance Criteria:**
+
+**Given** the video-URL field contains a YouTube URL
+**When** the content author clicks "Générer un brouillon IA depuis la vidéo"
+**Then** behavior is unchanged from Story 3.x — the URL is sent directly, no file picker opens
+
+**Given** the video-URL field contains a TikTok or Facebook URL
+**When** the content author clicks the same "Générer un brouillon IA depuis la vidéo" button
+**Then** a native file picker opens (accepting `.mp4`/`.mov`/`.webm`/`.m4v`); selecting a file
+immediately starts the generation with no second click — one button, one mental model,
+regardless of platform
+
+**Given** a selected file
+**When** it is processed
+**Then** the browser uploads it directly to the private Supabase Storage bucket
+`course-draft-uploads` (client-side size/type validation first: 200MB cap, video mime types
+only — the bucket itself enforces the same limits server-side as a second gate), then calls the
+`course-draft` Edge Function with `{ storagePath }` instead of `{ videoUrl }`
+
+**Given** the `course-draft` Edge Function receives a `storagePath`
+**When** it processes the request
+**Then** it explicitly re-checks `is_admin()` via the caller's own JWT before touching
+anything (defense in depth — the Storage RLS policy already blocks non-admin uploads, but the
+function does not trust "a valid JWT reached me" as equivalent to "the caller is admin," same
+lesson as `0011_admin_access_control.sql`), downloads the file from **our own** Storage via
+`service_role` (never a third party — no CGU conflict), uploads those bytes to Gemini's File
+API, generates the draft with the identical prompt/schema as the YouTube path, and **deletes
+the Storage object in a `finally` block** — success or failure, the file never persists past
+that single request
+
+**Given** the Storage bucket's RLS policy
+**When** a non-admin authenticated user (or an unauthenticated request) attempts to upload
+**Then** the `INSERT` is rejected by `storage.objects` RLS (`is_admin()`-gated,
+`0013_course_draft_video_uploads.sql`) before the Edge Function is ever reached — verified live
+(a non-admin test session got `"new row violates row-level security policy"`, HTTP 400)
+
+**Given** an upload or generation failure of any kind
+**When** the error surfaces in the UI
+**Then** it shows a plain French message ("Échec de l'envoi du fichier vers le serveur.
+Réessaie.") — never a raw Postgres/Storage error string leaked to the admin
+
+**Given** `generateCourseDraftFromVideo` (URL) and the new file-based path share the same Edge
+Function, request/response contract, and error handling
+**When** `services/ai.js` was extended
+**Then** the shared logic was factored into one internal `requestCourseDraft(body)` helper, with
+`generateCourseDraftFromVideo(videoUrl)` and `generateCourseDraftFromUploadedVideo(storagePath)`
+as its two thin, exported entry points — no duplicated fetch/error-mapping code
+
+**Implementation:** `supabase/migrations/0013_course_draft_video_uploads.sql` (bucket +
+admin-only INSERT policy, applied live), `supabase/functions/course-draft/index.ts` (extended to
+accept `storagePath`, deployed as version 5), `src/services/supabase.js`
+(`uploadCourseDraftVideo`), `src/services/ai.js` (`requestCourseDraft`,
+`generateCourseDraftFromUploadedVideo`), `src/pages/AdminPage.jsx` (unified button, hidden file
+input, `handleGenerateDraftFromFile`, `handleClickGenerateDraft`). Tests:
+`src/services/supabase.test.js`, `src/services/ai.test.js`,
+`src/test/mocks/handlers/course-draft.js` (extended to capture `storagePath`). Verified live:
+migration applied and confirmed via direct SQL introspection, Edge Function deployed and smoke-
+tested (401 with no auth, as expected from `verify_jwt: true`), and the full client flow
+exercised end-to-end via Playwright with a real generated video file — file picker opens on
+click, upload reaches the correct bucket/path, RLS correctly rejects a non-admin test session,
+error surfaces cleanly. The success path (real admin session, real Gemini generation) was not
+exercised in this session — no real admin credentials available here, and it would spend the
+user's own Gemini quota.

@@ -30,16 +30,20 @@ export function resetCourseDraftScenario() {
 
 /**
  * Derniers corps de requête envoyés au proxy, et l'en-tête Authorization reçu
- * (pour vérifier que le JWT de session est bien transmis).
- * @type {Array<{ videoUrl: string, authorization: string | null }>}
+ * (pour vérifier que le JWT de session est bien transmis). `videoUrl` OU
+ * `storagePath` selon le chemin exercé (jamais les deux, cf. Story 10.5).
+ * @type {Array<{ videoUrl?: string, storagePath?: string, authorization: string | null }>}
  */
 export const courseDraftRequests = [];
 
 export const courseDraftHandlers = [
   http.post(PROXY_URL, async ({ request }) => {
-    const body = /** @type {{ videoUrl: string }} */ (await request.clone().json());
+    const body = /** @type {{ videoUrl?: string, storagePath?: string }} */ (
+      await request.clone().json()
+    );
     courseDraftRequests.push({
-      videoUrl: body.videoUrl,
+      ...(body.videoUrl !== undefined ? { videoUrl: body.videoUrl } : {}),
+      ...(body.storagePath !== undefined ? { storagePath: body.storagePath } : {}),
       authorization: request.headers.get('authorization'),
     });
 

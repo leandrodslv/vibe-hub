@@ -31,8 +31,9 @@ import {
   onAuthChange,
   isAdmin,
   getWaitlistCounts,
+  uploadCourseDraftVideo,
 } from '../services/supabase';
-import { generateCourseDraftFromVideo } from '../services/ai';
+import { generateCourseDraftFromVideo, generateCourseDraftFromUploadedVideo } from '../services/ai';
 import {
   matchesHost,
   extractYouTubeVideoId,
@@ -694,6 +695,7 @@ function CourseEditor({ mode, course, onSave, onCancel }) {
   const [metaLoading, setMetaLoading] = useState(false);
   const [metaError, setMetaError] = useState('');
   const [metaNotice, setMetaNotice] = useState('');
+  const videoFileInputRef = useRef(null);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -707,6 +709,13 @@ function CourseEditor({ mode, course, onSave, onCancel }) {
 
   const isYouTubeUrl = matchesHost(form.video_url, YOUTUBE_HOSTS);
   const isTikTokUrl = matchesHost(form.video_url, ['tiktok.com']);
+  const isFacebookUrl = matchesHost(form.video_url, ['facebook.com', 'fb.watch']);
+  // Bouton unique "Générer un brouillon IA depuis la vidéo" : YouTube passe
+  // par son URL (Gemini l'ingère nativement) ; TikTok/Facebook n'ont pas cette
+  // capacité côté Gemini, et cette fonction ne doit JAMAIS aller télécharger
+  // la vidéo elle-même (CGU — Story 10.1) ⇒ on demande un fichier que l'admin
+  // a déjà enregistré lui-même (Story 10.5).
+  const showDraftButton = isYouTubeUrl || isTikTokUrl || isFacebookUrl;
 
   // Sans IA : titre/description depuis la légende TikTok (oEmbed public, sans
   // authentification — cf. epics-video-platforms.md Story 10.4). La miniature
@@ -752,6 +761,17 @@ function CourseEditor({ mode, course, onSave, onCancel }) {
     setMetaNotice('Miniature YouTube récupérée.');
   };
 
+  const applyDraft = (draft) => {
+    setForm((f) => ({
+      ...f,
+      title: draft.title || f.title,
+      description: draft.description || f.description,
+      duration: draft.duration || f.duration,
+      content: draft.content || f.content,
+    }));
+    setContentPreview(false);
+  };
+
   const handleGenerateDraft = async () => {
     setDraftError('');
     setDraftLoading(true);
@@ -761,14 +781,53 @@ function CourseEditor({ mode, course, onSave, onCancel }) {
       setDraftError(result.error);
       return;
     }
-    setForm((f) => ({
-      ...f,
-      title: result.draft.title || f.title,
-      description: result.draft.description || f.description,
-      duration: result.draft.duration || f.duration,
-      content: result.draft.content || f.content,
-    }));
-    setContentPreview(false);
+    applyDraft(result.draft);
+  };
+
+  // TikTok/Facebook : pas d'URL ingérable par Gemini, et cette fonction ne
+  // doit jamais aller télécharger la vidéo elle-même (Story 10.1) — l'admin
+  // fournit un fichier qu'il a déjà enregistré lui-même. Il part vers le
+  // bucket privé `course-draft-uploads` (RLS admin-only), l'Edge Function le
+  // lit puis le supprime aussitôt après génération, succès ou échec (Story
+  // 10.5) — jamais conservé durablement.
+  const handleGenerateDraftFromFile = async (file) => {
+    if (!file) return;
+    if (!/^video\/(mp4|quicktime|webm|x-m4v)$/.test(file.type)) {
+      setDraftError('Formats supportés : .mp4, .mov, .webm, .m4v.');
+      return;
+    }
+    if (file.size > 200 * 1024 * 1024) {
+      setDraftError('Fichier trop volumineux (200 Mo maximum).');
+      return;
+    }
+
+    setDraftError('');
+    setDraftLoading(true);
+    try {
+      const storagePath = await uploadCourseDraftVideo(file);
+      const result = await generateCourseDraftFromUploadedVideo(storagePath);
+      if (!result.success) {
+        setDraftError(result.error);
+        return;
+      }
+      applyDraft(result.draft);
+    } catch {
+      // Message générique volontaire : l'erreur brute (Storage/Postgres) n'a
+      // rien d'exploitable pour l'admin — seule la cause (upload) est utile.
+      setDraftError("Échec de l'envoi du fichier vers le serveur. Réessaie.");
+    } finally {
+      setDraftLoading(false);
+    }
+  };
+
+  const handleClickGenerateDraft = () => {
+    if (isYouTubeUrl) {
+      handleGenerateDraft();
+      return;
+    }
+    // TikTok/Facebook : ouvre le sélecteur de fichier — la génération se
+    // lance automatiquement une fois un fichier choisi (input onChange).
+    videoFileInputRef.current?.click();
   };
 
   const handleSubmit = async (e) => {
@@ -947,11 +1006,22 @@ function CourseEditor({ mode, course, onSave, onCancel }) {
             Formats supportés : SharePoint, Microsoft Stream, YouTube (dont Shorts), TikTok,
             Facebook (dont Reels et liens fb.watch), ou lien direct (.mp4)
           </p>
-          {isYouTubeUrl && (
+          {showDraftButton && (
             <div className="mt-3">
+              <input
+                ref={videoFileInputRef}
+                type="file"
+                accept="video/mp4,video/quicktime,video/webm,video/x-m4v"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = ''; // permet de re-choisir le même fichier plus tard
+                  handleGenerateDraftFromFile(file);
+                }}
+              />
               <button
                 type="button"
-                onClick={handleGenerateDraft}
+                onClick={handleClickGenerateDraft}
                 disabled={draftLoading}
                 className={`flex items-center gap-2 bg-primary-fixed text-on-primary-fixed-variant text-[12px] font-semibold px-3.5 py-2 rounded-lg hover:bg-primary-fixed-dim transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${FOCUS_RING}`}
               >
@@ -967,22 +1037,25 @@ function CourseEditor({ mode, course, onSave, onCancel }) {
                     : 'Générer un brouillon IA depuis la vidéo'}
               </button>
               <p className="text-[11px] text-on-surface-variant mt-1.5">
-                Gemini regarde la vidéo YouTube et préremplit titre, description et contenu écrit —
-                à relire avant d'enregistrer, rien n'est publié automatiquement.
+                {isYouTubeUrl
+                  ? "Gemini regarde la vidéo YouTube et préremplit titre, description et contenu écrit — à relire avant d'enregistrer, rien n'est publié automatiquement."
+                  : "Choisis un fichier vidéo que tu as déjà enregistré toi-même (TikTok/Facebook ne peuvent pas être récupérés automatiquement) — Gemini l'analyse et préremplit le formulaire, puis le fichier est supprimé du serveur."}
               </p>
               {draftError && (
                 <p role="alert" className="text-[12px] text-error font-medium mt-1.5">
                   {draftError}
                 </p>
               )}
-              <button
-                type="button"
-                onClick={handleUseYouTubeThumbnail}
-                className={`flex items-center gap-2 bg-surface-variant text-on-surface-variant hover:bg-outline-variant hover:text-on-surface text-[12px] font-semibold px-3.5 py-2 rounded-lg transition-colors cursor-pointer mt-2 ${FOCUS_RING}`}
-              >
-                <Download className="w-3.5 h-3.5" aria-hidden="true" />
-                Utiliser la miniature YouTube
-              </button>
+              {isYouTubeUrl && (
+                <button
+                  type="button"
+                  onClick={handleUseYouTubeThumbnail}
+                  className={`flex items-center gap-2 bg-surface-variant text-on-surface-variant hover:bg-outline-variant hover:text-on-surface text-[12px] font-semibold px-3.5 py-2 rounded-lg transition-colors cursor-pointer mt-2 ${FOCUS_RING}`}
+                >
+                  <Download className="w-3.5 h-3.5" aria-hidden="true" />
+                  Utiliser la miniature YouTube
+                </button>
+              )}
             </div>
           )}
 

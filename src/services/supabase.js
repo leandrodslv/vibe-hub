@@ -408,3 +408,24 @@ export async function deleteCourse(id) {
 
   if (error) rethrow('deleteCourse', error);
 }
+
+/**
+ * Upload une vidéo locale (déjà enregistrée par l'admin — jamais téléchargée
+ * pour lui, cf. Story 10.1) vers le bucket privé `course-draft-uploads`, en
+ * vue du brouillon IA (Epic 10 story 10.5). RLS : seul is_admin() peut y
+ * écrire (0013_course_draft_video_uploads.sql) — un appel non-admin échoue
+ * ici, avant même d'atteindre l'Edge Function `course-draft`.
+ *
+ * L'Edge Function supprime le fichier après génération, succès ou échec —
+ * ce chemin n'est jamais durable.
+ * @param {File} file
+ * @returns {Promise<string>} le storagePath à passer à generateCourseDraftFromUploadedVideo
+ */
+export async function uploadCourseDraftVideo(file) {
+  const path = `${crypto.randomUUID()}/${file.name}`;
+  const { error } = await supabase.storage
+    .from('course-draft-uploads')
+    .upload(path, file, { contentType: file.type });
+  if (error) rethrow('uploadCourseDraftVideo', error);
+  return path;
+}

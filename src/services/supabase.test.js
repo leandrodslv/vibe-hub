@@ -22,16 +22,18 @@ const h = vi.hoisted(() => {
   };
   const from = vi.fn(() => makeBuilder());
   const rpc = vi.fn(async () => ({ data: null, error: null }));
-  return { state, auth, from, rpc };
+  const storageUpload = vi.fn(async () => ({ data: { path: 'x' }, error: null }));
+  const storage = { from: vi.fn(() => ({ upload: storageUpload })) };
+  return { state, auth, from, rpc, storage, storageUpload };
 });
 
-const { auth, from, rpc } = h;
+const { auth, from, rpc, storage, storageUpload } = h;
 const setResult = (r) => {
   h.state.nextResult = r;
 };
 
 vi.mock('@supabase/supabase-js', () => ({
-  createClient: () => ({ from: h.from, auth: h.auth, rpc: h.rpc }),
+  createClient: () => ({ from: h.from, auth: h.auth, rpc: h.rpc, storage: h.storage }),
 }));
 
 vi.mock('../config/env.js', () => ({
@@ -122,6 +124,26 @@ describe('getWaitlistCounts', () => {
     await expect(svc.getWaitlistCounts()).rejects.toThrow(
       /Réponse inattendue \[getWaitlistCounts\]/
     );
+  });
+});
+
+describe('uploadCourseDraftVideo', () => {
+  const makeFile = (name = 'clip.mp4', type = 'video/mp4') => new File(['x'], name, { type });
+
+  it('upload vers le bucket course-draft-uploads et renvoie le storagePath', async () => {
+    const path = await svc.uploadCourseDraftVideo(makeFile());
+    expect(storage.from).toHaveBeenCalledWith('course-draft-uploads');
+    expect(path).toMatch(/^[0-9a-f-]{36}\/clip\.mp4$/);
+    expect(storageUpload).toHaveBeenCalledWith(
+      path,
+      expect.anything(),
+      expect.objectContaining({ contentType: 'video/mp4' })
+    );
+  });
+
+  it('lève sur erreur de upload', async () => {
+    storageUpload.mockResolvedValueOnce({ data: null, error: { message: 'quota' } });
+    await expect(svc.uploadCourseDraftVideo(makeFile())).rejects.toThrow('quota');
   });
 });
 

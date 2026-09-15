@@ -31,7 +31,8 @@ vi.mock('./supabase.js', () => ({
   getSession: () => Promise.resolve(h.session),
 }));
 
-const { generateAIResponse, generateCourseDraftFromVideo } = await import('./ai.js');
+const { generateAIResponse, generateCourseDraftFromVideo, generateCourseDraftFromUploadedVideo } =
+  await import('./ai.js');
 
 beforeEach(() => {
   h.aiConfigured = true;
@@ -188,5 +189,37 @@ describe('generateCourseDraftFromVideo', () => {
     const out = await generateCourseDraftFromVideo(YOUTUBE_URL);
     expect(out.success).toBe(false);
     expect(out.error).toMatch(/proxy non configuré/i);
+  });
+});
+
+describe('generateCourseDraftFromUploadedVideo', () => {
+  const STORAGE_PATH = 'uuid-1234/ma-video.mp4';
+
+  it("renvoie une erreur explicite si le proxy n'est pas configuré", async () => {
+    h.courseDraftConfigured = false;
+    const out = await generateCourseDraftFromUploadedVideo(STORAGE_PATH);
+    expect(out).toEqual({ success: false, error: expect.stringMatching(/pas configuré/i) });
+    expect(courseDraftRequests).toHaveLength(0);
+  });
+
+  it("renvoie une erreur si aucune session n'est active", async () => {
+    h.session = null;
+    const out = await generateCourseDraftFromUploadedVideo(STORAGE_PATH);
+    expect(out).toEqual({ success: false, error: expect.stringMatching(/session/i) });
+    expect(courseDraftRequests).toHaveLength(0);
+  });
+
+  it('transmet le storagePath (jamais videoUrl) et le JWT de session au proxy', async () => {
+    await generateCourseDraftFromUploadedVideo(STORAGE_PATH);
+    expect(courseDraftRequests[0]).toEqual({
+      storagePath: STORAGE_PATH,
+      authorization: 'Bearer fake-jwt-for-test',
+    });
+  });
+
+  it('renvoie le brouillon en cas de succès', async () => {
+    const out = await generateCourseDraftFromUploadedVideo(STORAGE_PATH);
+    expect(out.success).toBe(true);
+    expect(out.draft?.title).toBe('Prompts efficaces pour le design UI');
   });
 });
