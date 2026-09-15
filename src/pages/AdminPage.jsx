@@ -1306,6 +1306,10 @@ function AdminAccueilView({
 
       <AccueilHero email={email} topTools={topTools} />
 
+      <div className="mb-4">
+        <SuggestionBanner signals={signals} />
+      </div>
+
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
         <StatRingCard
           label="Total cours"
@@ -1385,8 +1389,6 @@ function AdminAccueilView({
           )}
         </AccueilCard>
       </div>
-
-      <SuggestionBanner signals={signals} />
     </div>
   );
 }

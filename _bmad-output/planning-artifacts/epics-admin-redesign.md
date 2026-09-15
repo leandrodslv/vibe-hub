@@ -293,9 +293,11 @@ something real instead of a class that doesn't exist.
 
 **Given** the "À faire" signals computed in Story 14.4
 **When** Accueil renders
-**Then** a banner at the bottom of the page shows the single highest-priority item (priority
-order: stale/never-rotated key > unpublished drafts > undelivered high-demand tool) with a CTA
-button into the relevant view
+**Then** a banner shows the single highest-priority item (priority order: stale/never-rotated
+key > unpublished drafts > undelivered high-demand tool) with a CTA button into the relevant
+view — positioned right after the welcome hero, before the stat rings, not at the bottom of
+the page (moved there same-day per Léandro's UX feedback: the most urgent item shouldn't
+require scrolling past everything else to see)
 
 **Given** no signal is currently true (key fresh, no drafts, no unaddressed demand)
 **When** Accueil renders
@@ -304,6 +306,7 @@ never an empty SkillPath-style "Join Now" banner with nothing to join
 
 **Implementation:** `src/pages/AdminPage.jsx` (`SuggestionBanner` — new, reuses
 `computeAdminSignals()` from Story 14.4 rather than a second implementation of the same
-priority logic). Verified live: with the mocked demand signal present, the banner shows it
-with a working CTA; the "Tout est à jour" calm state was verified by code review (same
+priority logic; rendered between `AccueilHero` and the stat-ring grid). Verified live: with
+the mocked demand signal present, the banner shows it with a working CTA, visible without
+scrolling; the "Tout est à jour" calm state was verified by code review (same
 `signals.length === 0` branch `TodoCard` already exercises).
