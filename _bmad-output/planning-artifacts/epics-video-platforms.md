@@ -121,8 +121,22 @@ Teams/SharePoint/Stream/YouTube/.mp4 list
 **When** a content author pastes a TikTok or Facebook URL
 **Then** the AI-draft button still only appears for YouTube URLs — Gemini's native video
 ingestion supports YouTube URLs directly but not TikTok/Facebook; extending AI-draft generation
-to those platforms is explicitly out of scope for this story (would require a separate
-download/transcode pipeline, its own AD, and likely ToS review per platform)
+to those platforms is explicitly out of scope for this story
+
+**Investigated 2026-09-15, rejected — not a technical limitation, a ToS one.** The Gemini API
+itself is not the blocker: besides the YouTube-URL passthrough (preview, YouTube-only), it also
+accepts raw video bytes directly (File API up to 2GB, inline base64 for smaller clips) — if the
+video file were in hand, Gemini could analyze a TikTok or Facebook video exactly like a YouTube
+one. The blocker is *obtaining* that file: TikTok's Terms of Service explicitly prohibit
+downloading/scraping content without prior written consent, and Meta's Platform Terms prohibit
+automated collection without prior written permission (extended in Jan 2025 to logged-out
+access too) — Meta actively enforces this with a dedicated team, legal action, and technical
+countermeasures, regardless of the contested *Meta v. Bright Data* ruling on public-data
+scraping. Building a server-side download pipeline for either platform would mean shipping a
+feature that breaches its own vendor's terms by default. Do not build this without an explicit,
+written, per-platform authorization (e.g. TikTok's Content Posting API scope, or a Meta app
+review granting the relevant Graph API video permissions) — an unauthorized scraper is not an
+acceptable substitute.
 
 **Implementation:** `src/lib/validation.js` (`ALLOWED_VIDEO_HOSTS`), `src/components/workspace/
 modules/CourseDetail.jsx` (embed selection), `vercel.json` (`frame-src`), `src/pages/
