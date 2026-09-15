@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-08-06
-last_updated: 2026-09-15 (audit complet contre le code réel — statuts epic-1..6 n'avaient jamais été mis à jour depuis leur création le 06/08 ; epic-7/8/9 passés à done, ops notifications terminées le 09-14 ; epic-6 (6-2, dashboard waitlist admin) livré et passé à done le jour même ; 2 gaps réels restants en epic-2/5, voir commentaires)
+last_updated: 2026-09-15 (audit complet contre le code réel — statuts epic-1..6 n'avaient jamais été mis à jour depuis leur création le 06/08 ; epic-7/8/9 passés à done, ops notifications terminées le 09-14 ; epic-6 (6-2, dashboard waitlist admin) livré et passé à done le jour même ; epic-2 (gap AD-6 de 2.3) corrigé et passé à done le jour même ; 1 gap réel restant en epic-5, voir commentaires)
 project: vibe-hub
 project_key: NOKEY
 tracking_system: file-system
@@ -53,10 +53,10 @@ development_status:
   1-2-enter-workspace-from-landing-page: done  # CTA Hero + Navbar → appHref(), live en prod
   epic-1-retrospective: optional
 
-  epic-2: in-progress  # catalogue + détail livrés ; 2.3 ne respecte pas AD-6
+  epic-2: done  # catalogue + détail + progression livrés ; gap AD-6 de 2.3 corrigé et passé à done le 2026-09-15
   2-1-browse-real-course-catalog: done  # ModulesTab.jsx : fetch Supabase réel, skeleton, erreur, vide, tri order_index, RLS anon (published=true)
   2-2-open-and-view-course-content: done  # CourseDetail.jsx, click-anywhere card
-  2-3-see-session-local-course-progress: review  # progress en useState pur (ModulesTab.jsx) — jamais écrit en localStorage (progress_*, AD-6) : perdu au refresh, pas seulement à la fermeture du navigateur
+  2-3-see-session-local-course-progress: done  # gap AD-6 corrigé le 2026-09-15 : progress persisté/relu depuis localStorage['progress_courses'] (ModulesTab.jsx), régression couverte par ModulesTab.test.jsx — survit maintenant à un refresh comme prévu, reste local au navigateur
   epic-2-retrospective: optional
 
   epic-3: done  # gate + CRUD complets, en prod, redesignés sur le design system Franc le 2026-09-15
