@@ -142,3 +142,61 @@ acceptable substitute.
 modules/CourseDetail.jsx` (embed selection), `vercel.json` (`frame-src`), `src/pages/
 AdminPage.jsx` (field copy). Tests: `src/lib/validation.test.js`. Verified live via Playwright
 against real TikTok/Facebook/YouTube-Shorts fixtures before shipping.
+
+### Story 10.2: Generate an AI Draft from a Manually-Obtained Video File
+
+As a content author,
+I want to generate an AI course draft from a TikTok or Facebook video I've saved myself,
+So that I'm not limited to YouTube for the "brouillon IA" shortcut, without the app ever
+scraping those platforms on my behalf.
+
+**Status: done — shipped 2026-09-15.**
+
+Follows directly from Story 10.1's investigation: Gemini itself can analyze any video file via
+its File API (upload + `fileData.fileUri`, same mechanism already used for YouTube URLs under
+the hood) — the only blocker was *obtaining* a TikTok/Facebook video server-side, which would
+breach both platforms' Terms of Service. The resolution already anticipated by the original
+`course-draft` implementation comment (never followed through until now): a **local script**,
+never an Edge Function, so no server ever downloads from a third party — only a file the
+content author has already saved themselves through their own, manual, non-automated action.
+
+**Acceptance Criteria:**
+
+**Given** a content author has manually saved a video file from TikTok, Facebook, or any other
+source (their own action — using each platform's own "save video" feature, never a script
+acting on their behalf)
+**When** they run `GEMINI_API_KEY=<key> npm run course-from-video -- <path-to-video>`
+**Then** the script uploads the file directly to Gemini's File API, polls until the file's
+`state` is `ACTIVE`, and generates the same structured draft (`title`/`description`/`duration`/
+`content`) as the YouTube path — same prompt, same response schema, same model
+(`gemini-2.5-flash-lite`), kept in sync by comment with `course-draft/index.ts`
+
+**Given** the script's file-type gate
+**When** an unsupported extension is passed
+**Then** it exits with a clear error listing supported extensions (`.mp4`, `.mov`, `.webm`,
+`.m4v`) before ever calling Gemini
+
+**Given** `GEMINI_API_KEY` is not set
+**When** the script runs
+**Then** it exits with a clear error pointing to the same secret already documented for
+`gemini-proxy`/`course-draft` in `.env.example` — no silent failure, no key prompted for or
+stored by the script
+
+**Given** the generated draft
+**When** the script finishes
+**Then** it only prints the JSON to stdout — it never writes to Supabase directly; the content
+author reviews it and pastes it into `/admin`'s course editor by hand, identical to the
+YouTube-draft review step ("à relire avant d'enregistrer, rien n'est publié automatiquement")
+
+**Given** this is a local dev-tooling script, not application code
+**When** it is added
+**Then** `@google/genai` is a `devDependency` (never shipped in the Vite/browser bundle — no
+`src/` file imports it), and the script is excluded from `npm run lint`'s scope exactly like
+the project's other `scripts/*.mjs` files (`--ext js,jsx` does not cover `.mjs`) — consistent
+with existing convention, not a newly introduced gap
+
+**Implementation:** `scripts/course-from-video.mjs`, `package.json` (`course-from-video` script
+entry, `@google/genai` devDependency). Verified end-to-end against the real Gemini API (an
+invalid key correctly surfaces `API_KEY_INVALID` with a clean exit code) — full success path
+not exercised with a real key/video in this session, by design (the content author's own
+Gemini quota, not spent on their behalf).

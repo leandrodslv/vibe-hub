@@ -25,6 +25,7 @@
     "test:regression:new": "node scripts/new-regression-test.mjs",
     "test:ui": "vitest --ui",
     "ai-fix": "node scripts/ai-fix.mjs",
+    "course-from-video": "node scripts/course-from-video.mjs",
     "weekly-sync": "node scripts/weekly-sync.mjs",
     "explore": "node scripts/explore.mjs",
     "perf:diff": "node scripts/perf-diff.mjs",
@@ -58,6 +59,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@google/genai": "^2.22.0",
     "@lhci/cli": "^0.14.0",
     "@playwright/test": "^1.48.0",
     "@size-limit/file": "^11.1.6",

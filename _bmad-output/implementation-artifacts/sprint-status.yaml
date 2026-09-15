@@ -82,9 +82,12 @@ development_status:
   epic-6-retrospective: optional
 
   # Multi-Platform Video Embeds — epics-video-platforms.md (FR-18, AD-11). Écrit
-  # rétroactivement : story déjà livrée le jour même.
+  # rétroactivement : stories déjà livrées le jour même. 10.2 documente aussi
+  # pourquoi le téléchargement serveur TikTok/Facebook a été explicitement
+  # rejeté (CGU) avant que la solution "script local" ne soit retenue.
   epic-10: done
   10-1-embed-tiktok-facebook-and-youtube-shorts-videos-in-course-detail: done  # 2026-09-15 : ALLOWED_VIDEO_HOSTS (lib/validation.js) + embed selection (CourseDetail.jsx : TikTok /embed/v2/<id>, plugin vidéo Facebook via href, fix extraction id YouTube Shorts) + frame-src CSP (vercel.json) + copie du champ admin (AdminPage.jsx) ; vérifié en local via Playwright contre de vraies vidéos TikTok/Facebook/Shorts
+  10-2-generate-an-ai-draft-from-a-manually-obtained-video-file: done  # 2026-09-15 : scripts/course-from-video.mjs (File API Gemini, jamais de téléchargement serveur — CGU TikTok/Facebook obligent un fichier obtenu manuellement par le content author) ; @google/genai en devDependency, script npm course-from-video ; testé bout-en-bout contre l'API réelle (clé invalide → erreur propre), pas de run complet clé+vidéo réelles (quota Gemini de l'utilisateur)
   epic-10-retrospective: optional
 
   # Notification Center — epics-notifications.md (FR-10..FR-17, NFR6-8, AD-7..AD-10).
