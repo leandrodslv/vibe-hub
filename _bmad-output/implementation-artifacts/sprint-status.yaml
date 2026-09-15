@@ -88,6 +88,7 @@ development_status:
   epic-10: done
   10-1-embed-tiktok-facebook-and-youtube-shorts-videos-in-course-detail: done  # 2026-09-15 : ALLOWED_VIDEO_HOSTS (lib/validation.js) + embed selection (CourseDetail.jsx : TikTok /embed/v2/<id>, plugin vidéo Facebook via href, fix extraction id YouTube Shorts) + frame-src CSP (vercel.json) + copie du champ admin (AdminPage.jsx) ; vérifié en local via Playwright contre de vraies vidéos TikTok/Facebook/Shorts
   10-2-generate-an-ai-draft-from-a-manually-obtained-video-file: done  # 2026-09-15 : scripts/course-from-video.mjs (File API Gemini, jamais de téléchargement serveur — CGU TikTok/Facebook obligent un fichier obtenu manuellement par le content author) ; @google/genai en devDependency, script npm course-from-video ; testé bout-en-bout contre l'API réelle (clé invalide → erreur propre), pas de run complet clé+vidéo réelles (quota Gemini de l'utilisateur)
+  10-3-local-transcription-mode-less-ai-cheaper-nothing-leaves-the-machine-but-text: done  # 2026-09-15 : --transcribe sur course-from-video.mjs — audio extrait (ffmpeg) + transcrit 100% localement (Whisper via @huggingface/transformers, aucun cloud), seul le texte part vers Gemini pour mise en forme ; durée calculée par ffprobe (pas devinée) ; testé bout-en-bout (ffmpeg réel, Whisper réel, appel Gemini réel rejeté proprement sur clé invalide)
   epic-10-retrospective: optional
 
   # Notification Center — epics-notifications.md (FR-10..FR-17, NFR6-8, AD-7..AD-10).

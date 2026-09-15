@@ -200,3 +200,69 @@ entry, `@google/genai` devDependency). Verified end-to-end against the real Gemi
 invalid key correctly surfaces `API_KEY_INVALID` with a clean exit code) — full success path
 not exercised with a real key/video in this session, by design (the content author's own
 Gemini quota, not spent on their behalf).
+
+### Story 10.3: Local Transcription Mode — Less AI, Cheaper, Nothing Leaves the Machine but Text
+
+As a content author,
+I want an option that transcribes the video locally and only sends the transcript text to
+Gemini,
+So that I have a cheaper, faster alternative that doesn't upload the video file itself, when a
+full AI "watch" of the video isn't needed to get a good draft.
+
+**Status: done — shipped 2026-09-15.**
+
+**Acceptance Criteria:**
+
+**Given** `scripts/course-from-video.mjs` is run with the `--transcribe` flag
+**When** it processes a local video file
+**Then** the audio track is extracted locally via `ffmpeg-static`/`fluent-ffmpeg` (mono,
+16kHz — Whisper's expected input), transcribed **entirely locally** via Whisper running
+in-process through `@huggingface/transformers` (ONNX, CPU, no cloud speech API, no per-minute
+cost) — the video file itself is never uploaded anywhere in this mode
+
+**Given** the transcription step
+**When** the model is selected
+**Then** it defaults to `Xenova/whisper-small` (multilingual — not the English-only `.en`
+variant, since course content is French), overridable via a `WHISPER_MODEL` env var; language
+is passed explicitly as `language: 'french', task: 'transcribe'` to the ASR pipeline rather
+than left to auto-detection, and long audio is chunked (`chunk_length_s: 30, stride_length_s:
+5`, Whisper's standard windowing) so videos longer than Whisper's native ~30s window still
+transcribe correctly
+
+**Given** only the transcript (never the video) needs to reach Gemini in this mode
+**When** the draft is generated
+**Then** a distinct prompt (`promptFromTranscript`) — aware the input is an ASR transcript that
+may contain hesitations/repetitions/minor errors — asks Gemini to produce a clean structured
+course from the text; this call carries no `fileData`/`inlineData` part, materially cheaper and
+faster than the video-upload path
+
+**Given** the exact video duration is knowable without any AI guess
+**When** the draft is assembled
+**Then** `duration` is computed directly from ffmpeg's own probed duration (`codecData` event)
+and overwrites whatever the model returned for that field — accuracy over inference for a value
+we can measure exactly
+
+**Given** an empty or unintelligible transcription (e.g. a video with no spoken audio)
+**When** this is detected
+**Then** the script fails fast with a clear message before ever calling Gemini — no wasted API
+call on empty input
+
+**Given** all temporary files (the extracted `.wav`)
+**When** the script finishes, succeeds or fails
+**Then** they are removed (`finally` block, `mkdtemp` + `rm -rf` on the temp dir) — no leftover
+audio files accumulate on disk across runs
+
+**Given** the two modes share the same CLI entry point
+**When** a content author chooses between them
+**Then** the default (no flag) remains "Gemini watches the full video" (Story 10.2, simplest,
+one network round-trip) and `--transcribe` is the opt-in "less AI, cheaper, video stays local"
+alternative — both produce the identical output shape (`title`/`description`/`duration`/
+`content`) so either can be pasted into `/admin` the same way
+
+**Implementation:** `scripts/course-from-video.mjs` (`generateFromTranscript`, extended CLI
+parsing for `--transcribe`), new devDependencies `@huggingface/transformers`, `wavefile`,
+`ffmpeg-static`, `fluent-ffmpeg`. Verified end-to-end locally: real ffmpeg audio extraction,
+real Whisper model download + transcription (tested with `Xenova/whisper-tiny` for a fast
+smoke test; `Xenova/whisper-small` is the shipped default), real call through to the Gemini API
+(invalid key correctly rejected) — full success path with a real key and real speech content
+not exercised in this session, by design (the content author's own Gemini quota).
