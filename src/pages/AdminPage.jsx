@@ -63,6 +63,7 @@ import {
   sanitizeText,
 } from '../lib/validation';
 import { TOOLS } from '../data/tools';
+import assistantIaImage from '../assets/landing/assistant-ia.jpg';
 
 const YOUTUBE_HOSTS = ['youtube.com', 'youtu.be'];
 
@@ -873,12 +874,10 @@ function AccueilCard({ title, icon: Icon, children, onSelect, ctaLabel }) {
 }
 
 /* ── Epic 14 story 14.2 : bannière de bienvenue ─────────────────────────── */
-// Photo libre de droits (licence Unsplash), même convention que APropos.jsx/
-// CourseDetail.jsx : image directe images.unsplash.com, pas l'API source.unsplash.com
-// (dépréciée). Overlay dégradé violet (tokens primary/primary-container) posé
-// dessus en un seul `background` CSS — le texte reste lisible sans div en plus.
-const HERO_BG_IMAGE =
-  "linear-gradient(to bottom right, rgba(91,60,221,0.45), rgba(116,89,247,0.45)), url('https://images.unsplash.com/photo-1771814536262-3c1320c8e9ce?q=80&w=1200&auto=format&fit=crop')";
+// Visuel maison déjà utilisé sur la landing (Programme.jsx) : assistant IA +
+// bras robotisé Vibe. Overlay dégradé violet (tokens primary/primary-container)
+// posé dessus en un seul `background` CSS — le texte reste lisible sans div en plus.
+const HERO_BG_IMAGE = `linear-gradient(to bottom right, rgba(91,60,221,0.55), rgba(116,89,247,0.55)), url(${assistantIaImage})`;
 
 function AccueilHero({ email, topTools }) {
   const name = email ? email.split('@')[0] : 'admin';
