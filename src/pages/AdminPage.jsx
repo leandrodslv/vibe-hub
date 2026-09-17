@@ -878,7 +878,7 @@ function AccueilCard({ title, icon: Icon, children, onSelect, ctaLabel }) {
 // (dépréciée). Overlay dégradé violet (tokens primary/primary-container) posé
 // dessus en un seul `background` CSS — le texte reste lisible sans div en plus.
 const HERO_BG_IMAGE =
-  "linear-gradient(to bottom right, rgba(91,60,221,0.72), rgba(116,89,247,0.72)), url('https://images.unsplash.com/photo-1771814536262-3c1320c8e9ce?q=80&w=1200&auto=format&fit=crop')";
+  "linear-gradient(to bottom right, rgba(91,60,221,0.45), rgba(116,89,247,0.45)), url('https://images.unsplash.com/photo-1771814536262-3c1320c8e9ce?q=80&w=1200&auto=format&fit=crop')";
 
 function AccueilHero({ email, topTools }) {
   const name = email ? email.split('@')[0] : 'admin';
