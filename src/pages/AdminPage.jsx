@@ -877,7 +877,7 @@ function AccueilCard({ title, icon: Icon, children, onSelect, ctaLabel }) {
 // Visuel maison déjà utilisé sur la landing (Programme.jsx) : assistant IA +
 // bras robotisé Vibe. Overlay dégradé violet (tokens primary/primary-container)
 // posé dessus en un seul `background` CSS — le texte reste lisible sans div en plus.
-const HERO_BG_IMAGE = `linear-gradient(to bottom right, rgba(91,60,221,0.55), rgba(116,89,247,0.55)), url(${assistantIaImage})`;
+const HERO_BG_IMAGE = `linear-gradient(to bottom right, rgba(91,60,221,0.72), rgba(116,89,247,0.72)), url(${assistantIaImage})`;
 
 function AccueilHero({ email, topTools }) {
   const name = email ? email.split('@')[0] : 'admin';
