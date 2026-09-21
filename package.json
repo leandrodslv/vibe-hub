@@ -57,7 +57,7 @@
     "recharts": "^3.10.1",
     "remark-gfm": "^4.0.1",
     "web-vitals": "^4.2.4",
-    "zod": "^3.25.76"
+    "zod": "^4.6.2"
   },
   "devDependencies": {
     "@google/genai": "^2.22.0",
